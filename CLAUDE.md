@@ -19,7 +19,7 @@ When a change is both — e.g. a view that kicks off async loading — consult b
 
 ## Project state
 
-Currently the unmodified Xcode "SwiftData App" template — `Item`, `ContentView`, and the two test files are scaffolding, not product code. Expect to replace them rather than build around them. The layer folders described under Architecture do not exist yet; create them as features land.
+Foundation work in progress, built one layer at a time: **design system (done)** → localization → persistence → networking. `Item.swift` and `ContentView.swift` are leftover Xcode "SwiftData App" template scaffolding — replace them, don't build around them. The app root currently shows `DesignSystemGallery` (a developer screen) instead of `ContentView`; the persistence step restores a real root.
 
 ## Platforms & toolchain
 
@@ -33,12 +33,25 @@ Currently the unmodified Xcode "SwiftData App" template — `Item`, `ContentView
 
 Layer folders under the target root (`ThawabForGod/`):
 
-- `App/` — composition root: app entry, `AppContainer` (manual DI), routing.
-- `Core/` — cross-cutting infra: networking, persistence, DI, location, notifications, formatters, theming, localization.
+- `App/` — composition root: app entry (`ThawabForGodApp`), `AppContainer` (manual DI), routing.
+- `Core/` — cross-cutting infra: theming, localization, persistence, networking, DI, location, notifications, formatters.
 - `Features/` — one folder per feature: `Views` (SwiftUI) + `ViewModel` + `Coordinator`, plus that feature's Domain/Data types.
-- `Resources/` — assets, localized strings, bundled data, fonts.
+- `Resources/` — assets (`Assets.xcassets`), localized strings, bundled data, fonts.
 
 **Dependency rule: Features → Domain ← Data.** Domain is pure Swift — no SwiftUI or UIKit imports. Wire concrete types only at the composition root.
+
+Each `Core` subsystem repeats that split:
+
+```
+Core/<Subsystem>/
+  Domain/   protocols + entities — pure Swift, no SwiftUI / SwiftData / URLSession
+  Data/     implementations — UserDefaults, SwiftData, URLSession
+  UI/       SwiftUI glue — @Observable @MainActor managers, @Entry environment values, modifiers
+```
+
+**All user preferences go through `SettingsStore`** (`Core/Settings/Domain`) — a `nonisolated` key/value protocol with a `UserDefaults` implementation and an `InMemorySettingsStore` for previews and tests. Add a case to `SettingsKey`; never touch `UserDefaults` directly and never invent a second settings path.
+
+**Design system: `Core/Theming`.** Views read `@Environment(\.theme)` for colour and use `.appFont(_:weight:)` for type — never a literal `Color`, a hex, or `.font(.system(size:))`. `AppColor` is the only file naming asset colours; the `Colors/` and `Accents/` asset groups provide a namespace so generated symbols don't collide with SwiftUI's `primary`/`separator`. Each colour set carries light and dark values, so no view branches on `colorScheme`. `ThemeManager` (`@Observable @MainActor`) owns the accent and appearance choices and is applied once at the root via `.themed(_:)`.
 
 **One codebase, two platforms.** Platform differences are handled inline with `#if os(macOS)` / `#if os(iOS)`. The template's `ContentView` wraps its content in a `fileprivate NavigationViewWrapper` that expands to `NavigationSplitView` on macOS and passes through on iOS — reuse that seam when a screen needs divergent navigation.
 
@@ -64,7 +77,7 @@ Only one scheme exists: `ThawabForGod`. `SDKROOT = auto` with `SUPPORTED_PLATFOR
 Build for simulator:
 
 ```bash
-xcodebuild build -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 16' -quiet
+xcodebuild build -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' -quiet
 ```
 
 Build for macOS:
@@ -76,38 +89,45 @@ xcodebuild build -scheme ThawabForGod -project ThawabForGod.xcodeproj -destinati
 Run all tests (unit + UI):
 
 ```bash
-xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 16' -quiet
+xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' -quiet
 ```
 
 Skip the slow UI target while iterating:
 
 ```bash
-xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 16' -skip-testing:ThawabForGodUITests -quiet
+xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' -skip-testing:ThawabForGodUITests -quiet
 ```
 
 Run a single test — the path is `Target/Suite/testName`:
 
 ```bash
-xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:ThawabForGodTests/ThawabForGodTests/example -quiet
+xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:ThawabForGodTests/ThawabForGodTests/example -quiet
 ```
 
-List available simulators:
+Check Swift 6 cleanliness without changing the project file — the language mode is still 5.0, so strict-concurrency problems are otherwise invisible:
+
+```bash
+xcodebuild build -scheme ThawabForGod -project ThawabForGod.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17' SWIFT_VERSION=6.0 -quiet
+```
+
+List available simulators — note that `name=iPhone 16` fails here because the destination defaults to the latest runtime (26.5), which has no iPhone 16:
 
 ```bash
 xcrun simctl list devices available
 ```
 
-**Always build after a change; fix warnings and errors before finishing.**
+**Always build after a change; fix warnings and errors before finishing.** Warnings count as failures — the build is currently clean on all four commands above.
 
 ## Tests
 
-Two targets: `ThawabForGodTests` (unit) and `ThawabForGodUITests` (UI, XCTest — `XCTestCase`, `XCUIApplication`, `@MainActor`). Add tests for Domain use cases and ViewModels.
+Two frameworks, deliberately: `ThawabForGodTests` uses **Swift Testing** (`import Testing`, `@Test`, `#expect`, `@MainActor` suites), `ThawabForGodUITests` stays on **XCTest** (`XCTestCase`, `XCUIApplication`). Write new unit tests with Swift Testing. Add tests for Domain use cases, services, and ViewModels.
 
-Note the mismatch to resolve: the template's unit test file uses **Swift Testing** (`import Testing`, `@Test`, `#expect`) while the project convention is **XCTest**. Since the scaffolding is meant to be replaced, write new unit tests in XCTest and convert the template file when you touch it.
+`SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES` means imports are not re-exported: a test touching a SwiftUI type needs its own `import SwiftUI` even though the app target already imports it.
 
 ## Don'ts
 
 - Don't invent SwiftUI / Foundation APIs. If unsure an API exists, check the docs or say so — never hallucinate a symbol.
 - Don't use APIs newer than the deployment target (iOS 17.0 / macOS 15.0).
 - Don't put SwiftUI / UIKit imports in Domain.
+- Don't hardcode a colour, hex value, or font size in a view — go through `@Environment(\.theme)` and `.appFont(_:weight:)`.
 - Don't hand-edit `project.pbxproj` or change signing settings. The project uses file-system synchronized groups, so new files are picked up automatically — just create them in the right folder, no target registration needed.
