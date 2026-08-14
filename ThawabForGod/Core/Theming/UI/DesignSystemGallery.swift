@@ -12,6 +12,7 @@ import SwiftUI
 /// real root and this becomes preview-only. Its labels are deliberately not localized.
 struct DesignSystemGallery: View {
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
 
     private var accentSelection: Binding<AccentPalette> {
@@ -43,25 +44,25 @@ struct DesignSystemGallery: View {
 
     private var pickers: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(verbatim: "Design system")
+            Text(l10n.string(.appName))
                 .appFont(.largeTitle, weight: .bold)
                 .foregroundStyle(theme.textPrimary)
 
             Picker(selection: accentSelection) {
                 ForEach(AccentPalette.allCases) { palette in
-                    Text(verbatim: palette.developerLabel).tag(palette)
+                    Text(l10n.string(palette.labelKey)).tag(palette)
                 }
             } label: {
-                Text(verbatim: "Accent")
+                Text(l10n.string(.accentLabel))
             }
             .pickerStyle(.segmented)
 
             Picker(selection: appearanceSelection) {
                 ForEach(AppearanceOverride.allCases) { appearance in
-                    Text(verbatim: appearance.developerLabel).tag(appearance)
+                    Text(l10n.string(appearance.labelKey)).tag(appearance)
                 }
             } label: {
-                Text(verbatim: "Appearance")
+                Text(l10n.string(.appearanceLabel))
             }
             .pickerStyle(.segmented)
         }
@@ -69,7 +70,7 @@ struct DesignSystemGallery: View {
 
     private var palette: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("Palette")
+            sectionTitle(.paletteTitle)
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 12)], spacing: 12) {
                 ForEach(swatches, id: \.name) { swatch in
@@ -96,14 +97,14 @@ struct DesignSystemGallery: View {
 
     private var typeScale: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionTitle("Type scale")
+            sectionTitle(.typeScaleTitle)
 
             ForEach(AppTextStyle.allCases, id: \.self) { style in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: style.rawValue)
                         .appFont(style)
                         .foregroundStyle(theme.textPrimary)
-                    Text(verbatim: "بسم الله الرحمن الرحيم")
+                    Text(l10n.string(.sampleGreeting))
                         .appFont(style)
                         .foregroundStyle(theme.textSecondary)
                 }
@@ -111,8 +112,8 @@ struct DesignSystemGallery: View {
         }
     }
 
-    private func sectionTitle(_ title: String) -> some View {
-        Text(verbatim: title)
+    private func sectionTitle(_ key: L10nKey) -> some View {
+        Text(l10n.string(key))
             .appFont(.title2, weight: .semibold)
             .foregroundStyle(theme.textPrimary)
     }
@@ -140,8 +141,14 @@ private struct Swatch: View {
 }
 
 #Preview {
-    let themeManager = ThemeManager(settingsStore: InMemorySettingsStore())
+    let settingsStore = InMemorySettingsStore()
 
     DesignSystemGallery()
-        .themed(themeManager)
+        .themed(ThemeManager(settingsStore: settingsStore))
+        .localized(
+            LocalizationManager(
+                settingsStore: settingsStore,
+                numberFormatting: LocaleNumberFormattingService()
+            )
+        )
 }

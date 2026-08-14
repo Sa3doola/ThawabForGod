@@ -19,7 +19,9 @@ When a change is both — e.g. a view that kicks off async loading — consult b
 
 ## Project state
 
-Foundation work in progress, built one layer at a time: **design system (done)** → localization → persistence → networking. `Item.swift` and `ContentView.swift` are leftover Xcode "SwiftData App" template scaffolding — replace them, don't build around them. The app root currently shows `DesignSystemGallery` (a developer screen) instead of `ContentView`; the persistence step restores a real root.
+All four foundation layers are in place — design system, localization, persistence, networking — each registered in `AppContainer`. The Xcode template scaffolding (`Item`, `ContentView`) is gone. Next comes feature vertical slices (Hijri date, prayer times, adhkar) built on top.
+
+The app root is still `DeveloperGallery` (`App/DeveloperGallery.swift`), a temporary TabView over the design-system and localization galleries so both can be exercised on device. Delete it, and the two `*Gallery` views, when the first real feature lands.
 
 ## Platforms & toolchain
 
@@ -53,9 +55,13 @@ Core/<Subsystem>/
 
 **Design system: `Core/Theming`.** Views read `@Environment(\.theme)` for colour and use `.appFont(_:weight:)` for type — never a literal `Color`, a hex, or `.font(.system(size:))`. `AppColor` is the only file naming asset colours; the `Colors/` and `Accents/` asset groups provide a namespace so generated symbols don't collide with SwiftUI's `primary`/`separator`. Each colour set carries light and dark values, so no view branches on `colorScheme`. `ThemeManager` (`@Observable @MainActor`) owns the accent and appearance choices and is applied once at the root via `.themed(_:)`.
 
-**One codebase, two platforms.** Platform differences are handled inline with `#if os(macOS)` / `#if os(iOS)`. The template's `ContentView` wraps its content in a `fileprivate NavigationViewWrapper` that expands to `NavigationSplitView` on macOS and passes through on iOS — reuse that seam when a screen needs divergent navigation.
+**One codebase, two platforms.** Platform differences are handled inline with `#if os(macOS)` / `#if os(iOS)`. Both builds must stay green — check macOS too, not just the simulator.
 
-**Persistence is SwiftData, wired at the app root.** `ThawabForGodApp` builds a single `ModelContainer` from an explicit `Schema([...])` and injects it via `.modelContainer(...)`. Every new `@Model` type must be added to that `Schema` array or it will not be persisted. The template reaches the store directly from views via `@Environment(\.modelContext)` and `@Query` — that is scaffolding, not the pattern: new feature code goes through a repository protocol in Domain with a SwiftData-backed implementation in Data, injected by `AppContainer`. Previews use an in-memory container (`.modelContainer(for:inMemory: true)`) so they don't touch the on-disk store; match that in new previews and in any test that needs a context.
+**Localization: `Core/Localization`.** `Text("key")` resolves against the language the *process* launched with, so it cannot switch at runtime. Strings therefore go through `LocalizationManager`, which reads them from the selected language's `.lproj` bundle: `Text(l10n.string(.settingsTitle))`, with `l10n` from `@Environment(LocalizationManager.self)`. Because that lookup touches observable state, every view re-renders the moment the language changes — **never wrap it in a static or global accessor**, which would drop the dependency and silently leave the UI in the old language. Keys are the `L10nKey` enum backed by `Resources/Localizable.xcstrings`; add a case and both translations together (a test asserts every key resolves in both languages). Numbers go through `l10n.string(_ value: Int)`, never interpolation, so Arabic-Indic and Latin digits follow the user's choice. `.localized(_:)` at the root also sets `\.locale` and `\.layoutDirection`, which is what mirrors every screen for Arabic.
+
+**Persistence: `Core/Persistence`, SwiftData, mutable user data only.** Bookmarks, counts, progress — the read-only Quran/adhkar corpus will be a separate bundled store and must not be added to this schema. `PersistenceController` owns the single `ModelContainer` (every new `@Model` type must be listed in its `Schema` or it will not be persisted) and is injected into the environment at the root. Features depend on repository protocols in Domain (`BookmarkRepository`), implemented in Data by a `@ModelActor` actor that runs off the main actor. `@Model` classes stay inside Data and never cross an actor boundary — domain value types do. Repositories buy safety at the cost of `@Query`'s live updates: callers re-fetch after a mutation. Tests and previews build a container with `PersistenceController(inMemory: true)`.
+
+**Networking: `Core/Networking`, optional by design.** No core feature may require it. `HTTPClient` (Domain protocol, `URLSessionHTTPClient` in Data) does GET into a `Decodable`, mapping everything onto `HTTPError` — `.transport`, `.status`, `.decoding`, plus `isRecoverable` for retry decisions — and re-throws `CancellationError` for cancelled tasks. `ReachabilityMonitor` (`@Observable @MainActor`, `NWPathMonitor`) exists to gate online-only affordances, never to block core features. Tests drive it through `MockURLProtocol` on an ephemeral session; that suite is `.serialized` because the mock's handler is class-level state.
 
 ## Conventions
 
@@ -63,8 +69,8 @@ Core/<Subsystem>/
 - **State:** Observation framework (`@Observable`) for ViewModels; `@State` / `@Binding` / `@Environment` in views. Do not use `ObservableObject` / `@Published` in new code.
 - **Views:** keep `body` small. Extract any subview over ~60 lines or reused. Avoid `AnyView` — use `@ViewBuilder` or a `switch` over an enum instead.
 - Every repository/service has a protocol (Domain) + an implementation (Data).
-- **Localization:** Arabic + English via String Catalogs; build every screen to mirror for RTL. Never hardcode user-facing strings.
-- **Numbers:** route through a formatter that switches Arabic-Indic / Latin digits.
+- **Localization:** Arabic + English via the String Catalog; build every screen to mirror for RTL. Never hardcode user-facing strings — add an `L10nKey` case. `Text(verbatim:)` is only for developer-facing screens.
+- **Numbers:** route through `LocalizationManager` / `NumberFormattingService`, never string interpolation.
 
 ## Prayer times
 
@@ -130,4 +136,4 @@ Two frameworks, deliberately: `ThawabForGodTests` uses **Swift Testing** (`impor
 - Don't use APIs newer than the deployment target (iOS 17.0 / macOS 15.0).
 - Don't put SwiftUI / UIKit imports in Domain.
 - Don't hardcode a colour, hex value, or font size in a view — go through `@Environment(\.theme)` and `.appFont(_:weight:)`.
-- Don't hand-edit `project.pbxproj` or change signing settings. The project uses file-system synchronized groups, so new files are picked up automatically — just create them in the right folder, no target registration needed.
+- Don't hand-edit `project.pbxproj` or change signing settings. The project uses file-system synchronized groups, so new files are picked up automatically — just create them in the right folder, no target registration needed. (The String Catalog ships Arabic without touching `knownRegions`, which is still `(en, Base)` — verified in the built bundle.)

@@ -26,9 +26,12 @@ nonisolated enum AccentPalette: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Developer-facing label for the design-system gallery only.
-    /// User-facing labels arrive with the string catalog in the localization step.
-    var developerLabel: String {
-        rawValue.capitalized
+    var labelKey: L10nKey {
+        switch self {
+        case .amber: .accentAmber
+        case .emerald: .accentEmerald
+        case .sapphire: .accentSapphire
+        case .rose: .accentRose
+        }
     }
 }

@@ -15,8 +15,11 @@ nonisolated enum AppearanceOverride: String, CaseIterable, Identifiable, Sendabl
 
     var id: String { rawValue }
 
-    /// Developer-facing label for the design-system gallery only.
-    var developerLabel: String {
-        rawValue.capitalized
+    var labelKey: L10nKey {
+        switch self {
+        case .system: .appearanceSystem
+        case .light: .appearanceLight
+        case .dark: .appearanceDark
+        }
     }
 }
