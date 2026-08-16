@@ -112,7 +112,8 @@ struct LocalizationGallery: View {
     let settingsStore = InMemorySettingsStore()
     let localizationManager = LocalizationManager(
         settingsStore: settingsStore,
-        numberFormatting: LocaleNumberFormattingService()
+        numberFormatting: LocaleNumberFormattingService(),
+        timeFormatting: LocaleTimeFormattingService()
     )
 
     LocalizationGallery()

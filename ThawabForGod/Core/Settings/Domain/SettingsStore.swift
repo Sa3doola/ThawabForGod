@@ -11,6 +11,13 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case appearance
     case language
     case numberSystem
+
+    // Seeded by onboarding, read from then on by prayer times and (later) Settings.
+    case onboardingCompleted
+    case calculationMethod
+    case asrMadhab
+    case latitude
+    case longitude
 }
 
 /// Small key/value store for user preferences.
@@ -23,4 +30,7 @@ nonisolated protocol SettingsStore: Sendable {
 
     func bool(for key: SettingsKey) -> Bool?
     func set(_ value: Bool?, for key: SettingsKey)
+
+    func double(for key: SettingsKey) -> Double?
+    func set(_ value: Double?, for key: SettingsKey)
 }

@@ -148,7 +148,8 @@ private struct Swatch: View {
         .localized(
             LocalizationManager(
                 settingsStore: settingsStore,
-                numberFormatting: LocaleNumberFormattingService()
+                numberFormatting: LocaleNumberFormattingService(),
+                timeFormatting: LocaleTimeFormattingService()
             )
         )
 }

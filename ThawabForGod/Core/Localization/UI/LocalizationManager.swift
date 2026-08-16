@@ -24,10 +24,16 @@ final class LocalizationManager {
 
     @ObservationIgnored private let settingsStore: any SettingsStore
     @ObservationIgnored private let numberFormatting: any NumberFormattingService
+    @ObservationIgnored private let timeFormatting: any TimeFormattingService
 
-    init(settingsStore: any SettingsStore, numberFormatting: any NumberFormattingService) {
+    init(
+        settingsStore: any SettingsStore,
+        numberFormatting: any NumberFormattingService,
+        timeFormatting: any TimeFormattingService
+    ) {
         self.settingsStore = settingsStore
         self.numberFormatting = numberFormatting
+        self.timeFormatting = timeFormatting
 
         let language = settingsStore.string(for: .language)
             .flatMap(AppLanguage.init(rawValue:)) ?? .preferred
@@ -67,11 +73,25 @@ final class LocalizationManager {
         String(localized: String.LocalizationValue(key.rawValue), bundle: bundle, locale: locale)
     }
 
-    func string(_ value: Int) -> String {
-        numberFormatting.string(from: value, system: numberSystem)
+    /// - Parameter grouped: pass `false` for a number that names rather than counts — a year,
+    ///   a page, an ayah — where a thousands separator would be wrong in every locale.
+    func string(_ value: Int, grouped: Bool = true) -> String {
+        numberFormatting.string(from: value, grouped: grouped, system: numberSystem)
     }
 
     func string(_ value: Double, fractionDigits: Int = 1) -> String {
         numberFormatting.string(from: value, fractionDigits: fractionDigits, system: numberSystem)
+    }
+
+    /// A clock time in the user's language and digits. Prefer this over `Text(date, style:)`,
+    /// which can only follow the locale and so cannot honour a digit choice made separately
+    /// from the language.
+    func timeString(_ date: Date) -> String {
+        timeFormatting.timeString(from: date, language: language, system: numberSystem)
+    }
+
+    /// A remaining duration as `h:mm:ss`.
+    func countdownString(_ interval: TimeInterval) -> String {
+        timeFormatting.countdownString(from: interval, system: numberSystem)
     }
 }

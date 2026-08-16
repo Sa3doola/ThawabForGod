@@ -40,4 +40,18 @@ nonisolated struct UserDefaultsSettingsStore: SettingsStore {
             defaults.removeObject(forKey: key.rawValue)
         }
     }
+
+    func double(for key: SettingsKey) -> Double? {
+        // Same reason as `bool`: `double(forKey:)` reports 0 for an unset key, and 0 is a
+        // perfectly good latitude.
+        defaults.object(forKey: key.rawValue) as? Double
+    }
+
+    func set(_ value: Double?, for key: SettingsKey) {
+        if let value {
+            defaults.set(value, forKey: key.rawValue)
+        } else {
+            defaults.removeObject(forKey: key.rawValue)
+        }
+    }
 }

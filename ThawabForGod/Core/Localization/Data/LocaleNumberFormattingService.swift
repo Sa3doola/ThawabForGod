@@ -12,24 +12,36 @@ import Foundation
 /// concurrent *formatting* under that condition. Building them once matters — a tasbih
 /// counter formats on every tap.
 nonisolated final class LocaleNumberFormattingService: NumberFormattingService, @unchecked Sendable {
-    private let integerFormatters: [NumberSystem: NumberFormatter]
+    private let groupedFormatters: [NumberSystem: NumberFormatter]
+
+    /// For numbers that name rather than count — years, page numbers — where a thousands
+    /// separator is simply wrong.
+    private let ungroupedFormatters: [NumberSystem: NumberFormatter]
 
     init() {
-        var integers: [NumberSystem: NumberFormatter] = [:]
-
-        for system in NumberSystem.allCases {
-            let integer = NumberFormatter()
-            integer.locale = Locale(identifier: system.localeIdentifier)
-            integer.numberStyle = .decimal
-            integer.maximumFractionDigits = 0
-            integers[system] = integer
-        }
-
-        self.integerFormatters = integers
+        self.groupedFormatters = Self.integerFormatters(grouped: true)
+        self.ungroupedFormatters = Self.integerFormatters(grouped: false)
     }
 
-    func string(from value: Int, system: NumberSystem) -> String {
-        guard let formatter = integerFormatters[system],
+    private static func integerFormatters(grouped: Bool) -> [NumberSystem: NumberFormatter] {
+        var formatters: [NumberSystem: NumberFormatter] = [:]
+
+        for system in NumberSystem.allCases {
+            let formatter = NumberFormatter()
+            formatter.locale = Locale(identifier: system.localeIdentifier)
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 0
+            formatter.usesGroupingSeparator = grouped
+            formatters[system] = formatter
+        }
+
+        return formatters
+    }
+
+    func string(from value: Int, grouped: Bool, system: NumberSystem) -> String {
+        let formatters = grouped ? groupedFormatters : ungroupedFormatters
+
+        guard let formatter = formatters[system],
               let formatted = formatter.string(from: NSNumber(value: value)) else {
             return String(value)
         }

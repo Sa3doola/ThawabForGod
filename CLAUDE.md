@@ -19,9 +19,16 @@ When a change is both — e.g. a view that kicks off async loading — consult b
 
 ## Project state
 
-All four foundation layers are in place — design system, localization, persistence, networking — each registered in `AppContainer`. The Xcode template scaffolding (`Item`, `ContentView`) is gone. Next comes feature vertical slices (Hijri date, prayer times, adhkar) built on top.
+Foundation layers: design system, localization (strings, digits, clock times), persistence, networking, settings, location, notifications — each registered in `AppContainer`.
 
-The app root is still `DeveloperGallery` (`App/DeveloperGallery.swift`), a temporary TabView over the design-system and localization galleries so both can be exercised on device. Delete it, and the two `*Gallery` views, when the first real feature lands.
+Two vertical slices are built:
+
+- **Home / prayer times** — `Core/PrayerTimes` (Domain + Data, Adhan-backed) and `Features/Home`. Times are computed on device; the engine also supplies the Qibla bearing, so the Qibla slice reuses it rather than adding a second copy of the maths.
+- **Onboarding** — `Features/Onboarding`, gated on a persisted completion flag. `AppRouter` reads that flag once at launch and `RootView` switches between the two.
+
+Next: TipKit (`TipsService`), then Hijri date, then the rolling notification window. `LocationService` exists and is used for onboarding's permission prompt; wiring live location into Home is still its own slice — Home reads the coordinates onboarding seeded, falling back to Makkah.
+
+`DeveloperGallery` is gone. `DesignSystemGallery` and `LocalizationGallery` remain as preview-only files — they are the only way to exercise accent, appearance and language until the Settings slice lands, and their `#Preview`s keep them compiling. Delete them once Settings ships.
 
 ## Platforms & toolchain
 
@@ -29,7 +36,7 @@ The app root is still `DeveloperGallery` (`App/DeveloperGallery.swift`), a tempo
 - Concurrency: **no data races.** Prefer async/await and structured concurrency; do not add Combine or completion-handler APIs to new code.
 - Actual build settings today: `SWIFT_VERSION = 5.0`, `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`, `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES`. Strict concurrency checking is **not** yet set to `complete` and the language mode is **not** yet Swift 6 — write code as if it were (explicit isolation, `Sendable` where values cross boundaries) so the flip is a non-event.
 - Because the module default is `MainActor`, declarations are implicitly main-actor-isolated unless annotated. Background work needs an explicit `nonisolated` or a detached task; don't assume a type is concurrency-free just because it carries no annotation. UI-facing types should still say `@MainActor` explicitly where it documents intent.
-- No linter, formatter, CocoaPods, or CI. No SPM dependencies yet — Adhan will be the first.
+- No linter, formatter, CocoaPods, or CI. One SPM dependency: **Adhan** (`batoulapps/adhan-swift`, MIT, upToNextMajor from 1.5.0). Xcode has no CLI for adding packages, so if another is ever needed, add it through Xcode's UI — or programmatically with the `xcodeproj` Ruby gem, which writes the same structures Xcode does. Never by hand.
 
 ## Architecture — Clean Architecture, MVVM-C
 
@@ -51,7 +58,7 @@ Core/<Subsystem>/
   UI/       SwiftUI glue — @Observable @MainActor managers, @Entry environment values, modifiers
 ```
 
-**All user preferences go through `SettingsStore`** (`Core/Settings/Domain`) — a `nonisolated` key/value protocol with a `UserDefaults` implementation and an `InMemorySettingsStore` for previews and tests. Add a case to `SettingsKey`; never touch `UserDefaults` directly and never invent a second settings path.
+**All user preferences go through `SettingsStore`** (`Core/Settings/Domain`) — a `nonisolated` key/value protocol (string, bool, double) with a `UserDefaults` implementation and an `InMemorySettingsStore` for previews and tests. Add a case to `SettingsKey`; never touch `UserDefaults` directly and never invent a second settings path. **Only write a key the user actually chose.** A stored preference outranks the device forever, so persisting a computed default silently converts "no preference" into a choice that cannot be undone — onboarding used to seed `language`, `numberSystem`, `accentPalette` and `appearance` from whatever was in effect at first launch, which left anyone who set the app to Arabic in iOS Settings stuck in English. It now writes only what it asked about (calculation method, madhab, coordinates), and `LocalizationManager` / `ThemeManager` fall back to the device until Settings ships and the user picks. Note the `object(forKey:)` casts in the `UserDefaults` implementation: `bool(forKey:)` and `double(forKey:)` cannot tell "false"/"0" from "unset", and 0 is a valid latitude.
 
 **Design system: `Core/Theming`.** Views read `@Environment(\.theme)` for colour and use `.appFont(_:weight:)` for type — never a literal `Color`, a hex, or `.font(.system(size:))`. `AppColor` is the only file naming asset colours; the `Colors/` and `Accents/` asset groups provide a namespace so generated symbols don't collide with SwiftUI's `primary`/`separator`. Each colour set carries light and dark values, so no view branches on `colorScheme`. `ThemeManager` (`@Observable @MainActor`) owns the accent and appearance choices and is applied once at the root via `.themed(_:)`.
 
@@ -74,7 +81,13 @@ Core/<Subsystem>/
 
 ## Prayer times
 
-Computed on-device with the **Adhan** library (MIT) — no API. The engine lives in a shared type in `Core`, to be extracted into a Swift package later. Location via CoreLocation; reverse-geocode only for the display name.
+Computed on-device with the **Adhan** library (MIT) — no API. `Core/PrayerTimes/Data/PrayerTimeEngine` is the **only file that imports Adhan**; everything above it speaks in domain entities (`Prayer`, `PrayerSchedule`, `Coordinates`, `CalculationConfig`), which is what keeps the library swappable and lets the whole slice be tested without it. The engine builds its own Gregorian calendar in the user's time zone — reading components through `Calendar.current` would hand Adhan Hijri numbers on a device set to the Islamic calendar.
+
+Next-prayer roll-over (after Isha → tomorrow's Fajr) lives in `GetPrayerScheduleUseCase`, not in `PrayerSchedule`, because it needs a second day's times. `PrayerSchedule` answers only within its own day and returns `nil` past Isha.
+
+Location via CoreLocation behind `LocationService` (`Core/Location`); reverse-geocode only for the display name. `CoreLocationService` is the only file that imports CoreLocation.
+
+**Displayed times and countdowns go through `LocalizationManager.timeString(_:)` / `.countdownString(_:)`**, never `Text(date, style:)` — the digit system is a choice separate from the language, which a single `Locale` cannot express. Countdowns come back wrapped in Unicode directional isolates; without them the bidi algorithm reorders `6:03:49` into `6:0 3:49` on an Arabic screen.
 
 ## Build & test — run these to verify every change
 

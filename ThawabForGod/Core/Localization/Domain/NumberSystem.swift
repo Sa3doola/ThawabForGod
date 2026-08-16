@@ -23,6 +23,15 @@ nonisolated enum NumberSystem: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// The Unicode numbering-system tag, for composing a locale around some *other*
+    /// language — a clock time has to follow the user's language and their digits at once.
+    var numberingSystemTag: String {
+        switch self {
+        case .arabicIndic: "arab"
+        case .latin: "latn"
+        }
+    }
+
     var labelKey: L10nKey {
         switch self {
         case .arabicIndic: .numbersArabicIndic

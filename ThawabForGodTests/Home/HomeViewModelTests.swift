@@ -1,0 +1,277 @@
+//
+//  HomeViewModelTests.swift
+//  ThawabForGodTests
+//
+
+import Foundation
+import Testing
+@testable import ThawabForGod
+
+@MainActor
+struct HomeViewModelTests {
+
+    private let today = PrayerTimeFixtures.day(2026, 6, 15)
+    private let tomorrow = PrayerTimeFixtures.day(2026, 6, 16)
+
+    private func makeViewModel(
+        at now: Date,
+        days: [Date]? = nil,
+        failure: PrayerTimeError? = nil,
+        hijriDates: any HijriDateServicing = StubHijriDateService(),
+        tips: any HomeTipReporting = SpyHomeTipReporter()
+    ) -> (HomeViewModel, TestClock) {
+        let repository: StubPrayerTimeRepository = if let failure {
+            StubPrayerTimeRepository(failure: failure)
+        } else {
+            PrayerTimeFixtures.repository(days: days ?? [today, tomorrow])
+        }
+
+        let clock = TestClock(now)
+        let viewModel = HomeViewModel(
+            useCase: GetPrayerScheduleUseCase(
+                repository: repository,
+                calendar: PrayerTimeFixtures.calendar
+            ),
+            coordinates: .makkah,
+            hijriDates: hijriDates,
+            config: .default,
+            tips: tips,
+            now: clock.provider
+        )
+
+        return (viewModel, clock)
+    }
+
+    private func ready(_ viewModel: HomeViewModel) throws -> HomeViewModel.Day {
+        guard case .ready(let day) = viewModel.phase else {
+            Issue.record("expected a loaded day, got \(viewModel.phase)")
+            throw CancellationError()
+        }
+        return day
+    }
+
+    // MARK: Loading
+
+    @Test func itStartsLoading() {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
+
+        #expect(viewModel.phase == .loading)
+    }
+
+    @Test func refreshingPublishesTheDayTheCurrentPrayerAndTheNext() throws {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
+
+        viewModel.refresh()
+        let day = try ready(viewModel)
+
+        #expect(day.schedule.times.count == 6)
+        #expect(day.currentPrayer == .dhuhr)
+        #expect(day.upcoming.prayer == .asr)
+        #expect(day.upcoming.isTomorrow == false)
+    }
+
+    @Test func theCountdownIsTheGapToTheNextPrayer() throws {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
+
+        viewModel.refresh()
+
+        // 13:00 → asr at 15:30 is two and a half hours.
+        #expect(viewModel.countdown == 2.5 * 3600)
+    }
+
+    @Test func aFailureToComputeBecomesTheUnavailableState() {
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            failure: .notComputable(today)
+        )
+
+        viewModel.refresh()
+
+        #expect(viewModel.phase == .unavailable)
+        #expect(viewModel.countdown == 0)
+    }
+
+    // MARK: Ticking
+
+    @Test func tickingFollowsTheClockDown() throws {
+        let (viewModel, clock) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 15))
+
+        viewModel.refresh()
+        #expect(viewModel.countdown == 30 * 60)
+
+        clock.advance(by: 60)
+        viewModel.tick()
+
+        #expect(viewModel.countdown == 29 * 60)
+        // Still the same prayer, so the loaded day is untouched.
+        #expect(try ready(viewModel).upcoming.prayer == .asr)
+    }
+
+    @Test func tickingPastAPrayerRetargetsTheCountdown() throws {
+        let (viewModel, clock) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 15, minute: 29))
+
+        viewModel.refresh()
+        #expect(try ready(viewModel).upcoming.prayer == .asr)
+
+        // Step over Asr.
+        clock.move(to: PrayerTimeFixtures.instant(today, hour: 15, minute: 31))
+        viewModel.tick()
+
+        let day = try ready(viewModel)
+        #expect(day.currentPrayer == .asr)
+        #expect(day.upcoming.prayer == .maghrib)
+        #expect(viewModel.countdown == (2 * 3600) + (29 * 60))
+    }
+
+    @Test func tickingDoesNothingWhileUnavailable() {
+        let (viewModel, clock) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            failure: .notComputable(today)
+        )
+
+        viewModel.refresh()
+        clock.advance(by: 60)
+        viewModel.tick()
+
+        #expect(viewModel.phase == .unavailable)
+    }
+
+    // MARK: After Isha
+
+    @Test func afterIshaTheCountdownTargetsTomorrowsFajr() throws {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 22))
+
+        viewModel.refresh()
+        let day = try ready(viewModel)
+
+        #expect(day.currentPrayer == .isha)
+        #expect(day.upcoming.prayer == .fajr)
+        #expect(day.upcoming.isTomorrow)
+        // 22:00 → 05:00 the next morning.
+        #expect(viewModel.countdown == 7 * 3600)
+    }
+
+    /// The row highlight and the countdown must not disagree: after Isha the countdown says
+    /// "Fajr", but *today's* Fajr row is long past and must not be marked as next.
+    @Test func tomorrowsFajrDoesNotHighlightTodaysFajrRow() throws {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 22))
+
+        viewModel.refresh()
+        let day = try ready(viewModel)
+
+        #expect(day.isUpcoming(.fajr) == false)
+        #expect(day.isCurrent(.isha))
+    }
+
+    @Test func beforeFajrNothingIsCurrentAndFajrIsNext() throws {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 3))
+
+        viewModel.refresh()
+        let day = try ready(viewModel)
+
+        #expect(day.currentPrayer == nil)
+        #expect(day.upcoming.prayer == .fajr)
+        #expect(day.isUpcoming(.fajr))
+        #expect(viewModel.countdown == 2 * 3600)
+    }
+
+    // MARK: Hijri header
+
+    /// Available from construction, before anything has been refreshed — the header must not
+    /// wait for the loading state to clear.
+    @Test func theHijriDateIsResolvedBeforeTheFirstRefresh() {
+        let hijri = StubHijriDateService(
+            hijriDate: HijriDate(day: 10, month: .muharram, year: 1447),
+            events: [.stub(id: "ashura")]
+        )
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13), hijriDates: hijri)
+
+        #expect(viewModel.phase == .loading)
+        #expect(viewModel.hijriDate == HijriDate(day: 10, month: .muharram, year: 1447))
+        #expect(viewModel.todaysEvents.map(\.id) == ["ashura"])
+    }
+
+    @Test func mostDaysCarryNoEvents() {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
+
+        viewModel.refresh()
+
+        #expect(viewModel.todaysEvents.isEmpty)
+    }
+
+    /// The date is not part of `Phase`, so it survives the times failing to compute — a screen
+    /// that cannot show prayer times should still know what day it is.
+    @Test func theHijriDateSurvivesAnUnavailableDay() {
+        let hijri = StubHijriDateService(
+            hijriDate: HijriDate(day: 1, month: .ramadan, year: 1447),
+            events: [.stub(id: "ramadan_start", noteKey: .eventNoteMoonSighting, month: .ramadan, day: 1)]
+        )
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            failure: .notComputable(today),
+            hijriDates: hijri
+        )
+
+        viewModel.refresh()
+
+        #expect(viewModel.phase == .unavailable)
+        #expect(viewModel.hijriDate == HijriDate(day: 1, month: .ramadan, year: 1447))
+        #expect(viewModel.todaysEvents.first?.noteKey == .eventNoteMoonSighting)
+    }
+
+    // MARK: Tip signals
+
+    /// The input to the "opened a few times" rule. Donated once per appearance — the ticking
+    /// loop must not inflate it.
+    @Test(.timeLimit(.minutes(1)))
+    func startingDonatesOneScreenOpening() async {
+        let tips = SpyHomeTipReporter()
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13), tips: tips)
+
+        // `start()` ticks until cancelled, so it is driven as the view drives it: spawned, and
+        // cancelled once the donation — which happens before the first sleep — has landed.
+        let task = Task { await viewModel.start() }
+        while tips.opens == 0 {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(tips.opens == 1)
+    }
+
+    @Test func refreshingReportsThatTheCountdownIsWithinToday() {
+        let tips = SpyHomeTipReporter()
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13), tips: tips)
+
+        viewModel.refresh()
+
+        #expect(tips.isCountingDownToTomorrow == false)
+    }
+
+    /// The other half of the tip's eligibility: it may only appear while the headline really
+    /// is pointing at tomorrow.
+    @Test func afterIshaTheRolloverIsReported() {
+        let tips = SpyHomeTipReporter()
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 22), tips: tips)
+
+        viewModel.refresh()
+
+        #expect(tips.isCountingDownToTomorrow == true)
+    }
+
+    /// A day that could not be computed has no headline to explain, so the flag must come back
+    /// down rather than keep a stale `true` from the last successful refresh.
+    @Test func anUnavailableDayClearsTheRollover() {
+        let tips = SpyHomeTipReporter()
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 22),
+            failure: .notComputable(today),
+            tips: tips
+        )
+
+        viewModel.refresh()
+
+        #expect(tips.isCountingDownToTomorrow == false)
+    }
+}

@@ -14,9 +14,7 @@ struct ThawabForGodApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Temporary root: the developer galleries, so the design system and localization
-            // can be checked on device. The first real feature replaces this.
-            DeveloperGallery()
+            RootView(container: container)
                 .themed(container.themeManager)
                 .localized(container.localizationManager)
         }

@@ -1,0 +1,110 @@
+//
+//  LocaleTimeFormattingService.swift
+//  ThawabForGod
+//
+
+import Foundation
+
+/// `DateFormatter`-backed clock times, one formatter per language/digit pairing.
+///
+/// Safety invariant for `@unchecked Sendable`: every formatter is fully configured in `init`
+/// and never mutated afterwards. Foundation documents `DateFormatter` as safe for concurrent
+/// *formatting* under exactly that condition. Building them once is worth the code — a
+/// running countdown reformats a screenful of times every second.
+nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unchecked Sendable {
+    private struct Style: Hashable {
+        let language: AppLanguage
+        let system: NumberSystem
+    }
+
+    private let timeFormatters: [Style: DateFormatter]
+
+    /// Two digits, zero-padded, per numbering system. Padding a countdown by hand would mean
+    /// prepending a Latin `"0"` in front of Arabic-Indic digits.
+    private let paddedFormatters: [NumberSystem: NumberFormatter]
+
+    /// Leading component of a countdown — unpadded, so it reads `9:05`, not `09:05`.
+    private let plainFormatters: [NumberSystem: NumberFormatter]
+
+    init() {
+        var times: [Style: DateFormatter] = [:]
+
+        for language in AppLanguage.allCases {
+            for system in NumberSystem.allCases {
+                let locale = Locale(
+                    identifier: "\(language.rawValue)@numbers=\(system.numberingSystemTag)"
+                )
+
+                let formatter = DateFormatter()
+                formatter.locale = locale
+                // `autoupdatingCurrent`, not `current`: the app can outlive a flight, and
+                // prayer times are meaningless in the departure city's zone.
+                formatter.timeZone = .autoupdatingCurrent
+                // A template rather than a fixed pattern, so 12- or 24-hour form and the
+                // position of the AM/PM marker follow the locale instead of being imposed.
+                formatter.setLocalizedDateFormatFromTemplate("jmm")
+                times[Style(language: language, system: system)] = formatter
+            }
+        }
+
+        self.timeFormatters = times
+        self.paddedFormatters = Self.numberFormatters(minimumIntegerDigits: 2)
+        self.plainFormatters = Self.numberFormatters(minimumIntegerDigits: 1)
+    }
+
+    private static func numberFormatters(minimumIntegerDigits: Int) -> [NumberSystem: NumberFormatter] {
+        var formatters: [NumberSystem: NumberFormatter] = [:]
+
+        for system in NumberSystem.allCases {
+            let formatter = NumberFormatter()
+            formatter.locale = Locale(identifier: system.localeIdentifier)
+            formatter.numberStyle = .none
+            formatter.minimumIntegerDigits = minimumIntegerDigits
+            // A countdown is a clock reading, not a quantity: `1:05:00`, never `1:05:000`.
+            formatter.usesGroupingSeparator = false
+            formatters[system] = formatter
+        }
+
+        return formatters
+    }
+
+    func timeString(from date: Date, language: AppLanguage, system: NumberSystem) -> String {
+        guard let formatter = timeFormatters[Style(language: language, system: system)] else {
+            return ""
+        }
+        return formatter.string(from: date)
+    }
+
+    func countdownString(from interval: TimeInterval, system: NumberSystem) -> String {
+        let total = Int(max(0, interval).rounded(.down))
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let seconds = total % 60
+
+        // Below an hour the hours component is noise, so it is dropped and minutes lead.
+        let components = hours > 0
+            ? [plain(hours, system), padded(minutes, system), padded(seconds, system)]
+            : [plain(minutes, system), padded(seconds, system)]
+
+        return Self.isolatedLeftToRight(components.joined(separator: ":"))
+    }
+
+    /// Wraps a clock reading so the bidirectional algorithm leaves its parts in order.
+    ///
+    /// Without this, `6:06:57` rendered inside an Arabic screen comes out as `٦:٠ ٦:٥٧` —
+    /// two colons make the run ambiguous, and the surrounding right-to-left paragraph
+    /// reorders the groups. A duration is read left to right in both languages, so it is
+    /// isolated rather than left to inherit the paragraph's direction. The digits themselves
+    /// are unaffected and still follow the user's choice.
+    private static func isolatedLeftToRight(_ string: String) -> String {
+        "\u{2066}\(string)\u{2069}" // LEFT-TO-RIGHT ISOLATE … POP DIRECTIONAL ISOLATE
+    }
+
+    private func plain(_ value: Int, _ system: NumberSystem) -> String {
+        plainFormatters[system]?.string(from: NSNumber(value: value)) ?? String(value)
+    }
+
+    private func padded(_ value: Int, _ system: NumberSystem) -> String {
+        paddedFormatters[system]?.string(from: NSNumber(value: value)) ?? String(format: "%02d", value)
+    }
+}

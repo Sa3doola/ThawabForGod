@@ -1,0 +1,68 @@
+[
+  {
+    "id": "islamic_new_year",
+    "nameKey": "event_islamic_new_year",
+    "month": 1,
+    "day": 1
+  },
+  {
+    "id": "ashura",
+    "nameKey": "event_ashura",
+    "month": 1,
+    "day": 10
+  },
+  {
+    "id": "mawlid",
+    "nameKey": "event_mawlid",
+    "noteKey": "event_note_observance_varies",
+    "month": 3,
+    "day": 12
+  },
+  {
+    "id": "isra_miraj",
+    "nameKey": "event_isra_miraj",
+    "month": 7,
+    "day": 27
+  },
+  {
+    "id": "nisf_shaban",
+    "nameKey": "event_nisf_shaban",
+    "month": 8,
+    "day": 15
+  },
+  {
+    "id": "ramadan_start",
+    "nameKey": "event_ramadan_start",
+    "noteKey": "event_note_moon_sighting",
+    "month": 9,
+    "day": 1
+  },
+  {
+    "id": "laylat_al_qadr",
+    "nameKey": "event_laylat_al_qadr",
+    "noteKey": "event_note_last_ten_nights",
+    "month": 9,
+    "day": 27
+  },
+  {
+    "id": "eid_al_fitr",
+    "nameKey": "event_eid_al_fitr",
+    "noteKey": "event_note_moon_sighting",
+    "month": 10,
+    "day": 1
+  },
+  {
+    "id": "arafah",
+    "nameKey": "event_arafah",
+    "noteKey": "event_note_moon_sighting",
+    "month": 12,
+    "day": 9
+  },
+  {
+    "id": "eid_al_adha",
+    "nameKey": "event_eid_al_adha",
+    "noteKey": "event_note_moon_sighting",
+    "month": 12,
+    "day": 10
+  }
+]

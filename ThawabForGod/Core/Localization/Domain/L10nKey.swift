@@ -9,7 +9,9 @@ import Foundation
 ///
 /// Raw values are the keys in `Localizable.xcstrings`. Features never pass raw strings
 /// around, and a missing key is a compile error rather than a wrong-looking screen.
-nonisolated enum L10nKey: String, CaseIterable, Sendable {
+/// `Decodable` so bundled reference data — the Islamic events table — can name a key by its
+/// raw value. A key that does not exist fails to decode, and the table's own test catches it.
+nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case appName = "app_name"
 
     case settingsTitle = "settings_title"
@@ -37,4 +39,112 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable {
     case typeScaleTitle = "type_scale_title"
     case sampleGreeting = "sample_greeting"
     case sampleCount = "sample_count"
+
+    // MARK: Prayer times
+
+    case homeTitle = "home_title"
+    case prayerFajr = "prayer_fajr"
+    case prayerSunrise = "prayer_sunrise"
+    case prayerDhuhr = "prayer_dhuhr"
+    case prayerAsr = "prayer_asr"
+    case prayerMaghrib = "prayer_maghrib"
+    case prayerIsha = "prayer_isha"
+    case nextPrayerLabel = "next_prayer_label"
+    case currentPrayerLabel = "current_prayer_label"
+    case tomorrowLabel = "tomorrow_label"
+    case prayerTimesUnavailable = "prayer_times_unavailable"
+    case prayerTimesLoading = "prayer_times_loading"
+
+    case madhabLabel = "madhab_label"
+    case madhabShafi = "madhab_shafi"
+    case madhabHanafi = "madhab_hanafi"
+
+    case methodLabel = "method_label"
+    case methodMuslimWorldLeague = "method_muslim_world_league"
+    case methodEgyptian = "method_egyptian"
+    case methodKarachi = "method_karachi"
+    case methodUmmAlQura = "method_umm_al_qura"
+    case methodDubai = "method_dubai"
+    case methodMoonsightingCommittee = "method_moonsighting_committee"
+    case methodNorthAmerica = "method_north_america"
+    case methodKuwait = "method_kuwait"
+    case methodQatar = "method_qatar"
+    case methodSingapore = "method_singapore"
+    case methodTehran = "method_tehran"
+    case methodTurkey = "method_turkey"
+
+    // MARK: Onboarding
+
+    case onboardingWelcomeTitle = "onboarding_welcome_title"
+    case onboardingWelcomeBody = "onboarding_welcome_body"
+    case onboardingOfflineTitle = "onboarding_offline_title"
+    case onboardingOfflineBody = "onboarding_offline_body"
+    case onboardingPrivacyTitle = "onboarding_privacy_title"
+    case onboardingPrivacyBody = "onboarding_privacy_body"
+
+    case onboardingLocationTitle = "onboarding_location_title"
+    case onboardingLocationBody = "onboarding_location_body"
+    case onboardingLocationAllow = "onboarding_location_allow"
+    case onboardingLocationGranted = "onboarding_location_granted"
+    case onboardingLocationDeniedBody = "onboarding_location_denied_body"
+    case onboardingManualTitle = "onboarding_manual_title"
+    case onboardingLatitude = "onboarding_latitude"
+    case onboardingLongitude = "onboarding_longitude"
+    case onboardingManualSave = "onboarding_manual_save"
+    case onboardingManualSaved = "onboarding_manual_saved"
+
+    case onboardingNotificationsTitle = "onboarding_notifications_title"
+    case onboardingNotificationsBody = "onboarding_notifications_body"
+    case onboardingNotificationsAllow = "onboarding_notifications_allow"
+    case onboardingNotificationsGranted = "onboarding_notifications_granted"
+    case onboardingNotificationsDeniedBody = "onboarding_notifications_denied_body"
+
+    case onboardingMethodTitle = "onboarding_method_title"
+    case onboardingMethodBody = "onboarding_method_body"
+
+    case onboardingContinue = "onboarding_continue"
+    case onboardingBack = "onboarding_back"
+    case onboardingSkip = "onboarding_skip"
+    case onboardingFinish = "onboarding_finish"
+
+    // MARK: Tips
+
+    case tipHomeTomorrowTitle = "tip_home_tomorrow_title"
+    case tipHomeTomorrowMessage = "tip_home_tomorrow_message"
+    case tipOnboardingMethodTitle = "tip_onboarding_method_title"
+    case tipOnboardingMethodMessage = "tip_onboarding_method_message"
+    case tipHomeHijriTitle = "tip_home_hijri_title"
+    case tipHomeHijriMessage = "tip_home_hijri_message"
+
+    // MARK: Hijri calendar
+
+    case hijriMonthMuharram = "hijri_month_muharram"
+    case hijriMonthSafar = "hijri_month_safar"
+    case hijriMonthRabiAlAwwal = "hijri_month_rabi_al_awwal"
+    case hijriMonthRabiAlThani = "hijri_month_rabi_al_thani"
+    case hijriMonthJumadaAlUla = "hijri_month_jumada_al_ula"
+    case hijriMonthJumadaAlAkhirah = "hijri_month_jumada_al_akhirah"
+    case hijriMonthRajab = "hijri_month_rajab"
+    case hijriMonthShaban = "hijri_month_shaban"
+    case hijriMonthRamadan = "hijri_month_ramadan"
+    case hijriMonthShawwal = "hijri_month_shawwal"
+    case hijriMonthDhulQadah = "hijri_month_dhul_qadah"
+    case hijriMonthDhulHijjah = "hijri_month_dhul_hijjah"
+
+    // MARK: Islamic events
+
+    case eventIslamicNewYear = "event_islamic_new_year"
+    case eventAshura = "event_ashura"
+    case eventMawlid = "event_mawlid"
+    case eventIsraMiraj = "event_isra_miraj"
+    case eventNisfShaban = "event_nisf_shaban"
+    case eventRamadanStart = "event_ramadan_start"
+    case eventLaylatAlQadr = "event_laylat_al_qadr"
+    case eventEidAlFitr = "event_eid_al_fitr"
+    case eventArafah = "event_arafah"
+    case eventEidAlAdha = "event_eid_al_adha"
+
+    case eventNoteMoonSighting = "event_note_moon_sighting"
+    case eventNoteObservanceVaries = "event_note_observance_varies"
+    case eventNoteLastTenNights = "event_note_last_ten_nights"
 }

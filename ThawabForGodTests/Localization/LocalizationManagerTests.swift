@@ -11,7 +11,11 @@ import Testing
 struct LocalizationManagerTests {
 
     private func makeManager(_ store: InMemorySettingsStore = InMemorySettingsStore()) -> LocalizationManager {
-        LocalizationManager(settingsStore: store, numberFormatting: LocaleNumberFormattingService())
+        LocalizationManager(
+            settingsStore: store,
+            numberFormatting: LocaleNumberFormattingService(),
+            timeFormatting: LocaleTimeFormattingService()
+        )
     }
 
     @Test func restoresStoredChoices() {

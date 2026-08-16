@@ -42,6 +42,13 @@ struct NumberFormattingTests {
         #expect(service.string(from: 1234, system: .arabicIndic) == "١٬٢٣٤")
     }
 
+    /// Grouping is right for a count and wrong for a year: a Hijri year rendered as "1,448"
+    /// is a bug users see on the Home screen every day of the 1400s.
+    @Test func groupingCanBeTurnedOffForNumbersThatNameRatherThanCount() {
+        #expect(service.string(from: 1448, grouped: false, system: .latin) == "1448")
+        #expect(service.string(from: 1448, grouped: false, system: .arabicIndic) == "١٤٤٨")
+    }
+
     @Test func honoursFractionDigits() {
         #expect(service.string(from: 21.5, fractionDigits: 1, system: .latin) == "21.5")
         #expect(service.string(from: 21.5, fractionDigits: 0, system: .latin) == "22")

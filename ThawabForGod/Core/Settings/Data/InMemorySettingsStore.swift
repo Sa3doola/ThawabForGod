@@ -16,10 +16,16 @@ nonisolated final class InMemorySettingsStore: SettingsStore, @unchecked Sendabl
     private let lock = NSLock()
     private var strings: [SettingsKey: String] = [:]
     private var bools: [SettingsKey: Bool] = [:]
+    private var doubles: [SettingsKey: Double] = [:]
 
-    init(strings: [SettingsKey: String] = [:], bools: [SettingsKey: Bool] = [:]) {
+    init(
+        strings: [SettingsKey: String] = [:],
+        bools: [SettingsKey: Bool] = [:],
+        doubles: [SettingsKey: Double] = [:]
+    ) {
         self.strings = strings
         self.bools = bools
+        self.doubles = doubles
     }
 
     func string(for key: SettingsKey) -> String? {
@@ -36,5 +42,13 @@ nonisolated final class InMemorySettingsStore: SettingsStore, @unchecked Sendabl
 
     func set(_ value: Bool?, for key: SettingsKey) {
         lock.withLock { bools[key] = value }
+    }
+
+    func double(for key: SettingsKey) -> Double? {
+        lock.withLock { doubles[key] }
+    }
+
+    func set(_ value: Double?, for key: SettingsKey) {
+        lock.withLock { doubles[key] = value }
     }
 }
