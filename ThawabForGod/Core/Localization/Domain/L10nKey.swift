@@ -73,6 +73,42 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case methodTehran = "method_tehran"
     case methodTurkey = "method_turkey"
 
+    // MARK: Qibla
+
+    case qiblaTitle = "qibla_title"
+    case qiblaLocating = "qibla_locating"
+    case qiblaBearingLabel = "qibla_bearing_label"
+    case qiblaDistanceLabel = "qibla_distance_label"
+    case qiblaDistanceUnitKilometres = "qibla_distance_unit_km"
+    case qiblaNorthMarker = "qibla_north_marker"
+    case qiblaNeedleLabel = "qibla_needle_label"
+    case qiblaCompassUnavailable = "qibla_compass_unavailable"
+    case qiblaCalibrationHint = "qibla_calibration_hint"
+    case qiblaLocationNeededBody = "qibla_location_needed_body"
+    case qiblaSetLocation = "qibla_set_location"
+    case qiblaDone = "qibla_done"
+
+    // MARK: Adhkar
+
+    case adhkarTitle = "adhkar_title"
+    case adhkarCategoryMorning = "adhkar_category_morning"
+    case adhkarCategoryMorningSubtitle = "adhkar_category_morning_subtitle"
+    case adhkarCategoryEvening = "adhkar_category_evening"
+    case adhkarCategoryEveningSubtitle = "adhkar_category_evening_subtitle"
+    case adhkarLoading = "adhkar_loading"
+    case adhkarUnavailable = "adhkar_unavailable"
+    case adhkarEmpty = "adhkar_empty"
+    case adhkarSourceLabel = "adhkar_source_label"
+    case adhkarVirtueLabel = "adhkar_virtue_label"
+    case adhkarShowTranslation = "adhkar_show_translation"
+    case adhkarShowTransliteration = "adhkar_show_transliteration"
+    case adhkarProgressLabel = "adhkar_progress_label"
+    case adhkarRepeatLabel = "adhkar_repeat_label"
+    case adhkarCountHint = "adhkar_count_hint"
+    case adhkarCompleted = "adhkar_completed"
+    case adhkarReset = "adhkar_reset"
+    case adhkarVerificationNotice = "adhkar_verification_notice"
+
     // MARK: Onboarding
 
     case onboardingWelcomeTitle = "onboarding_welcome_title"

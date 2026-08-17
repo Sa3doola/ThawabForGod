@@ -23,7 +23,11 @@ struct RootView: View {
         case .home:
             HomeCoordinatorView(
                 coordinator: container.homeCoordinator,
-                viewModel: container.homeViewModel()
+                viewModel: container.homeViewModel(),
+                qiblaCoordinator: container.qiblaCoordinator,
+                qiblaViewModel: container.qiblaViewModel(),
+                adhkarCoordinator: container.adhkarCoordinator,
+                adhkarViewModel: container.adhkarViewModel()
             )
         }
     }

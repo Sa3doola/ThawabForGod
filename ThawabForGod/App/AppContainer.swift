@@ -21,6 +21,7 @@ final class AppContainer {
     let bookmarkRepository: any BookmarkRepository
     let httpClient: any HTTPClient
     let locationService: any LocationService
+    let headingProvider: any HeadingProviding
     let notificationService: any NotificationService
     let tipsService: any TipsServicing
     let hijriDates: any HijriDateServicing
@@ -32,6 +33,27 @@ final class AppContainer {
     let prayerTimeRepository: any PrayerTimeRepositoring
     let getPrayerSchedule: GetPrayerScheduleUseCase
 
+    // MARK: Qibla
+
+    /// Built on the same engine as the prayer times above — one implementation of the Qibla
+    /// formula in the app, not two.
+    let getQiblaInfo: any GetQiblaInfoUseCase
+
+    // MARK: Corpus
+
+    /// The bundled, read-only reference content. Separate from `persistence` above, which is
+    /// SwiftData and holds only what the user changes.
+    ///
+    /// Constructed here and handed to whichever repositories read it, so the file is opened once
+    /// however many features come to depend on it — adhkar today; tasbih, the 99 Names and the
+    /// Quran later. Opening is deferred to the first read, so this line touches no disk.
+    let adhkarCorpus: any CorpusDatabaseProviding
+
+    // MARK: Adhkar
+
+    let adhkarRepository: any AdhkarRepositoring
+    let getAdhkar: GetAdhkarUseCase
+
     // MARK: Onboarding
 
     let onboardingRepository: any OnboardingRepositoring
@@ -42,6 +64,8 @@ final class AppContainer {
 
     let router: AppRouter
     let homeCoordinator = HomeCoordinator()
+    let qiblaCoordinator = QiblaCoordinator()
+    let adhkarCoordinator = AdhkarCoordinator()
 
     /// Where prayer times are computed for when onboarding captured nothing — a user who
     /// skipped the location screen entirely. Replaced by a live reading when the location
@@ -55,9 +79,11 @@ final class AppContainer {
         persistence: PersistenceController = .makeDefault(),
         httpClient: any HTTPClient = URLSessionHTTPClient(),
         locationService: (any LocationService)? = nil,
+        headingProvider: (any HeadingProviding)? = nil,
         notificationService: (any NotificationService)? = nil,
         tipsService: any TipsServicing = TipsService(),
         hijriDates: any HijriDateServicing = HijriDateService(),
+        adhkarCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "adhkar"),
         fallbackCoordinates: Coordinates = .makkah
     ) {
         self.tipsService = tipsService
@@ -72,6 +98,7 @@ final class AppContainer {
         // `CLLocationManager` has real side effects, and a default argument would run it even
         // for a caller supplying its own.
         self.locationService = locationService ?? CoreLocationService()
+        self.headingProvider = headingProvider ?? CoreLocationHeadingProvider()
         self.notificationService = notificationService ?? UserNotificationService()
 
         self.themeManager = ThemeManager(settingsStore: settingsStore)
@@ -91,6 +118,14 @@ final class AppContainer {
         self.prayerTimeEngine = engine
         self.prayerTimeRepository = prayerTimeRepository
         self.getPrayerSchedule = GetPrayerScheduleUseCase(repository: prayerTimeRepository)
+        self.getQiblaInfo = GreatCircleQiblaInfoUseCase(engine: engine)
+
+        // Same three-link shape as the prayer times above, over a database instead of a
+        // calculation: corpus → repository → use case.
+        let adhkarRepository = AdhkarRepository(database: adhkarCorpus)
+        self.adhkarCorpus = adhkarCorpus
+        self.adhkarRepository = adhkarRepository
+        self.getAdhkar = GetAdhkarUseCase(repository: adhkarRepository)
 
         let onboardingRepository = OnboardingRepository(settingsStore: settingsStore)
         self.onboardingRepository = onboardingRepository
@@ -142,6 +177,50 @@ final class AppContainer {
             config: onboardingRepository.seededConfig ?? .default
         )
         cachedHomeViewModel = viewModel
+        return viewModel
+    }
+
+    // MARK: Qibla
+
+    private var cachedQiblaViewModel: QiblaViewModel?
+
+    /// Qibla's view model, built on first use and kept.
+    ///
+    /// Lazy for the same reason as Home's, and seeded from the same place — but with **no**
+    /// `fallbackCoordinates`. Prayer times computed for Makkah are at least a defensible
+    /// placeholder; a Qibla arrow computed for a position the user is not at points confidently
+    /// in the wrong direction, which is worse than admitting there is nothing to point with.
+    func qiblaViewModel() -> QiblaViewModel {
+        if let cachedQiblaViewModel {
+            return cachedQiblaViewModel
+        }
+
+        let viewModel = QiblaViewModel(
+            getQiblaInfo: getQiblaInfo,
+            locationService: locationService,
+            headingProvider: headingProvider,
+            coordinates: onboardingRepository.seededCoordinates
+        )
+        cachedQiblaViewModel = viewModel
+        return viewModel
+    }
+
+    // MARK: Adhkar
+
+    private var cachedAdhkarViewModel: AdhkarViewModel?
+
+    /// Adhkar's view model, built on first use and kept.
+    ///
+    /// Kept rather than rebuilt because the repeat counts live on it: a reader who leaves the
+    /// morning adhkar to check the Qibla and comes back should find their place, and rebuilding
+    /// on every push would silently reset them.
+    func adhkarViewModel() -> AdhkarViewModel {
+        if let cachedAdhkarViewModel {
+            return cachedAdhkarViewModel
+        }
+
+        let viewModel = AdhkarViewModel(useCase: getAdhkar)
+        cachedAdhkarViewModel = viewModel
         return viewModel
     }
 }

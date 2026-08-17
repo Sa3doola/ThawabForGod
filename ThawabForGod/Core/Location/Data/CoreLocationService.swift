@@ -8,9 +8,10 @@ import Foundation
 
 /// `CLLocationManager` behind the `LocationService` protocol.
 ///
-/// The only file in the app that imports CoreLocation, for the same reason `PrayerTimeEngine`
-/// is the only one that imports Adhan: the delegate-and-callback shape stops here, and
-/// everything above sees `async` functions returning domain values.
+/// CoreLocation is confined to `Core/Location/Data` — this file and
+/// `CoreLocationHeadingProvider` — for the same reason `PrayerTimeEngine` is the only file that
+/// imports Adhan: the delegate-and-callback shape stops here, and everything above sees `async`
+/// functions and streams carrying domain values.
 ///
 /// Accuracy is deliberately coarse. Prayer times and the Qibla shift by seconds and fractions
 /// of a degree over a kilometre, so asking for a precise fix would spend battery and privacy

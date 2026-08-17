@@ -86,6 +86,14 @@ struct PrayerTimeEngineTests {
         #expect(abs(engine.qiblaBearing(from: newYork) - 58.481) < 0.001)
     }
 
+    /// A second published reference point, on a different meridian to New York, so a formula
+    /// that happened to be right for one longitude cannot pass on its own.
+    @Test func theQiblaBearingMatchesTheKnownValueForWashingtonDC() {
+        let washington = Coordinates(latitude: 38.9072, longitude: -77.0369)
+
+        #expect(abs(engine.qiblaBearing(from: washington) - 56.560) < 0.001)
+    }
+
     @Test func theQiblaBearingFromMakkahPointsAtItself() {
         // Degenerate but worth pinning: the bearing must stay finite at the Kaaba itself.
         #expect(engine.qiblaBearing(from: .makkah).isFinite)
