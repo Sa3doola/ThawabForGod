@@ -61,9 +61,17 @@ final class HomeViewModel {
     private(set) var hijriDate: HijriDate
     private(set) var todaysEvents: [IslamicEvent]
 
+    /// How the times are being calculated right now.
+    ///
+    /// A window onto `CalculationSettings` rather than a copy, and the reason it is exposed at
+    /// all: reading it inside a view registers a dependency on the shared object, so the view
+    /// can watch it with `onChange` and ask for a recompute when Settings changes it. A stored
+    /// copy would observe nothing.
+    var config: CalculationConfig { calculation.config }
+
     @ObservationIgnored private let useCase: GetPrayerScheduleUseCase
     @ObservationIgnored private let coordinates: Coordinates
-    @ObservationIgnored private let config: CalculationConfig
+    @ObservationIgnored private let calculation: CalculationSettings
     @ObservationIgnored private let hijriDates: any HijriDateServicing
     @ObservationIgnored private let tips: any HomeTipReporting
     @ObservationIgnored private let now: @Sendable () -> Date
@@ -71,6 +79,8 @@ final class HomeViewModel {
     /// - Parameters:
     ///   - coordinates: injected, never assumed. Today the container supplies a fixed point;
     ///     when the location slice lands only that one line changes.
+    ///   - calculation: the shared calculation choices. Not a plain `CalculationConfig`, because
+    ///     Settings can change it while this screen is alive.
     ///   - hijriDates: the Hijri conversion and the events table.
     ///   - tips: where TipKit's rule inputs are reported. Behind a protocol so this type never
     ///     imports TipKit and its tests never open a datastore.
@@ -79,13 +89,13 @@ final class HomeViewModel {
         useCase: GetPrayerScheduleUseCase,
         coordinates: Coordinates,
         hijriDates: any HijriDateServicing,
-        config: CalculationConfig = .default,
+        calculation: CalculationSettings,
         tips: any HomeTipReporting = HomeTipReporter(),
         now: @escaping @Sendable () -> Date = Date.init
     ) {
         self.useCase = useCase
         self.coordinates = coordinates
-        self.config = config
+        self.calculation = calculation
         self.hijriDates = hijriDates
         self.tips = tips
         self.now = now

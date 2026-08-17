@@ -18,6 +18,7 @@ struct HomeViewModelTests {
         days: [Date]? = nil,
         failure: PrayerTimeError? = nil,
         hijriDates: any HijriDateServicing = StubHijriDateService(),
+        calculation: CalculationSettings? = nil,
         tips: any HomeTipReporting = SpyHomeTipReporter()
     ) -> (HomeViewModel, TestClock) {
         let repository: StubPrayerTimeRepository = if let failure {
@@ -34,7 +35,10 @@ struct HomeViewModelTests {
             ),
             coordinates: .makkah,
             hijriDates: hijriDates,
-            config: .default,
+            calculation: calculation ?? CalculationSettings(
+                config: .default,
+                settingsStore: InMemorySettingsStore()
+            ),
             tips: tips,
             now: clock.provider
         )
@@ -217,6 +221,48 @@ struct HomeViewModelTests {
         #expect(viewModel.phase == .unavailable)
         #expect(viewModel.hijriDate == HijriDate(day: 1, month: .ramadan, year: 1447))
         #expect(viewModel.todaysEvents.first?.noteKey == .eventNoteMoonSighting)
+    }
+
+    // MARK: Calculation settings
+
+    /// The window onto the shared object, which is what the view watches for a change.
+    @Test func theConfigIsReadThroughRatherThanCopied() {
+        let calculation = CalculationSettings(config: .default, settingsStore: InMemorySettingsStore())
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            calculation: calculation
+        )
+
+        #expect(viewModel.config == .default)
+
+        calculation.select(method: .karachi)
+
+        #expect(viewModel.config.method == .karachi)
+    }
+
+    /// What Settings actually changes: the config handed to the use case on the next refresh.
+    /// Home's view watches `config` and calls `refresh()`, so this is that pair, without a view.
+    @Test func refreshingAfterAChangeAsksWithTheNewConfig() {
+        let calculation = CalculationSettings(config: .default, settingsStore: InMemorySettingsStore())
+        let repository = RecordingPrayerTimeRepository(schedules: [today: PrayerTimeFixtures.schedule(on: today)])
+        let clock = TestClock(PrayerTimeFixtures.instant(today, hour: 13))
+        let viewModel = HomeViewModel(
+            useCase: GetPrayerScheduleUseCase(repository: repository, calendar: PrayerTimeFixtures.calendar),
+            coordinates: .makkah,
+            hijriDates: StubHijriDateService(),
+            calculation: calculation,
+            tips: SpyHomeTipReporter(),
+            now: clock.provider
+        )
+
+        viewModel.refresh()
+        #expect(repository.requestedConfigs.last == .default)
+
+        calculation.select(method: .egyptian)
+        calculation.select(madhab: .hanafi)
+        viewModel.refresh()
+
+        #expect(repository.requestedConfigs.last == CalculationConfig(method: .egyptian, madhab: .hanafi))
     }
 
     // MARK: Tip signals

@@ -15,6 +15,7 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
     private struct Style: Hashable {
         let language: AppLanguage
         let system: NumberSystem
+        let clock: ClockFormat
     }
 
     private let timeFormatters: [Style: DateFormatter]
@@ -29,21 +30,27 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
     init() {
         var times: [Style: DateFormatter] = [:]
 
+        // Twelve formatters — two languages, two digit systems, three clock choices. Every
+        // combination is reachable, and building them all here is what keeps a ticking
+        // countdown from allocating one per second.
         for language in AppLanguage.allCases {
             for system in NumberSystem.allCases {
-                let locale = Locale(
-                    identifier: "\(language.rawValue)@numbers=\(system.numberingSystemTag)"
-                )
+                for clock in ClockFormat.allCases {
+                    let locale = Locale(
+                        identifier: "\(language.rawValue)@numbers=\(system.numberingSystemTag)"
+                    )
 
-                let formatter = DateFormatter()
-                formatter.locale = locale
-                // `autoupdatingCurrent`, not `current`: the app can outlive a flight, and
-                // prayer times are meaningless in the departure city's zone.
-                formatter.timeZone = .autoupdatingCurrent
-                // A template rather than a fixed pattern, so 12- or 24-hour form and the
-                // position of the AM/PM marker follow the locale instead of being imposed.
-                formatter.setLocalizedDateFormatFromTemplate("jmm")
-                times[Style(language: language, system: system)] = formatter
+                    let formatter = DateFormatter()
+                    formatter.locale = locale
+                    // `autoupdatingCurrent`, not `current`: the app can outlive a flight, and
+                    // prayer times are meaningless in the departure city's zone.
+                    formatter.timeZone = .autoupdatingCurrent
+                    // A template rather than a fixed pattern, so the order of the parts and
+                    // the position of the AM/PM marker follow the locale even when the hour
+                    // cycle is the user's choice rather than the region's.
+                    formatter.setLocalizedDateFormatFromTemplate(clock.dateFormatTemplate)
+                    times[Style(language: language, system: system, clock: clock)] = formatter
+                }
             }
         }
 
@@ -68,8 +75,14 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
         return formatters
     }
 
-    func timeString(from date: Date, language: AppLanguage, system: NumberSystem) -> String {
-        guard let formatter = timeFormatters[Style(language: language, system: system)] else {
+    func timeString(
+        from date: Date,
+        language: AppLanguage,
+        system: NumberSystem,
+        clock: ClockFormat
+    ) -> String {
+        let style = Style(language: language, system: system, clock: clock)
+        guard let formatter = timeFormatters[style] else {
             return ""
         }
         return formatter.string(from: date)

@@ -81,8 +81,8 @@ struct TimeFormattingTests {
     @Test func clockTimesFollowTheSelectedDigits() {
         let date = Date()
 
-        let latin = service.timeString(from: date, language: .english, system: .latin)
-        let arabicIndic = service.timeString(from: date, language: .english, system: .arabicIndic)
+        let latin = service.timeString(from: date, language: .english, system: .latin, clock: .system)
+        let arabicIndic = service.timeString(from: date, language: .english, system: .arabicIndic, clock: .system)
 
         #expect(digitsAreExclusively(latinDigits, arabicIndicDigits, in: latin))
         #expect(digitsAreExclusively(arabicIndicDigits, latinDigits, in: arabicIndic))
@@ -93,22 +93,80 @@ struct TimeFormattingTests {
     @Test func languageAndDigitsAreIndependent() {
         let date = Date()
 
-        let englishArabicDigits = service.timeString(from: date, language: .english, system: .arabicIndic)
-        let arabicLatinDigits = service.timeString(from: date, language: .arabic, system: .latin)
+        let englishArabicDigits = service.timeString(from: date, language: .english, system: .arabicIndic, clock: .system)
+        let arabicLatinDigits = service.timeString(from: date, language: .arabic, system: .latin, clock: .system)
 
         #expect(digitsAreExclusively(arabicIndicDigits, latinDigits, in: englishArabicDigits))
         #expect(digitsAreExclusively(latinDigits, arabicIndicDigits, in: arabicLatinDigits))
     }
 
-    @Test func everyLanguageAndDigitPairingProducesATime() {
+    @Test func everyLanguageDigitAndClockPairingProducesATime() {
         let date = PrayerTimeFixtures.instant(PrayerTimeFixtures.day(2026, 6, 15), hour: 5, minute: 42)
 
         for language in AppLanguage.allCases {
             for system in NumberSystem.allCases {
-                let formatted = service.timeString(from: date, language: language, system: system)
+                for clock in ClockFormat.allCases {
+                    let formatted = service.timeString(
+                        from: date,
+                        language: language,
+                        system: system,
+                        clock: clock
+                    )
 
-                #expect(!formatted.isEmpty, "\(language.rawValue)/\(system.rawValue) produced nothing")
+                    #expect(
+                        !formatted.isEmpty,
+                        "\(language.rawValue)/\(system.rawValue)/\(clock.rawValue) produced nothing"
+                    )
+                }
             }
         }
+    }
+
+    // MARK: Clock format
+
+    /// 17:05 in whatever zone the machine is in, so the assertions below hold wherever the suite
+    /// runs — the service formats in the device's zone, which a UTC fixture would fight.
+    private var lateAfternoon: Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .autoupdatingCurrent
+        return calendar.date(bySettingHour: 17, minute: 5, second: 0, of: Date())!
+    }
+
+    private func time(_ clock: ClockFormat, _ language: AppLanguage = .english) -> String {
+        service.timeString(from: lateAfternoon, language: language, system: .latin, clock: clock)
+    }
+
+    @Test func theTwentyFourHourChoiceOverridesTheLocale() {
+        #expect(time(.twentyFourHour).contains("17"))
+    }
+
+    /// The other half: the same instant, in the form the same locale might not have chosen.
+    @Test func theTwelveHourChoiceOverridesTheLocale() {
+        let formatted = time(.twelveHour)
+
+        #expect(formatted.contains("5"))
+        #expect(!formatted.contains("17"))
+    }
+
+    /// `.system` is not a third rendering — it is deferral. Whichever the locale picks, it has to
+    /// match one of the two the user could have asked for.
+    @Test(arguments: AppLanguage.allCases)
+    func theSystemChoiceDefersToTheLocale(_ language: AppLanguage) {
+        let system = time(.system, language)
+
+        #expect(system == time(.twelveHour, language) || system == time(.twentyFourHour, language))
+    }
+
+    /// The clock choice is independent of the digits, like the language is: 24-hour form drawn in
+    /// Arabic-Indic digits is a combination a single `Locale` cannot ask for.
+    @Test func theClockChoiceIsIndependentOfTheDigits() {
+        let formatted = service.timeString(
+            from: lateAfternoon,
+            language: .english,
+            system: .arabicIndic,
+            clock: .twentyFourHour
+        )
+
+        #expect(formatted.contains("١٧"))
     }
 }

@@ -17,6 +17,7 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case settingsTitle = "settings_title"
 
     case languageLabel = "language_label"
+    case settingsLanguageFooter = "settings_language_footer"
     case languageArabic = "language_arabic"
     case languageEnglish = "language_english"
 
@@ -35,10 +36,57 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case numbersArabicIndic = "numbers_arabic_indic"
     case numbersLatin = "numbers_latin"
 
-    case paletteTitle = "palette_title"
-    case typeScaleTitle = "type_scale_title"
-    case sampleGreeting = "sample_greeting"
-    case sampleCount = "sample_count"
+    case clockLabel = "clock_label"
+    case clockSystem = "clock_system"
+    case clockTwelveHour = "clock_twelve_hour"
+    case clockTwentyFourHour = "clock_twenty_four_hour"
+
+    // MARK: Settings
+
+    case settingsAppearanceSection = "settings_appearance_section"
+    case settingsFormatSection = "settings_format_section"
+    case settingsCalculationSection = "settings_calculation_section"
+    case settingsTipsSection = "settings_tips_section"
+    case settingsAboutSection = "settings_about_section"
+
+    case settingsRemindersSection = "settings_reminders_section"
+    case settingsRemindersFooter = "settings_reminders_footer"
+    case settingsRemindersDenied = "settings_reminders_denied"
+
+    case settingsSampleLabel = "settings_sample_label"
+    case settingsCalculationFooter = "settings_calculation_footer"
+    case settingsResetTips = "settings_reset_tips"
+    case settingsResetTipsFooter = "settings_reset_tips_footer"
+    case settingsResetTipsDone = "settings_reset_tips_done"
+    case settingsVersionLabel = "settings_version_label"
+    case settingsSourcesTitle = "settings_sources_title"
+    case settingsSourcesFooter = "settings_sources_footer"
+
+    // MARK: Attribution
+
+    case sourceAdhkarTitle = "source_adhkar_title"
+    case sourceAdhkarAttribution = "source_adhkar_attribution"
+    case sourceAdhkarNote = "source_adhkar_note"
+    case sourceNamesTitle = "source_names_title"
+    case sourceNamesAttribution = "source_names_attribution"
+    case sourceNamesNote = "source_names_note"
+    case sourceTasbihTitle = "source_tasbih_title"
+    case sourceTasbihAttribution = "source_tasbih_attribution"
+    case sourceAdhanTitle = "source_adhan_title"
+    case sourceAdhanAttribution = "source_adhan_attribution"
+    case sourceGRDBTitle = "source_grdb_title"
+    case sourceGRDBAttribution = "source_grdb_attribution"
+
+    // MARK: Reminders
+
+    /// The one sentence every prayer reminder carries. The prayer's own name is the title, so
+    /// this stays free of anything that would have to be interpolated — or read on a lock
+    /// screen by someone other than the user.
+    case notificationPrayerBody = "notification_prayer_body"
+
+    case licenceMIT = "licence_mit"
+    case licenceUnsettled = "licence_unsettled"
+    case licenceNone = "licence_none"
 
     // MARK: Prayer times
 

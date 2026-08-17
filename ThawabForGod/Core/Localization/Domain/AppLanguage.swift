@@ -23,9 +23,22 @@ nonisolated enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// The language to start in when the user has never chosen one.
-    static var preferred: AppLanguage {
-        let preferred = Locale.preferredLanguages.first ?? "en"
-        return preferred.hasPrefix("ar") ? .arabic : .english
+    /// The language the app is actually running in.
+    ///
+    /// Read from the bundle rather than from a stored preference, because the choice is not the
+    /// app's to make. iOS gives every app shipping more than one localization a **Language** row
+    /// of its own in the Settings app, and changing it there relaunches the process in the new
+    /// language. That is both the platform idiom and the only switch that does not have to fight
+    /// `Form` and `List` over their right-to-left mirroring — see `LocalizationManager`.
+    ///
+    /// `preferredLocalizations` is the intersection of what the user asked for with what this
+    /// bundle actually contains, so its first entry is the localization in force. Anything that
+    /// is not Arabic resolves to English, which is also the development region.
+    ///
+    /// - Parameter bundle: injected so a test can ask about a bundle other than whichever one
+    ///   the test host happens to be running in.
+    static func current(in bundle: Bundle = .main) -> AppLanguage {
+        let identifier = bundle.preferredLocalizations.first ?? "en"
+        return identifier.hasPrefix("ar") ? .arabic : .english
     }
 }

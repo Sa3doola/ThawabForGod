@@ -12,8 +12,17 @@ import Foundation
 /// Arabic-Indic digits must see `٥:٤٢ AM`. A plain `Locale(identifier: "en")` cannot express
 /// that, so neither can `Text(date, style:)`.
 nonisolated protocol TimeFormattingService: Sendable {
-    /// A clock time — `5:42 AM`, `٥:٤٢ ص` — with 12- or 24-hour form following the language.
-    func timeString(from date: Date, language: AppLanguage, system: NumberSystem) -> String
+    /// A clock time — `5:42 AM`, `٥:٤٢ ص`.
+    ///
+    /// - Parameter clock: 12- or 24-hour form. `.system` leaves it to the locale, which is the
+    ///   default; the other two cases exist because the locale's answer is a convention rather
+    ///   than a preference, and a user is entitled to disagree with it.
+    func timeString(
+        from date: Date,
+        language: AppLanguage,
+        system: NumberSystem,
+        clock: ClockFormat
+    ) -> String
 
     /// A remaining duration as `h:mm:ss`, dropping the hours component below an hour.
     /// Negative intervals clamp to zero, so a countdown that has just elapsed reads `0:00`.

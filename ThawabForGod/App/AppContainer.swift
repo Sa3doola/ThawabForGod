@@ -23,6 +23,11 @@ final class AppContainer {
     let locationService: any LocationService
     let headingProvider: any HeadingProviding
     let notificationService: any NotificationService
+
+    /// Which prayers are reminded, as an observable the Settings screen edits and the refresh
+    /// key watches. The scheduler itself re-reads the store rather than this object.
+    let reminderPreferences: ReminderPreferences
+
     let tipsService: any TipsServicing
     let hijriDates: any HijriDateServicing
     let reachability = ReachabilityMonitor()
@@ -81,6 +86,7 @@ final class AppContainer {
     let adhkarCoordinator = AdhkarCoordinator()
     let tasbihCoordinator = TasbihCoordinator()
     let namesCoordinator = NamesCoordinator()
+    let settingsCoordinator = SettingsCoordinator()
 
     /// Where prayer times are computed for when onboarding captured nothing — a user who
     /// skipped the location screen entirely. Replaced by a live reading when the location
@@ -114,7 +120,7 @@ final class AppContainer {
         // for a caller supplying its own.
         self.locationService = locationService ?? CoreLocationService()
         self.headingProvider = headingProvider ?? CoreLocationHeadingProvider()
-        self.notificationService = notificationService ?? UserNotificationService()
+        self.reminderPreferences = ReminderPreferences(settingsStore: settingsStore)
 
         self.themeManager = ThemeManager(settingsStore: settingsStore)
         self.localizationManager = LocalizationManager(
@@ -134,6 +140,20 @@ final class AppContainer {
         self.prayerTimeRepository = prayerTimeRepository
         self.getPrayerSchedule = GetPrayerScheduleUseCase(repository: prayerTimeRepository)
         self.getQiblaInfo = GreatCircleQiblaInfoUseCase(engine: engine)
+
+        // Built here rather than up with the other services because it needs two of them: the
+        // repository the times come from, and the localization manager the words come from.
+        // Everything it reads *late* — position, method, toggles — it reads through
+        // `AppReminderInputs` at refresh time instead of capturing now.
+        self.notificationService = notificationService ?? UserNotificationService(
+            center: UserNotificationCenterClient(),
+            planner: PrayerReminderPlanner(repository: prayerTimeRepository),
+            content: LocalizedReminderContent(l10n: self.localizationManager),
+            inputs: AppReminderInputs(
+                location: self.locationService,
+                settingsStore: settingsStore
+            )
+        )
 
         // Same three-link shape as the prayer times above, over a database instead of a
         // calculation: corpus → repository → use case.
@@ -184,6 +204,54 @@ final class AppContainer {
         reachability.start()
     }
 
+    // MARK: Prayer calculation
+
+    private var cachedCalculationSettings: CalculationSettings?
+
+    /// The calculation choices, shared by Home and Settings.
+    ///
+    /// Lazy for the same reason Home's view model is: it has to read what onboarding seeded, which
+    /// has not been written yet when `init` runs. Cached because *sharing the instance is the
+    /// point* — a second one would leave Settings editing a copy Home never sees.
+    func calculationSettings() -> CalculationSettings {
+        if let cachedCalculationSettings {
+            return cachedCalculationSettings
+        }
+
+        let settings = CalculationSettings(
+            config: onboardingRepository.seededConfig ?? .default,
+            settingsStore: settingsStore
+        )
+        cachedCalculationSettings = settings
+        return settings
+    }
+
+    // MARK: Settings
+
+    private var cachedSettingsViewModel: SettingsViewModel?
+
+    /// Settings' view model, built on first use and kept.
+    ///
+    /// It holds no preference of its own — every one of them belongs to a manager built above —
+    /// so this is cached for its one piece of screen state, the tips-reset confirmation, rather
+    /// than to protect anything the user typed.
+    func settingsViewModel() -> SettingsViewModel {
+        if let cachedSettingsViewModel {
+            return cachedSettingsViewModel
+        }
+
+        let viewModel = SettingsViewModel(
+            theme: themeManager,
+            localization: localizationManager,
+            calculation: calculationSettings(),
+            reminders: reminderPreferences,
+            notifications: notificationService,
+            resetTips: ResetTipsUseCase(tips: tipsService)
+        )
+        cachedSettingsViewModel = viewModel
+        return viewModel
+    }
+
     // MARK: Home
 
     private var cachedHomeViewModel: HomeViewModel?
@@ -202,7 +270,9 @@ final class AppContainer {
             useCase: getPrayerSchedule,
             coordinates: onboardingRepository.seededCoordinates ?? fallbackCoordinates,
             hijriDates: hijriDates,
-            config: onboardingRepository.seededConfig ?? .default
+            // The same object Settings edits, not a snapshot of it — which is what lets a method
+            // changed in Settings redraw today's times.
+            calculation: calculationSettings()
         )
         cachedHomeViewModel = viewModel
         return viewModel

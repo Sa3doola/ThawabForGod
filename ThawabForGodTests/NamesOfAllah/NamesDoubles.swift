@@ -10,16 +10,31 @@ import Foundation
 nonisolated struct NamesStubError: Error, Equatable {}
 
 /// Names on demand, and a record of which language was asked for.
-actor StubNamesRepository: NamesRepositoring {
+///
+/// Locked rather than an `actor`, which is what this was. `NamesRepositoring` is a `nonisolated`
+/// protocol, so its witness has to be nonisolated too — and an actor cannot be, which left the
+/// compiler trying to apply `nonisolated` to the actor declaration itself and rejecting it. The
+/// same shape as `SpyNamesTipReporting` below and every other double in this suite that stands
+/// behind a `nonisolated` protocol.
+///
+/// Safety invariant for `@unchecked Sendable`: `languages` is only ever touched while `lock` is
+/// held, and nothing else here is mutable.
+nonisolated final class StubNamesRepository: NamesRepositoring, @unchecked Sendable {
+    private let lock = NSLock()
     private let result: Result<[DivineName], NamesStubError>
-    private(set) var requestedLanguages: [AppLanguage] = []
+    private var languages: [AppLanguage] = []
+
+    /// Every language asked for, in order.
+    var requestedLanguages: [AppLanguage] {
+        lock.withLock { languages }
+    }
 
     init(_ result: Result<[DivineName], NamesStubError> = .success([.stub()])) {
         self.result = result
     }
 
     func allNames(in language: AppLanguage) throws -> [DivineName] {
-        requestedLanguages.append(language)
+        lock.withLock { languages.append(language) }
         return try result.get()
     }
 }

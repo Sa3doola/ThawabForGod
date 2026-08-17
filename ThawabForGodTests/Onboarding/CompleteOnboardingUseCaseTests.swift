@@ -75,12 +75,14 @@ struct OnboardingRepositoryTests {
     /// preference outranks the device, a user who later set this app to Arabic in iOS Settings
     /// kept seeing English, with no in-app Settings screen to undo it. Onboarding asks about
     /// none of these, so it must write none of them.
+    ///
+    /// The language is no longer among them because it can no longer be stored at all — there is
+    /// no `SettingsKey.language` to write, which is the strongest form this guarantee can take.
     @Test func onboardingDoesNotPinPreferencesTheUserWasNeverAsked() {
         let (repository, store) = makeRepository()
 
         repository.completeOnboarding(with: seed)
 
-        #expect(store.string(for: .language) == nil)
         #expect(store.string(for: .numberSystem) == nil)
         #expect(store.string(for: .accentPalette) == nil)
         #expect(store.string(for: .appearance) == nil)
@@ -104,8 +106,8 @@ struct OnboardingRepositoryTests {
         )
         let theme = ThemeManager(settingsStore: store)
 
-        #expect(localization.language == AppLanguage.preferred)
-        #expect(localization.numberSystem == NumberSystem.preferred(for: AppLanguage.preferred))
+        #expect(localization.language == AppLanguage.current())
+        #expect(localization.numberSystem == NumberSystem.preferred(for: AppLanguage.current()))
         #expect(theme.accent == AccentPalette.fallback)
         #expect(theme.appearance == AppearanceOverride.fallback)
     }

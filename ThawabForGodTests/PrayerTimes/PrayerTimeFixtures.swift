@@ -80,6 +80,43 @@ nonisolated struct StubPrayerTimeRepository: PrayerTimeRepositoring {
     }
 }
 
+/// The same stub, but recording what it was asked with.
+///
+/// A class rather than a struct because the recording has to survive being copied into a use case
+/// — and `@unchecked Sendable` over a lock for the same reason `SpyHomeTipReporter` is: the
+/// protocol is `nonisolated`, so no actor could witness it.
+///
+/// It exists for one question the value-type stub cannot answer: whether a config changed in
+/// Settings actually reaches the calculation.
+nonisolated final class RecordingPrayerTimeRepository: PrayerTimeRepositoring, @unchecked Sendable {
+    private let lock = NSLock()
+    private let schedules: [Date: PrayerSchedule]
+    private var configs: [CalculationConfig] = []
+
+    init(schedules: [Date: PrayerSchedule]) {
+        self.schedules = schedules
+    }
+
+    /// Every config asked for, in order.
+    var requestedConfigs: [CalculationConfig] {
+        lock.withLock { configs }
+    }
+
+    func schedule(
+        for coordinates: Coordinates,
+        date: Date,
+        config: CalculationConfig
+    ) throws -> PrayerSchedule {
+        lock.withLock { configs.append(config) }
+
+        guard let schedule = schedules[PrayerTimeFixtures.calendar.startOfDay(for: date)] else {
+            throw PrayerTimeError.notComputable(date)
+        }
+
+        return schedule
+    }
+}
+
 /// A clock the test moves by hand.
 ///
 /// Safety invariant for `@unchecked Sendable`: it is only ever touched from the test's main

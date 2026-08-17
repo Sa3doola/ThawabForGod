@@ -32,5 +32,14 @@ nonisolated struct Theme: Equatable, Sendable {
         self.danger = AppColor.danger
     }
 
+    /// The colour a given accent choice would produce.
+    ///
+    /// For the one screen that has to show all four at once — the swatch picker in Settings —
+    /// rather than only the selected one. It lives here so `AppColor` stays the only file that
+    /// names an asset colour, and no view has to reach past the palette to draw a preference.
+    func color(of palette: AccentPalette) -> Color {
+        AppColor.accent(palette)
+    }
+
     static let fallback = Theme()
 }

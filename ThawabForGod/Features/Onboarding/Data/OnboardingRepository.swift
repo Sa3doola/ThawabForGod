@@ -25,25 +25,12 @@ nonisolated struct OnboardingRepository: OnboardingRepositoring {
         settingsStore.bool(for: .onboardingCompleted) ?? false
     }
 
-    var seededConfig: CalculationConfig? {
-        guard let method = settingsStore.string(for: .calculationMethod)
-            .flatMap(PrayerCalculationMethod.init(rawValue:)),
-            let madhab = settingsStore.string(for: .asrMadhab)
-            .flatMap(AsrMadhab.init(rawValue:)) else {
-            return nil
-        }
+    // Both read through the shared accessors rather than decoding the keys here: the reminder
+    // scheduler needs the same two pairs, and one decode with three readers is the whole point
+    // of `SettingsStore+PrayerTimes`.
+    var seededConfig: CalculationConfig? { settingsStore.storedCalculationConfig }
 
-        return CalculationConfig(method: method, madhab: madhab)
-    }
-
-    var seededCoordinates: Coordinates? {
-        guard let latitude = settingsStore.double(for: .latitude),
-              let longitude = settingsStore.double(for: .longitude) else {
-            return nil
-        }
-
-        return Coordinates(latitude: latitude, longitude: longitude)
-    }
+    var seededCoordinates: Coordinates? { settingsStore.storedCoordinates }
 
     func completeOnboarding(with seed: OnboardingSeed) {
         settingsStore.set(seed.config.method.rawValue, for: .calculationMethod)

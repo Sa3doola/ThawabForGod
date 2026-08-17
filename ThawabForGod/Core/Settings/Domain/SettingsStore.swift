@@ -9,15 +9,26 @@ import Foundation
 nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case accentPalette
     case appearance
-    case language
+    // No `language`: it is the system's, chosen in the app's own page in the Settings app. A key
+    // here would outrank that choice forever, which is the exact failure the note above
+    // describes — and it is why an in-app switcher was removed rather than repaired.
     case numberSystem
+    case clockFormat
 
-    // Seeded by onboarding, read from then on by prayer times and (later) Settings.
+    // Seeded by onboarding, read from then on by prayer times, Settings and the reminders.
     case onboardingCompleted
     case calculationMethod
     case asrMadhab
     case latitude
     case longitude
+
+    // One per obligatory prayer. Unset means on — a reminder the user has never opinionated
+    // about should arrive, and writing `true` at first launch would breach the rule above.
+    case reminderFajr
+    case reminderDhuhr
+    case reminderAsr
+    case reminderMaghrib
+    case reminderIsha
 }
 
 /// Small key/value store for user preferences.

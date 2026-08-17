@@ -22,6 +22,9 @@ final class HomeCoordinator {
         case adhkar
         case tasbih
         case names
+        /// iOS and iPadOS only. On macOS, Settings is a scene of its own reached with ⌘, — the
+        /// place a Mac user looks for it — rather than a screen pushed onto this stack.
+        case settings
     }
 
     var path = NavigationPath()

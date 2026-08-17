@@ -42,33 +42,6 @@ final class MockLocationService: LocationService {
     }
 }
 
-@MainActor
-final class MockNotificationService: NotificationService {
-    var status: NotificationAuthorization
-    var outcomeOfPrompt: NotificationAuthorization
-
-    private(set) var authorizationRequestCount = 0
-
-    init(
-        status: NotificationAuthorization = .notDetermined,
-        outcomeOfPrompt: NotificationAuthorization = .authorized
-    ) {
-        self.status = status
-        self.outcomeOfPrompt = outcomeOfPrompt
-    }
-
-    func authorizationStatus() async -> NotificationAuthorization {
-        status
-    }
-
-    @discardableResult
-    func requestAuthorization() async -> NotificationAuthorization {
-        authorizationRequestCount += 1
-        status = outcomeOfPrompt
-        return status
-    }
-}
-
 /// Records what onboarding wrote, without touching `UserDefaults`.
 ///
 /// Safety invariant for `@unchecked Sendable`: only ever touched from the test's main actor.

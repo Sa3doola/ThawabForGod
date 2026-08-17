@@ -13,10 +13,15 @@ nonisolated enum NotificationAuthorization: Sendable, Equatable {
     case authorized
 }
 
-/// Notification permission.
+/// Notification permission, and the rolling window of prayer reminders.
 ///
-/// Scheduling lives behind this protocol too, but is not part of this slice: the rolling
-/// prayer-reminder window is its own step, and nothing here should imply it already exists.
+/// One protocol for both because they are one decision: there is nothing to schedule without
+/// permission, and no reason to hold permission without scheduling. Keeping them together also
+/// keeps this the single place the app asks — onboarding prompts through here, Settings reads
+/// the status through here, and nothing else touches the notification centre.
+///
+/// The status is the app's own three-case enum rather than `UNAuthorizationStatus`: Domain does
+/// not import UserNotifications, and callers only ever branch on the three outcomes.
 @MainActor
 protocol NotificationService: AnyObject {
     func authorizationStatus() async -> NotificationAuthorization
@@ -27,4 +32,19 @@ protocol NotificationService: AnyObject {
     /// without reminders.
     @discardableResult
     func requestAuthorization() async -> NotificationAuthorization
+
+    /// Rebuilds the pending window from scratch: recompute, clear, refill.
+    ///
+    /// Safe to call as often as anything likes — on launch, on returning to the foreground,
+    /// after any change in Settings. Reminders carry stable identifiers, so a re-add replaces
+    /// rather than duplicates and the pending set converges on the same answer however many
+    /// refreshes overlap.
+    ///
+    /// Silent about failure by design. A refresh that cannot run — permission refused, position
+    /// unknown — leaves the user with no reminders, which is the correct outcome and not
+    /// something to interrupt them about.
+    func refreshSchedule() async
+
+    /// Drops every pending reminder. What a refusal, or a revoked permission, leaves behind.
+    func cancelAll()
 }

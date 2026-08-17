@@ -38,7 +38,7 @@ struct GetNamesUseCaseTests {
 
         _ = try await useCase.allNames(in: .arabic)
 
-        #expect(await repository.requestedLanguages == [.arabic])
+        #expect(repository.requestedLanguages == [.arabic])
     }
 
     @Test func anEmptyListStaysEmptyRatherThanFailing() async throws {

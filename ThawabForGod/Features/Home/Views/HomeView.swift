@@ -33,6 +33,10 @@ struct HomeView: View {
         // Structured concurrency does the lifecycle work: SwiftUI cancels this when the
         // screen disappears, which stops the ticking loop inside `start()`.
         .task { await viewModel.start() }
+        // Settings can change the calculation method while this screen is still alive behind
+        // it. The ticking loop would not notice — it only recomputes when a prayer arrives —
+        // so the change is watched here and the times are recomputed on the spot.
+        .onChange(of: viewModel.config) { viewModel.refresh() }
     }
 
     @ViewBuilder
@@ -104,7 +108,8 @@ private struct StatusNotice: View {
             viewModel: HomeViewModel(
                 useCase: useCase,
                 coordinates: .makkah,
-                hijriDates: HijriDateService()
+                hijriDates: HijriDateService(),
+                calculation: CalculationSettings(config: .default, settingsStore: settingsStore)
             )
         )
     }

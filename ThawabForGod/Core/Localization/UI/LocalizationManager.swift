@@ -6,21 +6,38 @@
 import Observation
 import SwiftUI
 
-/// Owns the language and digit choices, and resolves strings and numbers for them.
+/// Resolves strings and numbers for the language the app is running in, and owns the two
+/// formatting choices that are the app's own.
 ///
-/// Why strings are resolved here instead of by `Text("key")`: SwiftUI looks a key up in the
-/// language the *process* launched with, so a plain `Text("key")` would not change until the
-/// app is restarted. Going through this object solves both halves — it reads the string from
-/// the language's own `.lproj` bundle, and because the lookup touches observable state, every
-/// view that displays a string re-renders the moment the language changes.
+/// **The language is not one of them.** It belongs to the system: iOS lists this app in the
+/// Settings app with a Language row of its own, because the bundle ships both `ar.lproj` and
+/// `en.lproj`, and picking there relaunches the process. That is deliberate rather than a
+/// limitation — an in-app switcher used to live here, and it could not be made to work.
+/// `Form` and `List` are UIKit-backed, and they decide their right-to-left mirroring once, when
+/// the backing view is created; flipping `\.layoutDirection` under a live one leaves the
+/// transform in place and renders every glyph backwards. Rebuilding the hierarchy with an `.id`
+/// did not reliably clear it either. Letting the system relaunch the app sidesteps the whole
+/// class of problem, and is what a reader of either language already expects.
 ///
-/// The corollary: never wrap this in a static or global accessor. That would drop the
-/// observation dependency and the UI would silently keep the old language.
+/// What stays here is what the system cannot express: `NumberSystem` and `ClockFormat`. An
+/// Arabic reader may want Latin digits, and a reader of either language may want a 24-hour
+/// clock; a single `Locale` has no way to say that, which is why these two are still the app's.
+///
+/// Strings still resolve through `string(_:)` rather than `Text("key")` — not to switch at
+/// runtime any more, but because `L10nKey` makes a missing key a compile error and gives the
+/// catalog a single door.
 @Observable
 @MainActor
 final class LocalizationManager {
-    private(set) var language: AppLanguage
+
+    /// The language in force, fixed for the lifetime of the process.
+    ///
+    /// A `let`, and that is the point: nothing in the app may change it, so no screen has to
+    /// cope with it changing underneath. A new value arrives the only way it can — a relaunch.
+    let language: AppLanguage
+
     private(set) var numberSystem: NumberSystem
+    private(set) var clockFormat: ClockFormat
 
     @ObservationIgnored private let settingsStore: any SettingsStore
     @ObservationIgnored private let numberFormatting: any NumberFormattingService
@@ -29,45 +46,47 @@ final class LocalizationManager {
     init(
         settingsStore: any SettingsStore,
         numberFormatting: any NumberFormattingService,
-        timeFormatting: any TimeFormattingService
+        timeFormatting: any TimeFormattingService,
+        language: AppLanguage = .current()
     ) {
         self.settingsStore = settingsStore
         self.numberFormatting = numberFormatting
         self.timeFormatting = timeFormatting
 
-        let language = settingsStore.string(for: .language)
-            .flatMap(AppLanguage.init(rawValue:)) ?? .preferred
         self.language = language
         self.numberSystem = settingsStore.string(for: .numberSystem)
             .flatMap(NumberSystem.init(rawValue:)) ?? .preferred(for: language)
+        // No `preferred(for:)` equivalent: the fallback keeps deferring to the locale rather
+        // than resolving to a case, so a device that changes region is still followed.
+        self.clockFormat = settingsStore.string(for: .clockFormat)
+            .flatMap(ClockFormat.init(rawValue:)) ?? .fallback
     }
 
     // MARK: Choices
-
-    func select(language: AppLanguage) {
-        self.language = language
-        settingsStore.set(language.rawValue, for: .language)
-    }
 
     func select(numberSystem: NumberSystem) {
         self.numberSystem = numberSystem
         settingsStore.set(numberSystem.rawValue, for: .numberSystem)
     }
 
+    func select(clockFormat: ClockFormat) {
+        self.clockFormat = clockFormat
+        settingsStore.set(clockFormat.rawValue, for: .clockFormat)
+    }
+
     // MARK: Resolved values
 
-    var locale: Locale { language.locale }
+    /// `autoupdatingCurrent` rather than one built from `language`, now that the process is
+    /// already running in the right language: the system's locale carries the user's *region*
+    /// too, and `Locale(identifier: "ar")` would throw that away.
+    var locale: Locale { .autoupdatingCurrent }
 
-    var layoutDirection: LayoutDirection { language.isRightToLeft ? .rightToLeft : .leftToRight }
-
-    /// The string catalog for the selected language, falling back to the main bundle.
-    private var bundle: Bundle {
-        guard let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj"),
-              let bundle = Bundle(path: path) else {
-            return .main
-        }
-        return bundle
-    }
+    /// The main bundle, because the process launched in the language the user picked and its
+    /// `.lproj` is the one `String(localized:)` will reach for.
+    ///
+    /// This used to hunt for a specific `.lproj` so a runtime switch could read the other
+    /// language's strings. Nothing switches at runtime any more, so the lookup went with it.
+    private var bundle: Bundle { .main }
 
     func string(_ key: L10nKey) -> String {
         String(localized: String.LocalizationValue(key.rawValue), bundle: bundle, locale: locale)
@@ -87,7 +106,12 @@ final class LocalizationManager {
     /// which can only follow the locale and so cannot honour a digit choice made separately
     /// from the language.
     func timeString(_ date: Date) -> String {
-        timeFormatting.timeString(from: date, language: language, system: numberSystem)
+        timeFormatting.timeString(
+            from: date,
+            language: language,
+            system: numberSystem,
+            clock: clockFormat
+        )
     }
 
     /// A remaining duration as `h:mm:ss`.

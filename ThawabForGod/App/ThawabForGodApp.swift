@@ -19,5 +19,25 @@ struct ThawabForGodApp: App {
                 .localized(container.localizationManager)
         }
         .modelContainer(container.persistence.container)
+
+        #if os(macOS)
+        // The Mac idiom, and the reason the toolbar gear is `#if os(iOS)`: a Mac user looks for
+        // preferences under the app menu and ⌘,, not in the window. The same `SettingsView` fills
+        // it, in a `NavigationStack` of its own so the sources screen has somewhere to push to —
+        // this scene is not inside the one `RootView` puts up.
+        //
+        // No `.modelContainer(_:)`: nothing on this screen touches SwiftData.
+        Settings {
+            NavigationStack {
+                SettingsView(
+                    viewModel: container.settingsViewModel(),
+                    coordinator: container.settingsCoordinator
+                )
+            }
+            .frame(minWidth: 420, minHeight: 520)
+            .themed(container.themeManager)
+            .localized(container.localizationManager)
+        }
+        #endif
     }
 }
