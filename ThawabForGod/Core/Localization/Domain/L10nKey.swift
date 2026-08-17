@@ -43,6 +43,7 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: Prayer times
 
     case homeTitle = "home_title"
+    case libraryTitle = "library_title"
     case prayerFajr = "prayer_fajr"
     case prayerSunrise = "prayer_sunrise"
     case prayerDhuhr = "prayer_dhuhr"
@@ -109,6 +110,30 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case adhkarReset = "adhkar_reset"
     case adhkarVerificationNotice = "adhkar_verification_notice"
 
+    // MARK: Tasbih
+
+    case tasbihTitle = "tasbih_title"
+    case tasbihLoading = "tasbih_loading"
+    case tasbihUnavailable = "tasbih_unavailable"
+    case tasbihTargetLabel = "tasbih_target_label"
+    case tasbihLapsLabel = "tasbih_laps_label"
+    case tasbihCountLabel = "tasbih_count_label"
+    case tasbihCountHint = "tasbih_count_hint"
+    case tasbihReset = "tasbih_reset"
+
+    // MARK: The 99 names
+
+    case namesTitle = "names_title"
+    case namesLoading = "names_loading"
+    case namesUnavailable = "names_unavailable"
+    case namesSearchPrompt = "names_search_prompt"
+    case namesNoMatches = "names_no_matches"
+    case namesMeaningLabel = "names_meaning_label"
+    case namesExplanationLabel = "names_explanation_label"
+    case namesReferenceLabel = "names_reference_label"
+    case namesNumberLabel = "names_number_label"
+    case namesVerificationNotice = "names_verification_notice"
+
     // MARK: Onboarding
 
     case onboardingWelcomeTitle = "onboarding_welcome_title"
@@ -151,6 +176,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case tipOnboardingMethodMessage = "tip_onboarding_method_message"
     case tipHomeHijriTitle = "tip_home_hijri_title"
     case tipHomeHijriMessage = "tip_home_hijri_message"
+    case tipTasbihResetTitle = "tip_tasbih_reset_title"
+    case tipTasbihResetMessage = "tip_tasbih_reset_message"
+    case tipNamesTapTitle = "tip_names_tap_title"
+    case tipNamesTapMessage = "tip_names_tap_message"
 
     // MARK: Hijri calendar
 

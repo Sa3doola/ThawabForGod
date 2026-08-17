@@ -20,6 +20,8 @@ final class HomeCoordinator {
     enum Destination: Hashable {
         case qibla
         case adhkar
+        case tasbih
+        case names
     }
 
     var path = NavigationPath()

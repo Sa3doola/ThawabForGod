@@ -50,7 +50,7 @@ struct AdhkarReadingView: View {
                 .padding(.vertical, 48)
 
         case .ready(let adhkar) where adhkar.isEmpty:
-            AdhkarNotice(message: l10n.string(.adhkarEmpty))
+            InlineNotice(message: l10n.string(.adhkarEmpty))
 
         case .ready(let adhkar):
             progressHeader
@@ -71,7 +71,7 @@ struct AdhkarReadingView: View {
             }
 
         case .unavailable:
-            AdhkarNotice(message: l10n.string(.adhkarUnavailable))
+            InlineNotice(message: l10n.string(.adhkarUnavailable))
         }
     }
 
@@ -128,7 +128,7 @@ struct AdhkarReadingView: View {
         AdhkarReadingView(
             viewModel: AdhkarViewModel(
                 useCase: GetAdhkarUseCase(
-                    repository: AdhkarRepository(database: CorpusDatabase(name: "adhkar"))
+                    repository: AdhkarRepository(database: CorpusDatabase(name: "corpus"))
                 )
             ),
             category: .morning

@@ -9,14 +9,15 @@ import SwiftData
 /// Owns the app's single `ModelContainer`.
 ///
 /// Scope: **mutable user data only** — bookmarks, counts, progress. The read-only religious
-/// corpus (Quran, adhkar) will ship as its own bundled store; do not add it to this schema.
+/// corpus ships as its own bundled store (`Core/Persistence/Corpus`); do not add it here.
 ///
 /// Every new `@Model` type must be listed in `schema` or it will not be persisted.
 nonisolated struct PersistenceController: Sendable {
     let container: ModelContainer
 
     static let schema = Schema([
-        BookmarkRecord.self
+        BookmarkRecord.self,
+        TasbihSessionModel.self
     ])
 
     init(inMemory: Bool = false) throws {

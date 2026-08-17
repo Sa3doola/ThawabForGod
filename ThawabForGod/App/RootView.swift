@@ -27,7 +27,11 @@ struct RootView: View {
                 qiblaCoordinator: container.qiblaCoordinator,
                 qiblaViewModel: container.qiblaViewModel(),
                 adhkarCoordinator: container.adhkarCoordinator,
-                adhkarViewModel: container.adhkarViewModel()
+                adhkarViewModel: container.adhkarViewModel(),
+                tasbihCoordinator: container.tasbihCoordinator,
+                tasbihViewModel: container.tasbihViewModel(),
+                namesCoordinator: container.namesCoordinator,
+                namesViewModel: container.namesViewModel()
             )
         }
     }

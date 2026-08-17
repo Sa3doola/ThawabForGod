@@ -57,7 +57,7 @@ struct AdhkarCategoryListView: View {
             verificationNotice
 
         case .unavailable:
-            AdhkarNotice(message: l10n.string(.adhkarUnavailable))
+            InlineNotice(message: l10n.string(.adhkarUnavailable))
         }
     }
 
@@ -90,29 +90,6 @@ struct AdhkarCategoryListView: View {
     }
 }
 
-/// The one state that is neither a list nor a spinner: the corpus could not be opened.
-struct AdhkarNotice: View {
-    let message: String
-
-    @Environment(\.theme) private var theme
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle")
-                .appFont(.title2)
-                .foregroundStyle(theme.warning)
-
-            Text(message)
-                .appFont(.callout)
-                .foregroundStyle(theme.textSecondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-    }
-}
-
 #Preview {
     let settingsStore = InMemorySettingsStore()
 
@@ -120,7 +97,7 @@ struct AdhkarNotice: View {
         AdhkarCategoryListView(
             viewModel: AdhkarViewModel(
                 useCase: GetAdhkarUseCase(
-                    repository: AdhkarRepository(database: CorpusDatabase(name: "adhkar"))
+                    repository: AdhkarRepository(database: CorpusDatabase(name: "corpus"))
                 )
             ),
             coordinator: AdhkarCoordinator()

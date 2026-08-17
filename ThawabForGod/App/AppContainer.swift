@@ -47,12 +47,25 @@ final class AppContainer {
     /// Constructed here and handed to whichever repositories read it, so the file is opened once
     /// however many features come to depend on it — adhkar today; tasbih, the 99 Names and the
     /// Quran later. Opening is deferred to the first read, so this line touches no disk.
-    let adhkarCorpus: any CorpusDatabaseProviding
+    let corpus: any CorpusDatabaseProviding
 
     // MARK: Adhkar
 
     let adhkarRepository: any AdhkarRepositoring
     let getAdhkar: GetAdhkarUseCase
+
+    // MARK: Tasbih
+
+    /// The first feature assembled from both stores: phrases out of the read-only corpus,
+    /// counts into SwiftData.
+    let tasbihCatalog: any TasbihCatalogProviding
+    let tasbihProgress: any TasbihProgressRepositoring
+    let tasbihUseCase: TasbihUseCase
+
+    // MARK: The 99 names
+
+    let namesRepository: any NamesRepositoring
+    let getNames: GetNamesUseCase
 
     // MARK: Onboarding
 
@@ -66,6 +79,8 @@ final class AppContainer {
     let homeCoordinator = HomeCoordinator()
     let qiblaCoordinator = QiblaCoordinator()
     let adhkarCoordinator = AdhkarCoordinator()
+    let tasbihCoordinator = TasbihCoordinator()
+    let namesCoordinator = NamesCoordinator()
 
     /// Where prayer times are computed for when onboarding captured nothing — a user who
     /// skipped the location screen entirely. Replaced by a live reading when the location
@@ -83,7 +98,7 @@ final class AppContainer {
         notificationService: (any NotificationService)? = nil,
         tipsService: any TipsServicing = TipsService(),
         hijriDates: any HijriDateServicing = HijriDateService(),
-        adhkarCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "adhkar"),
+        corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
         fallbackCoordinates: Coordinates = .makkah
     ) {
         self.tipsService = tipsService
@@ -122,10 +137,23 @@ final class AppContainer {
 
         // Same three-link shape as the prayer times above, over a database instead of a
         // calculation: corpus → repository → use case.
-        let adhkarRepository = AdhkarRepository(database: adhkarCorpus)
-        self.adhkarCorpus = adhkarCorpus
+        let adhkarRepository = AdhkarRepository(database: corpus)
+        self.corpus = corpus
         self.adhkarRepository = adhkarRepository
         self.getAdhkar = GetAdhkarUseCase(repository: adhkarRepository)
+
+        // Both halves of the storage split, met in one use case: the same corpus the adhkar read
+        // from, and the same `ModelContainer` the bookmarks write to.
+        let tasbihCatalog = TasbihCatalogRepository(database: corpus)
+        let tasbihProgress = TasbihProgressRepository(modelContainer: persistence.container)
+        self.tasbihCatalog = tasbihCatalog
+        self.tasbihProgress = tasbihProgress
+        self.tasbihUseCase = TasbihUseCase(catalog: tasbihCatalog, progress: tasbihProgress)
+
+        // The third reader of the same corpus, and the simplest: read-only all the way down.
+        let namesRepository = NamesRepository(database: corpus)
+        self.namesRepository = namesRepository
+        self.getNames = GetNamesUseCase(repository: namesRepository)
 
         let onboardingRepository = OnboardingRepository(settingsStore: settingsStore)
         self.onboardingRepository = onboardingRepository
@@ -221,6 +249,44 @@ final class AppContainer {
 
         let viewModel = AdhkarViewModel(useCase: getAdhkar)
         cachedAdhkarViewModel = viewModel
+        return viewModel
+    }
+
+    // MARK: Tasbih
+
+    private var cachedTasbihViewModel: TasbihViewModel?
+
+    /// Tasbih's view model, built on first use and kept.
+    ///
+    /// Kept for a stronger reason than the other two: it holds counted taps that have not reached
+    /// the store yet. Rebuilding it on each push would discard whatever was counted since the
+    /// last lap — the one thing this feature must not lose.
+    func tasbihViewModel() -> TasbihViewModel {
+        if let cachedTasbihViewModel {
+            return cachedTasbihViewModel
+        }
+
+        let viewModel = TasbihViewModel(useCase: tasbihUseCase)
+        cachedTasbihViewModel = viewModel
+        return viewModel
+    }
+
+    // MARK: The 99 names
+
+    private var cachedNamesViewModel: NamesViewModel?
+
+    /// The names' view model, built on first use and kept.
+    ///
+    /// Kept for the mildest of the three reasons: nothing here is at risk of being lost, but
+    /// holding it means returning to the grid keeps the search text and skips a re-read of
+    /// ninety-nine rows.
+    func namesViewModel() -> NamesViewModel {
+        if let cachedNamesViewModel {
+            return cachedNamesViewModel
+        }
+
+        let viewModel = NamesViewModel(useCase: getNames)
+        cachedNamesViewModel = viewModel
         return viewModel
     }
 }

@@ -10,13 +10,13 @@ import Testing
 /// Reads the database that actually ships, not a fixture.
 ///
 /// That is the point of this suite. Everything above the repository is tested against stubs and
-/// would go on passing if `adhkar.sqlite` were dropped from the bundle, renamed, or rebuilt with
+/// would go on passing if `corpus.sqlite` were dropped from the bundle, renamed, or rebuilt with
 /// a column missing — so this is the only thing standing between a packaging or schema mistake
 /// and a screen that says the adhkar could not be loaded. It also exercises `DhikrRecord`'s
 /// `init(row:)`, which nothing else can reach without linking GRDB into the test target.
 struct AdhkarRepositoryTests {
 
-    private let repository = AdhkarRepository(database: CorpusDatabase(name: "adhkar"))
+    private let repository = AdhkarRepository(database: CorpusDatabase(name: "corpus"))
 
     // MARK: Categories
 
