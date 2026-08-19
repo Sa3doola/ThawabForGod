@@ -15,6 +15,10 @@ import SwiftUI
 /// do with each other. Both triggers hang off the `.home` branch on purpose: reminders are
 /// meaningless until onboarding has produced a position and a calculation method, and evaluating
 /// the key earlier would build `CalculationSettings` before onboarding had seeded it.
+///
+/// On iOS, every foreground refill also books the next background top-up through
+/// `BackgroundRefreshScheduler`, so a phone that is never reopened still gets refilled — see
+/// that type's documentation for the one manual Xcode step it depends on.
 struct RootView: View {
     let container: AppContainer
 
@@ -46,15 +50,23 @@ struct RootView: View {
             // Runs once when this branch appears — which covers both launching into Home and
             // arriving from the last step of onboarding — and again whenever anything the
             // pending reminders were built from changes.
-            .task(id: reminderKey) { await container.notificationService.refreshSchedule() }
+            .task(id: reminderKey) { await refillReminders() }
             // And on every return to the foreground, which is what keeps a ten-day window from
-            // running dry. A phone left closed for longer needs `BGTaskScheduler`; see the note
-            // at the foot of `UserNotificationService`.
+            // running dry between launches.
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
-                Task { await container.notificationService.refreshSchedule() }
+                Task { await refillReminders() }
             }
         }
+    }
+
+    /// Refills the pending window, then — on iOS — books the next background top-up so the
+    /// window keeps refilling even if the app is never reopened.
+    private func refillReminders() async {
+        await container.notificationService.refreshSchedule()
+        #if os(iOS)
+        container.backgroundRefreshScheduler.scheduleNextRefresh()
+        #endif
     }
 
     /// Everything a pending reminder was built from. When any part of it changes, the window on

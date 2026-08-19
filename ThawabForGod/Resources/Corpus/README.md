@@ -39,6 +39,29 @@ this note must not be deleted. The citation is stored per dhikr and shown in the
 reading view precisely so a reader can check it themselves rather than take the
 app's word for it.
 
+### A best-effort spot-check (2026-08-18)
+
+Not the scholar pass above — this project has none of its own — but a sanity
+check worth recording rather than leaving unsaid. A sample of the 34 rows
+(the two ayat al-Kursi/last-two-ayat-of-al-Baqarah entries, the three
+Quls, and half a dozen of the hadith-based morning duas, chosen for being
+either the highest-stakes text or the easiest to get subtly wrong) was
+diffed character-by-character against
+[hisnmuslim.com](https://hisnmuslim.com/i/ar/1), the Arabic-original
+companion site for the same book this data set draws from. Every sampled row
+matched, with one cosmetic difference throughout: this corpus renders the
+peace-be-upon-him salutation as the single ﷺ ligature (`U+FDFA`) wherever
+hisnmuslim.com spells it out as `صلى الله عليه وسلم` — a font/encoding choice
+common to most digital Islamic apps, not a textual variant, and not something
+this note treats as a discrepancy.
+
+This is a spot-check of roughly a quarter of the rows, by an AI agent with no
+standing to certify religious text, not the line-by-line pass the warning
+above asks for — it narrows the risk on the sample it covers without
+discharging the warning for the rest. The two-line hadith citations were not
+independently checked against the named books at all; that still needs a
+reader with access to them.
+
 ## Sources
 
 ### Adhkar
@@ -108,6 +131,40 @@ renderings and verse numbers — and none of the authored prose (`desc` fields) 
 those repositories also carry. That is a defensible position rather than a settled
 one. Before V1, either confirm it or replace this file with data from a source
 that grants explicit permission.
+
+#### A best-effort spot-check (2026-08-18)
+
+Reading every row in `data/divine_names.json` turned up three plain English
+spelling mistakes, unrelated to the translation-choice question above — copy
+errors, not interpretation:
+
+| # | field | was | now |
+| - | --- | --- | --- |
+| 33 | `meaning_en` | `The Maginificent` | `The Magnificent` |
+| 89 | `transliteration` | `Al Mughi` | `Al Mughni` |
+| 97 | `meaning_en` | `The Inhertior` | `The Inheritor` |
+
+Fixed in the vendored JSON — never in `corpus.sqlite` itself, per the rule
+below — and `corpus.sqlite` regenerated from it with
+`build_corpus_db.py`, so the fix is reviewable as a data diff rather than a
+binary one.
+
+Two more things surfaced that are judgement calls rather than typos, left for
+whoever does the real pass rather than decided here:
+
+- **#91's transliteration, `Ad Daaarr`,** is the one entry whose doubled
+  letters don't obviously map to its diacritics the way the rest of the list's
+  do (compare `Al Ghaffaar`, `Al Qahhaar`). It may be correct — shadda on both
+  the ض and the ر would produce something in this shape — but it reads as a
+  typo next to its neighbours and deserves a second look from a reader who can
+  parse the diacritics with more confidence than this pass did.
+- **#17 (Ar-Razzaq) and #39 (Al-Muqeet) both render as "The Sustainer."** Two
+  different names sharing an English gloss is not necessarily wrong — the
+  roots are both about provision — but it means the app currently shows the
+  same word twice for two names a reader would expect to read differently.
+  Worth a more distinct rendering of one of them (Al-Muqeet is often given as
+  "The Nourisher" or "The Maintainer" elsewhere) if this list gets a real
+  editing pass.
 
 ### Tasbih presets
 

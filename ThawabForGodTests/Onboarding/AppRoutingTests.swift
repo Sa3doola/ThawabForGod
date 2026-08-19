@@ -39,7 +39,10 @@ struct AppRoutingTests {
             settingsStore: settingsStore,
             persistence: try PersistenceController(inMemory: true),
             locationService: MockLocationService(),
-            notificationService: MockNotificationService()
+            notificationService: MockNotificationService(),
+            // `BGTaskScheduler.shared.register(_:)` is a real system call with no fake to hand
+            // it instead — see the parameter's own documentation on `AppContainer.init`.
+            registersBackgroundRefresh: false
         )
     }
 

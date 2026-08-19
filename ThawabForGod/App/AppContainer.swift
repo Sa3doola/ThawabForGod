@@ -24,6 +24,12 @@ final class AppContainer {
     let headingProvider: any HeadingProviding
     let notificationService: any NotificationService
 
+    #if os(iOS)
+    /// Refills the reminder window from the background. iOS only — see the type's own
+    /// documentation for the manual Xcode capability step it depends on.
+    let backgroundRefreshScheduler: BackgroundRefreshScheduler
+    #endif
+
     /// Which prayers are reminded, as an observable the Settings screen edits and the refresh
     /// key watches. The scheduler itself re-reads the store rather than this object.
     let reminderPreferences: ReminderPreferences
@@ -89,8 +95,8 @@ final class AppContainer {
     let settingsCoordinator = SettingsCoordinator()
 
     /// Where prayer times are computed for when onboarding captured nothing — a user who
-    /// skipped the location screen entirely. Replaced by a live reading when the location
-    /// slice wires `LocationService` into Home.
+    /// skipped the location screen entirely. Also the seed `HomeViewModel` shows for its first
+    /// frame, before `locationService` has produced a live fix.
     private let fallbackCoordinates: Coordinates
 
     init(
@@ -105,7 +111,18 @@ final class AppContainer {
         tipsService: any TipsServicing = TipsService(),
         hijriDates: any HijriDateServicing = HijriDateService(),
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
-        fallbackCoordinates: Coordinates = .makkah
+        fallbackCoordinates: Coordinates = .makkah,
+        // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
+        // elsewhere) is a real call into the system's background-task service — unlike
+        // `locationService` or `notificationService`, there is no protocol here to hand a fake
+        // to, so this is the escape hatch instead. Constructing a real `AppContainer()` in a
+        // test (`AppRoutingTests` does, for its routing-through-the-container coverage) with
+        // this left `true` registers for real from inside the test host process, which is a
+        // different bundle than the app ships as — that mismatch is what surfaced as flaky,
+        // unrelated-looking test failures and simulator instability across an entire run, not
+        // a failure of this call itself. Unconditional (not `#if os(iOS)`) only because Swift
+        // does not allow a single parameter in a list to be conditionally compiled cleanly.
+        registersBackgroundRefresh: Bool = true
     ) {
         self.tipsService = tipsService
         self.hijriDates = hijriDates
@@ -155,6 +172,12 @@ final class AppContainer {
             )
         )
 
+        #if os(iOS)
+        self.backgroundRefreshScheduler = BackgroundRefreshScheduler(
+            notificationService: self.notificationService
+        )
+        #endif
+
         // Same three-link shape as the prayer times above, over a database instead of a
         // calculation: corpus → repository → use case.
         let adhkarRepository = AdhkarRepository(database: corpus)
@@ -198,6 +221,15 @@ final class AppContainer {
         // Before any view exists: a `TipView` or `.popoverTip(_:)` built against an
         // unconfigured datastore never displays and logs on every redraw.
         tipsService.configure()
+
+        #if os(iOS)
+        // Same requirement, stricter: `BGTaskScheduler` fatals if `register()` runs any later
+        // than the app finishing launch, so this cannot wait for `RootView` to appear either.
+        // Skipped in tests — see `registersBackgroundRefresh`'s own documentation for why.
+        if registersBackgroundRefresh {
+            backgroundRefreshScheduler.register()
+        }
+        #endif
 
         // Networking is optional, but knowing whether it is available is cheap and lets the
         // UI gate online-only actions from launch.
@@ -269,6 +301,7 @@ final class AppContainer {
         let viewModel = HomeViewModel(
             useCase: getPrayerSchedule,
             coordinates: onboardingRepository.seededCoordinates ?? fallbackCoordinates,
+            locationService: locationService,
             hijriDates: hijriDates,
             // The same object Settings edits, not a snapshot of it — which is what lets a method
             // changed in Settings redraw today's times.

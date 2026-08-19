@@ -70,15 +70,23 @@ final class HomeViewModel {
     var config: CalculationConfig { calculation.config }
 
     @ObservationIgnored private let useCase: GetPrayerScheduleUseCase
-    @ObservationIgnored private let coordinates: Coordinates
+    @ObservationIgnored private var coordinates: Coordinates
+    @ObservationIgnored private let locationService: (any LocationService)?
     @ObservationIgnored private let calculation: CalculationSettings
     @ObservationIgnored private let hijriDates: any HijriDateServicing
     @ObservationIgnored private let tips: any HomeTipReporting
     @ObservationIgnored private let now: @Sendable () -> Date
 
     /// - Parameters:
-    ///   - coordinates: injected, never assumed. Today the container supplies a fixed point;
-    ///     when the location slice lands only that one line changes.
+    ///   - coordinates: the starting point — onboarding's seeded position, or Makkah if it was
+    ///     skipped. Held as the fallback for as long as no live fix has arrived, which is also
+    ///     what lets every existing test exercise a schedule without touching `locationService`
+    ///     at all.
+    ///   - locationService: where a live position comes from, once `start()` asks for one. `nil`
+    ///     in previews and in tests that only care about the astronomy, where a fixed
+    ///     `coordinates` is enough. Never prompts for permission itself — onboarding already
+    ///     did, so a fix here means "already authorized", not "ask while the user is reading
+    ///     prayer times."
     ///   - calculation: the shared calculation choices. Not a plain `CalculationConfig`, because
     ///     Settings can change it while this screen is alive.
     ///   - hijriDates: the Hijri conversion and the events table.
@@ -88,6 +96,7 @@ final class HomeViewModel {
     init(
         useCase: GetPrayerScheduleUseCase,
         coordinates: Coordinates,
+        locationService: (any LocationService)? = nil,
         hijriDates: any HijriDateServicing,
         calculation: CalculationSettings,
         tips: any HomeTipReporting = HomeTipReporter(),
@@ -95,6 +104,7 @@ final class HomeViewModel {
     ) {
         self.useCase = useCase
         self.coordinates = coordinates
+        self.locationService = locationService
         self.calculation = calculation
         self.hijriDates = hijriDates
         self.tips = tips
@@ -120,6 +130,11 @@ final class HomeViewModel {
         // Before the loop, so a screen that is dismissed immediately still records the visit.
         await tips.homeOpened()
 
+        // After the first refresh, not before: the screen has something to show — the seeded
+        // point, or Makkah — while this is in flight, rather than sitting on `.loading` for a
+        // fix that might never come.
+        await resolveLiveLocation()
+
         while !Task.isCancelled {
             do {
                 try await Task.sleep(for: .seconds(1))
@@ -128,6 +143,24 @@ final class HomeViewModel {
             }
             tick()
         }
+    }
+
+    /// Reads a live fix, if the app has a location service and is already authorized.
+    ///
+    /// One-shot, the same as `LocationService` itself is — no continuous tracking, matching
+    /// `QiblaViewModel`'s use of the same protocol. A denial, an unauthorized state, or a
+    /// failed reading all leave `coordinates` exactly where it was: the seeded point remains a
+    /// defensible placeholder for prayer times in a way it never was for the Qibla arrow.
+    private func resolveLiveLocation() async {
+        guard let locationService,
+              locationService.authorization == .authorized,
+              let live = try? await locationService.currentCoordinates(),
+              live != coordinates else {
+            return
+        }
+
+        coordinates = live
+        refresh()
     }
 
     /// Recomputes everything from the current instant.

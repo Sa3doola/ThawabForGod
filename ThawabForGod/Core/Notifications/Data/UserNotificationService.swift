@@ -157,9 +157,7 @@ nonisolated private extension NotificationAuthorization {
     }
 }
 
-// TODO: Refills happen only while the app is open — on launch, and on returning to the
-// foreground. Ten days of headroom makes that enough for any ordinary use, but a phone left
-// untouched for longer runs the window dry. `BGTaskScheduler` with a
-// `BGAppRefreshTaskRequest` is the fix, and is its own slice: it needs a background mode in the
-// entitlements, a registered identifier, and a scheduling policy the system will actually
-// honour.
+// Foreground refills happen on launch and on returning to the foreground, from `RootView`.
+// A phone left untouched for longer than the ten-day window is handled by
+// `BackgroundRefreshScheduler` (iOS only), which books a `BGAppRefreshTaskRequest` after every
+// foreground refill so the system wakes the app to refill again on its own.

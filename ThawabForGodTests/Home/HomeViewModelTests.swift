@@ -265,6 +265,92 @@ struct HomeViewModelTests {
         #expect(repository.requestedConfigs.last == CalculationConfig(method: .egyptian, madhab: .hanafi))
     }
 
+    // MARK: Live location
+
+    /// The whole point of the slice: a live fix that arrives after construction reaches the
+    /// calculation, replacing the seeded point rather than sitting unused beside it.
+    @Test(.timeLimit(.minutes(1)))
+    func aLiveFixReplacesTheSeededCoordinates() async {
+        let live = Coordinates(latitude: 51.5074, longitude: -0.1278)
+        let location = MockLocationService(
+            authorization: .authorized,
+            coordinatesResult: .success(live)
+        )
+        let repository = RecordingPrayerTimeRepository(
+            schedules: [today: PrayerTimeFixtures.schedule(on: today)]
+        )
+        let clock = TestClock(PrayerTimeFixtures.instant(today, hour: 13))
+        let viewModel = HomeViewModel(
+            useCase: GetPrayerScheduleUseCase(repository: repository, calendar: PrayerTimeFixtures.calendar),
+            coordinates: .makkah,
+            locationService: location,
+            hijriDates: StubHijriDateService(),
+            calculation: CalculationSettings(config: .default, settingsStore: InMemorySettingsStore()),
+            tips: SpyHomeTipReporter(),
+            now: clock.provider
+        )
+
+        let task = Task { await viewModel.start() }
+        while repository.requestedCoordinates.last != live {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        // The very first ask is still the seeded point — the screen never sits on `.loading`
+        // waiting for the fix — and the live one lands once it arrives.
+        #expect(repository.requestedCoordinates.first == .makkah)
+        #expect(repository.requestedCoordinates.last == live)
+    }
+
+    /// Home never asks for permission on its own — onboarding already did — so anything short
+    /// of an already-authorized status leaves the seeded point untouched.
+    @Test(.timeLimit(.minutes(1)))
+    func withoutAuthorizationTheSeededCoordinatesStay() async {
+        let location = MockLocationService(authorization: .denied)
+        let repository = RecordingPrayerTimeRepository(
+            schedules: [today: PrayerTimeFixtures.schedule(on: today)]
+        )
+        let clock = TestClock(PrayerTimeFixtures.instant(today, hour: 13))
+        let viewModel = HomeViewModel(
+            useCase: GetPrayerScheduleUseCase(repository: repository, calendar: PrayerTimeFixtures.calendar),
+            coordinates: .makkah,
+            locationService: location,
+            hijriDates: StubHijriDateService(),
+            calculation: CalculationSettings(config: .default, settingsStore: InMemorySettingsStore()),
+            tips: SpyHomeTipReporter(),
+            now: clock.provider
+        )
+
+        let task = Task { await viewModel.start() }
+        while repository.requestedCoordinates.isEmpty {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(repository.requestedCoordinates.allSatisfy { $0 == .makkah })
+        // Denied never reaches the read — the guard chain stops at the authorization check.
+        #expect(location.coordinatesRequestCount == 0)
+    }
+
+    /// No `locationService` at all — every other test in this file — must behave exactly as it
+    /// did before this slice: `start()` finishes without ever touching a service that isn't
+    /// there.
+    @Test(.timeLimit(.minutes(1)))
+    func withNoLocationServiceTheSeededCoordinatesStay() async throws {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
+
+        let task = Task { await viewModel.start() }
+        while case .loading = viewModel.phase {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(try ready(viewModel).schedule.times.count == 6)
+    }
+
     // MARK: Tip signals
 
     /// The input to the "opened a few times" rule. Donated once per appearance — the ticking

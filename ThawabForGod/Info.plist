@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	 Merged into the generated Info.plist (GENERATE_INFOPLIST_FILE = YES stays on;
+	 this file is additive, not a replacement) for the one key Xcode's INFOPLIST_KEY_*
+	 synthesis does not support: BGTaskSchedulerPermittedIdentifiers must be a real
+	 array, and no build setting produces that for this key, confirmed by inspecting
+	 the built app's Info.plist with and without a clean build.
+
+	 See BackgroundRefreshScheduler.swift for what registers under this identifier.
+	 Harmless on macOS, where nothing calls BGTaskScheduler.register(_:) — the
+	 background-refresh code is #if os(iOS) only.
+	-->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.Sa3dola.ThawabForGod.refreshReminders</string>
+	</array>
+</dict>
+</plist>

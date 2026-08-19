@@ -92,6 +92,7 @@ nonisolated final class RecordingPrayerTimeRepository: PrayerTimeRepositoring, @
     private let lock = NSLock()
     private let schedules: [Date: PrayerSchedule]
     private var configs: [CalculationConfig] = []
+    private var coordinatesLog: [Coordinates] = []
 
     init(schedules: [Date: PrayerSchedule]) {
         self.schedules = schedules
@@ -102,12 +103,21 @@ nonisolated final class RecordingPrayerTimeRepository: PrayerTimeRepositoring, @
         lock.withLock { configs }
     }
 
+    /// Every point asked for, in order — what a live location fix actually reached the
+    /// calculation with, as opposed to what the view model was merely constructed with.
+    var requestedCoordinates: [Coordinates] {
+        lock.withLock { coordinatesLog }
+    }
+
     func schedule(
         for coordinates: Coordinates,
         date: Date,
         config: CalculationConfig
     ) throws -> PrayerSchedule {
-        lock.withLock { configs.append(config) }
+        lock.withLock {
+            configs.append(config)
+            coordinatesLog.append(coordinates)
+        }
 
         guard let schedule = schedules[PrayerTimeFixtures.calendar.startOfDay(for: date)] else {
             throw PrayerTimeError.notComputable(date)

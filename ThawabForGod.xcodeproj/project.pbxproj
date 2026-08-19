@@ -34,9 +34,22 @@
 		9D285A39302A054500164D4C /* ThawabForGodUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ThawabForGodUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9D31A83D3034DB9B00F935B2 /* Exceptions for "ThawabForGod" folder in "ThawabForGod" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9D285A1F302A054500164D4C /* ThawabForGod */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9D285A22302A054500164D4C /* ThawabForGod */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9D31A83D3034DB9B00F935B2 /* Exceptions for "ThawabForGod" folder in "ThawabForGod" target */,
+			);
 			path = ThawabForGod;
 			sourceTree = "<group>";
 		};
@@ -414,6 +427,10 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ThawabForGod/Info.plist;
+				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = com.Sa3dola.ThawabForGod.refreshReminders;
+				INFOPLIST_KEY_CFBundleDisplayName = Noor;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Noor uses your location to calculate accurate prayer times and the direction of the Qibla. Your location stays on this device.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -472,6 +489,10 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ThawabForGod/Info.plist;
+				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = com.Sa3dola.ThawabForGod.refreshReminders;
+				INFOPLIST_KEY_CFBundleDisplayName = Noor;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Noor uses your location to calculate accurate prayer times and the direction of the Qibla. Your location stays on this device.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
