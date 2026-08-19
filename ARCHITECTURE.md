@@ -73,6 +73,7 @@ ThawabForGod/
 │   └── Tips/           TipKit configuration
 ├── Features/       One folder per feature: Views + ViewModel + Coordinator
 │   ├── Home/           Prayer times + next-prayer countdown
+│   ├── Quran/          Placeholder for Phase 2 — the tab exists, the slice does not
 │   ├── Onboarding/     First-run: permissions, calculation method
 │   ├── Qibla/          Compass + distance, reusing the prayer-time engine
 │   ├── Adhkar/         Morning/evening remembrance, the first corpus reader

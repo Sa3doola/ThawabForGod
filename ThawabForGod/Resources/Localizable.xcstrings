@@ -987,6 +987,23 @@
         }
       }
     },
+    "home_tab_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرئيسية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        }
+      }
+    },
     "home_title": {
       "extractionState": "manual",
       "localizations": {
@@ -2445,6 +2462,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Qibla"
+          }
+        }
+      }
+    },
+    "quran_coming_soon_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المصحف كاملًا مع التفسير آيةً آية هو ما يُبنى الآن. وسيعمل دون اتصال بالإنترنت، كسائر ما في التطبيق."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The full Quran, with tafsir verse by verse, is what is being built next. It will read offline, like everything else here."
+          }
+        }
+      }
+    },
+    "quran_coming_soon_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قريبًا إن شاء الله"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming soon"
+          }
+        }
+      }
+    },
+    "quran_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القرآن"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quran"
           }
         }
       }

@@ -29,8 +29,8 @@ struct AdhkarCategoryListView: View {
         .background(theme.background)
         .navigationTitle(l10n.string(.adhkarTitle))
         .task { await viewModel.loadCategories() }
-        // Pushes into the stack Home owns, rather than opening one of its own. Two-way: a back
-        // swipe writes `nil` through the binding and the coordinator follows.
+        // Pushes into the stack this tab owns, rather than opening one of its own. Two-way: a
+        // back swipe writes `nil` through the binding and the coordinator follows.
         .navigationDestination(item: openCategory) { category in
             AdhkarReadingView(viewModel: viewModel, category: category)
         }

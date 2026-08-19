@@ -91,6 +91,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: Prayer times
 
     case homeTitle = "home_title"
+    /// The tab-bar label for the same screen `homeTitle` titles. Short on purpose: a tab item
+    /// truncates where a navigation title wraps, and "مواقيت الصلاة" does not fit one.
+    case homeTabLabel = "home_tab_label"
     case libraryTitle = "library_title"
     case prayerFajr = "prayer_fajr"
     case prayerSunrise = "prayer_sunrise"
@@ -136,6 +139,12 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case qiblaLocationNeededBody = "qibla_location_needed_body"
     case qiblaSetLocation = "qibla_set_location"
     case qiblaDone = "qibla_done"
+
+    // MARK: Quran
+
+    case quranTitle = "quran_title"
+    case quranComingSoonTitle = "quran_coming_soon_title"
+    case quranComingSoonBody = "quran_coming_soon_body"
 
     // MARK: Adhkar
 

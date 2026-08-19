@@ -13,10 +13,10 @@ import SwiftUI
 /// the root, so a change here is a change everywhere rather than a change that has to be
 /// propagated.
 ///
-/// A `Form` on all three platforms. On iPhone and iPad it is pushed onto the stack Home owns; on
-/// macOS the same view is the content of the `Settings` scene, reached with ⌘, where a Mac user
-/// expects to find it. `.formStyle(.grouped)` is what makes the second of those look native
-/// rather than like a phone screen in a window.
+/// A `Form` on all three platforms. On iPhone and iPad it is the root of its own tab; on macOS
+/// the same view is the content of the `Settings` scene, reached with ⌘, where a Mac user expects
+/// to find it — which is why there is no settings tab in that build. `.formStyle(.grouped)` is
+/// what makes the second of those look native rather than like a phone screen in a window.
 struct SettingsView: View {
     let viewModel: SettingsViewModel
     let coordinator: SettingsCoordinator
@@ -40,9 +40,9 @@ struct SettingsView: View {
         // Re-read on each appearance rather than once: notification permission can be revoked
         // in the Settings app while this app sits in the background.
         .task { await viewModel.loadNotificationStatus() }
-        // Pushes into whichever stack encloses this screen: Home's on iOS, the one the Settings
-        // scene puts up on macOS. Two-way, so a back swipe writes `nil` and the coordinator
-        // follows — the same idiom the names grid uses.
+        // Pushes into whichever stack encloses this screen: the settings tab's on iOS, the one
+        // the Settings scene puts up on macOS. Two-way, so a back swipe writes `nil` and the
+        // coordinator follows — the same idiom the names grid uses.
         .navigationDestination(item: openDestination) { destination in
             switch destination {
             case .sources:

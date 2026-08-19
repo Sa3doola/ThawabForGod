@@ -8,7 +8,7 @@ import Observation
 /// Owns which name the reader has open, and nothing else.
 ///
 /// No `NavigationPath`, for the same reason `AdhkarCoordinator` and `TasbihCoordinator` have
-/// none: Home owns the stack these screens live in, and a second path would mean a
+/// none: the Home tab owns the stack these screens live in, and a second path would mean a
 /// `NavigationStack` nested inside the first, which breaks the back gesture and the toolbar both.
 /// The grid drives this through `navigationDestination(item:)`, so a push and a back swipe are the
 /// same value changing.

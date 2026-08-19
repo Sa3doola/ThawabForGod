@@ -9,8 +9,11 @@ import SwiftUI
 /// Owns Home's navigation state, and nothing else.
 ///
 /// It renders no views and holds no business logic — that separation is what lets a later
-/// slice push a prayer detail or a settings screen by adding a case to `Destination`, without
-/// reaching into `HomeView`.
+/// slice push a prayer detail by adding a case to `Destination`, without reaching into
+/// `HomeView`.
+///
+/// The stack this drives is Home's *tab*, not the app's. Adhkar and Settings used to be cases
+/// here and are now tabs of their own — see `AppTab` for where that line falls.
 @Observable
 @MainActor
 final class HomeCoordinator {
@@ -19,12 +22,8 @@ final class HomeCoordinator {
     /// `navigationDestination(for:)` matches on.
     enum Destination: Hashable {
         case qibla
-        case adhkar
         case tasbih
         case names
-        /// iOS and iPadOS only. On macOS, Settings is a scene of its own reached with ⌘, — the
-        /// place a Mac user looks for it — rather than a screen pushed onto this stack.
-        case settings
     }
 
     var path = NavigationPath()
