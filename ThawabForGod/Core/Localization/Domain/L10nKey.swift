@@ -64,6 +64,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
 
     // MARK: Attribution
 
+    case sourceQuranTitle = "source_quran_title"
+    case sourceQuranAttribution = "source_quran_attribution"
     case sourceAdhkarTitle = "source_adhkar_title"
     case sourceAdhkarAttribution = "source_adhkar_attribution"
     case sourceAdhkarNote = "source_adhkar_note"
@@ -85,6 +87,7 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case notificationPrayerBody = "notification_prayer_body"
 
     case licenceMIT = "licence_mit"
+    case licenceCCBY = "licence_cc_by"
     case licenceUnsettled = "licence_unsettled"
     case licenceNone = "licence_none"
 
@@ -143,8 +146,19 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: Quran
 
     case quranTitle = "quran_title"
-    case quranComingSoonTitle = "quran_coming_soon_title"
-    case quranComingSoonBody = "quran_coming_soon_body"
+    case quranSectionSurahs = "quran_section_surahs"
+    case quranSectionJuz = "quran_section_juz"
+    /// Precedes a number — "Juz 7", "جزء ٧" — rather than carrying one, because the digits go
+    /// through `LocalizationManager` and a format string would take that away from it.
+    case quranJuzLabel = "quran_juz_label"
+    /// Followed by a number. Written as a label with a colon rather than "7 verses", which
+    /// Arabic cannot say with one noun form across every count.
+    case quranVersesLabel = "quran_verses_label"
+    case quranMeccan = "quran_meccan"
+    case quranMedinan = "quran_medinan"
+    case quranSajda = "quran_sajda"
+    case quranVerseLabel = "quran_verse_label"
+    case quranUnavailable = "quran_unavailable"
 
     // MARK: Adhkar
 

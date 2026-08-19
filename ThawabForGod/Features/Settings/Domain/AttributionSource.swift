@@ -48,6 +48,18 @@ nonisolated extension AttributionSource {
     /// is a typo made by whoever edits it and belongs at the top of the first launch, not in a
     /// silently empty row.
     static let all: [AttributionSource] = [
+        // First, and with no note: unlike everything below it, the Quran text is not
+        // best-effort data this project reshaped and hopes is right. Tanzil publish it as
+        // verified and monitored, it is used verbatim, and their terms require the source to
+        // be named and linked — which is what this row is.
+        AttributionSource(
+            id: "quran",
+            titleKey: .sourceQuranTitle,
+            attributionKey: .sourceQuranAttribution,
+            licenceKey: .licenceCCBY,
+            noteKey: nil,
+            url: URL(string: "https://tanzil.net")!
+        ),
         AttributionSource(
             id: "adhkar",
             titleKey: .sourceAdhkarTitle,

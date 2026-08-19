@@ -67,12 +67,16 @@ struct MainTabView: View {
         )
     }
 
-    /// Empty until Phase 2 fills it. The tab is here first on purpose: it is the shape the
-    /// Quran slice gets built into, rather than something the tab bar has to be rearranged for
-    /// once the reading screen exists.
+    /// The chapters and the parts, each pushing into the reading screen.
+    ///
+    /// A tab rather than a push for the same reason the adhkar are: reading is a sitting the
+    /// reader returns to, and a tab is what remembers where they were.
     private var quranTab: some View {
         NavigationStack {
-            QuranView()
+            QuranListView(
+                viewModel: container.quranViewModel(),
+                coordinator: container.quranCoordinator
+            )
         }
     }
 

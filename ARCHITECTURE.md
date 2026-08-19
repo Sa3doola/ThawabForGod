@@ -73,14 +73,14 @@ ThawabForGod/
 │   └── Tips/           TipKit configuration
 ├── Features/       One folder per feature: Views + ViewModel + Coordinator
 │   ├── Home/           Prayer times + next-prayer countdown
-│   ├── Quran/          Placeholder for Phase 2 — the tab exists, the slice does not
+│   ├── Quran/          The mushaf: chapters, parts, and the reading screen
 │   ├── Onboarding/     First-run: permissions, calculation method
 │   ├── Qibla/          Compass + distance, reusing the prayer-time engine
 │   ├── Adhkar/         Morning/evening remembrance, the first corpus reader
 │   ├── Tasbih/         Electronic counter — corpus phrases, SwiftData counts
 │   ├── NamesOfAllah/   The 99 names, read-only, in-memory search
 │   └── Settings/       Drives every preference above; stores none of its own
-└── Resources/      Assets, Localizable.xcstrings, bundled corpus.sqlite
+└── Resources/      Assets, Localizable.xcstrings, bundled corpus.sqlite + quran.sqlite
 ```
 
 ## Data flow: a screen appearing

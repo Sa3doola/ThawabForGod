@@ -1089,6 +1089,23 @@
         }
       }
     },
+    "licence_cc_by": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المشاع الإبداعي — نسب المصنف ٣٫٠"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creative Commons Attribution 3.0"
+          }
+        }
+      }
+    },
     "licence_mit": {
       "extractionState": "manual",
       "localizations": {
@@ -2466,36 +2483,104 @@
         }
       }
     },
-    "quran_coming_soon_body": {
+    "quran_juz_label": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "المصحف كاملًا مع التفسير آيةً آية هو ما يُبنى الآن. وسيعمل دون اتصال بالإنترنت، كسائر ما في التطبيق."
+            "value": "جزء"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The full Quran, with tafsir verse by verse, is what is being built next. It will read offline, like everything else here."
+            "value": "Juz"
           }
         }
       }
     },
-    "quran_coming_soon_title": {
+    "quran_meccan": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "قريبًا إن شاء الله"
+            "value": "مكية"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coming soon"
+            "value": "Meccan"
+          }
+        }
+      }
+    },
+    "quran_medinan": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مدنية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medinan"
+          }
+        }
+      }
+    },
+    "quran_sajda": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجدة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sajda"
+          }
+        }
+      }
+    },
+    "quran_section_juz": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأجزاء"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Juz"
+          }
+        }
+      }
+    },
+    "quran_section_surahs": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السور"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surahs"
           }
         }
       }
@@ -2513,6 +2598,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quran"
+          }
+        }
+      }
+    },
+    "quran_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تحميل القرآن."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Quran could not be loaded."
+          }
+        }
+      }
+    },
+    "quran_verse_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verse"
+          }
+        }
+      }
+    },
+    "quran_verses_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الآيات:"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verses:"
           }
         }
       }
@@ -2989,6 +3125,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "The 99 Names of Allah"
+          }
+        }
+      }
+    },
+    "source_quran_attribution": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشروع تنزيل — النص العثماني، الإصدار ١٫١"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanzil Project — Uthmani text, version 1.1"
+          }
+        }
+      }
+    },
+    "source_quran_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القرآن الكريم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Quran"
           }
         }
       }

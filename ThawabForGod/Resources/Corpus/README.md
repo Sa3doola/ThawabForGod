@@ -5,11 +5,16 @@ ever written to at runtime — the databases are opened read-only, and anything 
 *user* changes (bookmarks, counts, progress) belongs in `Core/Persistence`'s
 SwiftData store instead.
 
-`corpus.sqlite` holds one table set per feature — the adhkar, the tasbih presets
-and the 99 names today; the Quran later — all read through the same
-`CorpusDatabaseProviding` infrastructure. A feature large enough to warrant its
-own file (the Quran, most likely) can have one: `CorpusDatabase` is constructed
-with a resource name and knows nothing about what is inside it.
+Two files, both read through the same `CorpusDatabaseProviding` infrastructure —
+`CorpusDatabase` is constructed with a resource name and knows nothing about what
+is inside it, which is what makes a second one free:
+
+- **`corpus.sqlite`** holds one table set per feature — the adhkar, the tasbih
+  presets and the 99 names.
+- **`quran.sqlite`** holds the Quran. Its own file rather than more tables in the
+  first, for the reason this section anticipated: the text is an order of
+  magnitude larger than everything in `corpus.sqlite` put together, and it has a
+  different upstream, a different licence and its own rebuild step.
 
 ---
 
@@ -18,6 +23,13 @@ with a resource name and knows nothing about what is inside it.
 Two separate warnings, both blocking for V1. The adhkar are immediately below;
 the 99 names are under [Sources](#sources). Neither the app nor this file may
 present any of it as authoritative until someone has checked it.
+
+**The Quran text is the exception, and deliberately so.** It is not data this
+project assembled and hopes is right: it is Tanzil's published Uthmani text, used
+verbatim, which they produce and monitor with specialists for exactly this
+purpose. That is why it is the one source in Settings → Sources with no warning
+beside it. What still holds is the rule that it must not be *edited* — see
+[The Quran](#the-quran) below.
 
 ## ⚠️ The adhkar text is NOT yet verified
 
@@ -166,6 +178,43 @@ whoever does the real pass rather than decided here:
   "The Nourisher" or "The Maintainer" elsewhere) if this list gets a real
   editing pass.
 
+### The Quran
+
+**Source:** the [Tanzil Project](https://tanzil.net) — the Uthmani text, version
+1.1, and `quran-data.xml` for the chapter metadata and the divisions.
+
+**Licence: Creative Commons Attribution 3.0**, with terms that shape how this is
+built. Their copyright block states them in full and is reproduced *inside*
+`quran.sqlite` — in the `source` table — because those terms ask for it to appear
+in "all files derived from or containing substantial portion of this text". A
+copy of the database on its own is therefore still compliant. The build fails
+outright if the download arrives without that block.
+
+The three obligations, and how each is met:
+
+| Term | How |
+| --- | --- |
+| Verbatim copies only; **changing it is not allowed** | The text is inserted exactly as downloaded, and a SHA-256 of the verses is pinned in the build script — an upstream revision is a loud failure to be re-pinned deliberately, not a silent change to the mushaf the app ships |
+| Source clearly indicated, with a link to tanzil.net | Settings → Sources carries the row, linking to tanzil.net |
+| Notice reproduced in derived files | The `source` table, as above |
+
+**One transformation is applied, and it is worth being explicit about.** For the
+112 chapters that open with it, Tanzil delivers the basmala as a *prefix of verse
+1*; the mushaf prints it above the chapter, unnumbered. The build moves it into
+`surah.bismillah` so the reading screen can draw it as a heading. Not a word is
+added, removed or altered — the same characters in the same order, stored in two
+columns instead of one, and the reader sees them in the order the mushaf has
+them. (The Tazkiya Tech Quran SDK, working from the same upstream, makes the same
+cut for the same reason.) Al-Fatiha is left alone, its basmala being verse 1, and
+At-Tawba has none. `QuranRepositoryTests` pins all of that.
+
+**What is not verified:** nothing about the *text* is in doubt. The divisions —
+juz, hizb, rub el hizb, page numbers, sajda markers — come from Tanzil's metadata
+rather than from a printed mushaf, and while the canonical boundaries are pinned
+in tests, a full page-by-page check against a printed Madina mushaf has not been
+done. The page numbers in particular are unused today; a paged reading mode would
+be the point at which they need one.
+
 ### Tasbih presets
 
 Written out in the build script rather than sourced from anywhere. They are five
@@ -226,6 +275,48 @@ changes, so a reader can tell two builds apart.
 **A `tasbih_preset.id` is load-bearing.** The SwiftData progress store keys a
 user's saved count on it, so renaming one orphans whatever they had counted. Treat
 these ids as permanent.
+
+## Rebuilding `quran.sqlite`
+
+```bash
+python3 Tools/CorpusBuilder/build_quran_db.py
+```
+
+That downloads the Uthmani text and `quran-data.xml` from Tanzil and regenerates
+the database in place. Pass `--text` and `--metadata` to build from local copies
+instead — which is also how to rebuild without hitting the network twice.
+
+The same rule as above: **the script is the only thing that writes this file, and
+rows must not be edited by hand.** Here it is not only reproducibility — an edit
+is a change to the Quran text, which the licence forbids and which no reviewer
+could see in a binary diff.
+
+### Schema
+
+| table | holds |
+| --- | --- |
+| `surah` | the 114 chapters: three name spellings, verse count, where and when revealed, and the basmala heading (`NULL` for Al-Fatiha and At-Tawba) |
+| `verse` | all 6,236 verses: the Uthmani text, a search-normalized copy, the juz / hizb / rub el hizb it falls in, its mushaf page, and its sajda kind where it has one |
+| `juz`, `hizb`, `rub_el_hizb` | the divisions, as ranges to jump to |
+| `source` | Tanzil's copyright notice, verbatim — see above |
+| `verse_fts`, `surah_fts` | FTS5 indexes over the normalized text and the three name spellings |
+
+`PRAGMA user_version` is the schema version, and is `2` (`1` was `surah` and
+`verse` alone, Arabic only).
+
+**`text_normalized` is built here, not on device.** It is the verse with every
+diacritic dropped and the ambiguous letters folded together — alef forms to `ا`,
+ta marbuta to `ه`, alef maqsura to `ي` — so that a reader typing plain Arabic
+matches a fully vowelled text. Normalizing 6,236 verses to answer one query would
+be the whole corpus walked per keystroke.
+
+**A known limit, for whoever builds search.** Folding drops the superscript alef,
+so `ٱلْعَٰلَمِينَ` normalizes to `العلمين` — the Uthmani spelling without its
+diacritics, not the modern `العالمين` that a reader is more likely to type. The
+same applies to `الرحمن`. Tanzil publish a separate "simple" (imlaei) edition
+that spells those alefs out, and pulling it in as a second column is the obvious
+answer when full-text search lands. It is not a problem today: nothing queries
+these indexes yet.
 
 ### The citation is prose, not a structured reference
 

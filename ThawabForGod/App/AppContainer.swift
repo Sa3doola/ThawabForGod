@@ -56,9 +56,22 @@ final class AppContainer {
     /// SwiftData and holds only what the user changes.
     ///
     /// Constructed here and handed to whichever repositories read it, so the file is opened once
-    /// however many features come to depend on it — adhkar today; tasbih, the 99 Names and the
-    /// Quran later. Opening is deferred to the first read, so this line touches no disk.
+    /// however many features come to depend on it — the adhkar, the tasbih and the 99 Names.
+    /// Opening is deferred to the first read, so this line touches no disk.
     let corpus: any CorpusDatabaseProviding
+
+    /// The Quran, which is a second file rather than more tables in the first.
+    ///
+    /// Its text is an order of magnitude larger than everything in `corpus` put together, and it
+    /// has a different upstream and a different licence — so it is versioned, rebuilt and
+    /// attributed on its own. `CorpusDatabase` is constructed with a resource name and knows
+    /// nothing about what is inside it, which is what makes a second one free.
+    let quranCorpus: any CorpusDatabaseProviding
+
+    // MARK: Quran
+
+    let quranRepository: any QuranRepositoring
+    let getQuran: GetQuranUseCase
 
     // MARK: Adhkar
 
@@ -89,6 +102,7 @@ final class AppContainer {
     let router: AppRouter
     let homeCoordinator = HomeCoordinator()
     let qiblaCoordinator = QiblaCoordinator()
+    let quranCoordinator = QuranCoordinator()
     let adhkarCoordinator = AdhkarCoordinator()
     let tasbihCoordinator = TasbihCoordinator()
     let namesCoordinator = NamesCoordinator()
@@ -111,6 +125,7 @@ final class AppContainer {
         tipsService: any TipsServicing = TipsService(),
         hijriDates: any HijriDateServicing = HijriDateService(),
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
+        quranCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "quran"),
         fallbackCoordinates: Coordinates = .makkah,
         // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
         // elsewhere) is a real call into the system's background-task service — unlike
@@ -197,6 +212,13 @@ final class AppContainer {
         let namesRepository = NamesRepository(database: corpus)
         self.namesRepository = namesRepository
         self.getNames = GetNamesUseCase(repository: namesRepository)
+
+        // The same three links again, over the other file. Nothing but this line and the
+        // property above knows there are two databases.
+        let quranRepository = QuranRepository(database: quranCorpus)
+        self.quranCorpus = quranCorpus
+        self.quranRepository = quranRepository
+        self.getQuran = GetQuranUseCase(repository: quranRepository)
 
         let onboardingRepository = OnboardingRepository(settingsStore: settingsStore)
         self.onboardingRepository = onboardingRepository
@@ -333,6 +355,25 @@ final class AppContainer {
             coordinates: onboardingRepository.seededCoordinates
         )
         cachedQiblaViewModel = viewModel
+        return viewModel
+    }
+
+    // MARK: Quran
+
+    private var cachedQuranViewModel: QuranViewModel?
+
+    /// The Quran's view model, built on first use and kept.
+    ///
+    /// Kept rather than rebuilt because the chosen segment and the loaded lists live on it: a
+    /// reader who was looking at the parts, opened one, and came back should find the parts
+    /// still selected and no second read of the corpus behind it.
+    func quranViewModel() -> QuranViewModel {
+        if let cachedQuranViewModel {
+            return cachedQuranViewModel
+        }
+
+        let viewModel = QuranViewModel(useCase: getQuran)
+        cachedQuranViewModel = viewModel
         return viewModel
     }
 
