@@ -22,6 +22,10 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case latitude
     case longitude
 
+    // How Home is arranged: which sections, in what order, and which shortcut circles. One key
+    // holding the whole value as JSON — see `HomeLayoutRepository` for why it is not nine.
+    case homeLayout
+
     // The reading screen's own look. Unset means the app's colours at the app's size — the
     // reader has to have opened the panel and moved something for any of these to exist, which
     // is what lets "reset" write `nil` back rather than the defaults.
