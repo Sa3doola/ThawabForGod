@@ -2483,6 +2483,74 @@
         }
       }
     },
+    "quran_bookmark_add": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ الآية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark"
+          }
+        }
+      }
+    },
+    "quran_bookmark_remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة العلامة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Bookmark"
+          }
+        }
+      }
+    },
+    "quran_bookmarks_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد آيات محفوظة بعد. المس علامة الحفظ بجانب الآية لحفظها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved verses yet. Tap the bookmark beside a verse to keep it."
+          }
+        }
+      }
+    },
+    "quran_continue_reading": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متابعة القراءة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Reading"
+          }
+        }
+      }
+    },
     "quran_juz_label": {
       "extractionState": "manual",
       "localizations": {
@@ -2547,6 +2615,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sajda"
+          }
+        }
+      }
+    },
+    "quran_section_bookmarks": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العلامات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmarks"
           }
         }
       }

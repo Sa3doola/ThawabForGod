@@ -33,13 +33,23 @@ struct ReaderView: View {
     private var style: ReadingStyle { settings.style(on: theme) }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                content
+        // `ScrollViewReader` so a bookmark and "continue reading" can land on the verse they
+        // name rather than at the top of a 286-verse chapter.
+        ScrollViewReader { proxy in
+            ScrollView {
+                // Lazy, unlike the eager `VStack` this replaces. Al-Baqara is 286 verses and a
+                // juz can be more; building every one of them before the first frame was both a
+                // visible pause on open and the reason `onAppear` could not be used to track
+                // position — with an eager stack every row appears at once, so "the verse in
+                // view" would have been the last verse of the chapter, immediately.
+                LazyVStack(alignment: .leading, spacing: 18) {
+                    content
+                }
+                .padding(20)
+                .frame(maxWidth: 620)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(20)
-            .frame(maxWidth: 620)
-            .frame(maxWidth: .infinity, alignment: .center)
+            .task(id: scrollTargetKey) { scroll(proxy) }
         }
         .background(background)
         .navigationTitle(title)
@@ -57,6 +67,30 @@ struct ReaderView: View {
             ReaderSettingsSheet(settings: settings, coordinator: coordinator)
         }
         .task { await viewModel.load(reading) }
+        // On the way out rather than as they scroll — one save per sitting instead of one per
+        // verse boundary. See `QuranViewModel.saveReadingPosition()`.
+        .onDisappear { viewModel.saveReadingPosition() }
+    }
+
+    /// Puts the reader on the verse a bookmark named, once the verses exist to scroll to.
+    ///
+    /// Keyed on the target *and* the loaded phase, so it runs after the text arrives rather than
+    /// against an empty `LazyVStack` — a `scrollTo` for a row that has not been built yet does
+    /// nothing. Unanimated: this is where the reader asked to be, not a journey they want to
+    /// watch the app take.
+    private func scroll(_ proxy: ScrollViewProxy) {
+        guard let target = coordinator.scrollTarget, case .ready = viewModel.readingPhase else {
+            return
+        }
+
+        proxy.scrollTo(target, anchor: .top)
+        coordinator.clearScrollTarget()
+    }
+
+    /// What re-runs the scroll: the verse being aimed at, and whether the text has loaded.
+    private var scrollTargetKey: String {
+        let isReady = if case .ready = viewModel.readingPhase { true } else { false }
+        return "\(coordinator.scrollTarget?.description ?? "-")|\(isReady)"
     }
 
     /// The chosen paper, but only under text that is actually there.
@@ -94,8 +128,10 @@ struct ReaderView: View {
                 .padding(.vertical, 48)
 
         case .ready(let loaded):
-            ForEach(loaded.surahOrder, id: \.self) { number in
-                chapter(number, in: loaded)
+            // One flat list, so the `LazyVStack` above is lazy in the rows rather than in the
+            // chapters — see `QuranViewModel.Reading.Item`.
+            ForEach(loaded.items) { item in
+                row(item, in: loaded)
             }
 
         case .unavailable:
@@ -103,18 +139,20 @@ struct ReaderView: View {
         }
     }
 
-    /// One chapter's worth of this span: its heading where it needs one, then its verses.
+    /// One row of the span: a chapter heading, a basmala, or a verse.
     @ViewBuilder
-    private func chapter(_ number: Int, in loaded: QuranViewModel.Reading) -> some View {
-        VStack(alignment: .leading, spacing: 18) {
-            // Named only when the span covers more than one chapter. Reading a single chapter,
-            // the navigation title already says which — a heading under it would be the name
-            // twice on one screen.
-            if loaded.surahOrder.count > 1, let surah = loaded.surahs[number] {
+    private func row(
+        _ item: QuranViewModel.Reading.Item,
+        in loaded: QuranViewModel.Reading
+    ) -> some View {
+        switch item {
+        case .heading(let number):
+            if let surah = loaded.surahs[number] {
                 chapterHeading(surah)
             }
 
-            if loaded.showsBismillah(forSurah: number), let bismillah = loaded.surahs[number]?.bismillah {
+        case .bismillah(let number):
+            if let bismillah = loaded.surahs[number]?.bismillah {
                 Text(bismillah)
                     .readingFont(size: style.typography.textSize)
                     .foregroundStyle(style.palette.accent)
@@ -123,9 +161,20 @@ struct ReaderView: View {
                     .environment(\.locale, AppLanguage.arabic.locale)
             }
 
-            ForEach(loaded.verses(inSurah: number)) { verse in
-                VerseRow(verse: verse)
-            }
+        case .verse(let verse):
+            VerseRow(
+                verse: verse,
+                isBookmarked: viewModel.isBookmarked(verse.id),
+                onSetBookmark: { isBookmarked in
+                    Task { await viewModel.setBookmark(isBookmarked, for: verse.id) }
+                }
+            )
+            // The scroll target, which is why it is the `VerseReference` and not the row's
+            // position: a bookmark names a verse, not an index into a span.
+            .id(verse.id)
+            // Now that the rows are the lazy children, this fires as each one scrolls in —
+            // which is what makes it a reading position rather than a constant.
+            .onAppear { viewModel.noteVerseInView(verse.id) }
         }
     }
 
@@ -141,7 +190,9 @@ struct ReaderView: View {
                 .foregroundStyle(style.palette.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, 4)
+        // Extra breathing room above a new chapter, which the per-chapter stack used to give it
+        // before the span was flattened.
+        .padding(.top, 10)
     }
 
     /// The chapter's Arabic name, or the part's number.
@@ -166,11 +217,7 @@ struct ReaderView: View {
 
     NavigationStack {
         ReaderView(
-            viewModel: QuranViewModel(
-                useCase: GetQuranUseCase(
-                    repository: QuranRepository(database: CorpusDatabase(name: "quran"))
-                )
-            ),
+            viewModel: previewQuranViewModel(),
             coordinator: QuranCoordinator(),
             settings: ReaderSettings(settingsStore: settingsStore),
             reading: .surah(1)

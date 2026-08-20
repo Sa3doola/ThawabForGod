@@ -18,9 +18,14 @@ import Observation
 final class QuranViewModel {
 
     /// Which list the segmented control is showing.
+    ///
+    /// Bookmarks are a third *segment* rather than a screen of their own: choosing where to start
+    /// reading is one act whether the reader picks a chapter, a part, or something they kept, and
+    /// a saved verse is no more a separate destination than a chapter is.
     enum Section: Hashable, CaseIterable {
         case surahs
         case juz
+        case bookmarks
     }
 
     /// What the list screen has to show.
@@ -61,6 +66,49 @@ final class QuranViewModel {
             verses.filter { $0.surahNumber == number }
         }
 
+        /// One row of the reading screen, in the order it is drawn.
+        ///
+        /// The span is flattened to a single list rather than left as chapters-containing-verses
+        /// because a `LazyVStack` is only lazy in its *direct* children. Nested, a whole chapter
+        /// was one child — so all 286 verses of Al-Baqara were built before the first frame, every
+        /// `onAppear` fired at once, and scrolling fired none. That is not only slow: it is what
+        /// made the last-read position stick at the first verse for good, since the appearance
+        /// that set it was the only one that ever happened.
+        enum Item: Identifiable, Hashable {
+            case heading(Int)
+            case bismillah(Int)
+            case verse(Verse)
+
+            var id: String {
+                switch self {
+                case .heading(let surah): "heading-\(surah)"
+                case .bismillah(let surah): "bismillah-\(surah)"
+                case .verse(let verse): "verse-\(verse.id)"
+                }
+            }
+        }
+
+        /// The whole span as one flat list — headings and basmalas in place, verses in order.
+        var items: [Item] {
+            var items: [Item] = []
+            let order = surahOrder
+            // Named only when the span covers more than one chapter: reading a single chapter,
+            // the navigation title already says which, and a heading under it would be the name
+            // twice on one screen.
+            let namesChapters = order.count > 1
+
+            for number in order {
+                if namesChapters, surahs[number] != nil {
+                    items.append(.heading(number))
+                }
+                if showsBismillah(forSurah: number) {
+                    items.append(.bismillah(number))
+                }
+                items.append(contentsOf: verses(inSurah: number).map(Item.verse))
+            }
+            return items
+        }
+
         /// Whether the chapter's basmala heading belongs above it here.
         ///
         /// Only where this span actually contains that chapter's first verse. Juz 2 opens at
@@ -81,10 +129,40 @@ final class QuranViewModel {
     /// change through a method would buy nothing.
     var section: Section = .surahs
 
-    @ObservationIgnored private let useCase: GetQuranUseCase
+    /// The kept verses, newest first, and the same set keyed for lookup.
+    ///
+    /// Both, because the two screens ask different questions of the same data: the bookmarks
+    /// segment wants them in order, and every `VerseRow` in a chapter wants to know whether *it*
+    /// is one — which against an array would be a linear scan per verse, 286 of them in
+    /// Al-Baqara alone.
+    private(set) var bookmarks: [QuranBookmark] = []
+    private(set) var bookmarkedVerses: Set<VerseReference> = []
 
-    init(useCase: GetQuranUseCase) {
+    /// Where the reader left off, or `nil` before they have read anything.
+    private(set) var lastRead: ReadingPosition?
+
+    @ObservationIgnored private let useCase: GetQuranUseCase
+    @ObservationIgnored private let progress: QuranProgressUseCase
+
+    /// The last verse to come into view, held *outside* observation.
+    ///
+    /// Every visible `VerseRow` reports itself as it appears, which on a fast scroll is many
+    /// writes a second. `@ObservationIgnored` is what keeps that from being many redraws a
+    /// second: nothing reads this during a view update — it is only ever consumed by
+    /// `saveReadingPosition()` on the way out.
+    @ObservationIgnored private var verseInView: VerseReference?
+
+    /// The position write that leaving the reading screen started, if it has not finished.
+    ///
+    /// Held because the two halves of "go back" race: popping the reader fires its `onDisappear`,
+    /// and the list underneath re-runs `loadProgress()` at the same moment. Without this, the
+    /// re-read usually won — and the reader watched "continue reading" go on naming the verse
+    /// they opened at rather than the one they got to. Seen on device, not reasoned about.
+    @ObservationIgnored private var pendingPositionWrite: Task<Void, Never>?
+
+    init(useCase: GetQuranUseCase, progress: QuranProgressUseCase) {
         self.useCase = useCase
+        self.progress = progress
     }
 
     // MARK: Derived
@@ -97,6 +175,15 @@ final class QuranViewModel {
     var juz: [Juz] {
         guard case .ready(_, let juz) = listPhase else { return [] }
         return juz
+    }
+
+    /// One chapter by number, for the rows that name a verse's chapter without holding one.
+    ///
+    /// A linear scan over 114 rows, which is cheap and stays honest: a dictionary cached beside
+    /// the array would be a second copy of the same data to keep in step for no measurable gain
+    /// at this size.
+    func surah(_ number: Int) -> Surah? {
+        surahs.first { $0.id == number }
     }
 
     // MARK: Loading
@@ -130,6 +217,7 @@ final class QuranViewModel {
     /// Loads the verses of a chapter or a part, with the chapters needed to head them.
     func load(_ reading: QuranReading) async {
         readingPhase = .loading
+        clearVerseInView()
 
         do {
             async let chapters = useCase.surahs()
@@ -155,6 +243,108 @@ final class QuranViewModel {
         } catch {
             guard !Task.isCancelled else { return }
             readingPhase = .unavailable
+        }
+    }
+
+    // MARK: The reader's own marks
+
+    /// Loads the bookmarks and the last-read position.
+    ///
+    /// Its own method rather than part of `loadList()`, and driven from the same `.task`: these
+    /// come out of a different store than the lists do, and a failure to read the user's marks
+    /// should leave the chapters on screen rather than replacing them with "unavailable". So a
+    /// throw here empties the marks and says nothing — the corpus is what the screen is *for*.
+    func loadProgress() async {
+        // Anything still being written has to land before this reads, or it reads the value it
+        // is about to be told is stale. See `pendingPositionWrite`.
+        await pendingPositionWrite?.value
+
+        do {
+            async let bookmarks = progress.bookmarks()
+            async let position = progress.lastRead()
+
+            let loaded = try await (bookmarks: bookmarks, position: position)
+            guard !Task.isCancelled else { return }
+
+            self.bookmarks = loaded.bookmarks
+            self.bookmarkedVerses = Set(loaded.bookmarks.map(\.reference))
+            self.lastRead = loaded.position
+        } catch {
+            guard !Task.isCancelled else { return }
+            bookmarks = []
+            bookmarkedVerses = []
+            lastRead = nil
+        }
+    }
+
+    /// Keeps or forgets a verse, moving the on-screen state first.
+    ///
+    /// Optimistic on purpose: the tap is on a verse the reader is looking at, and a bookmark that
+    /// filled in only once SwiftData had saved would lag behind the finger. The set is put back
+    /// if the write fails, so the screen cannot end up claiming something was kept when it was
+    /// not.
+    func setBookmark(_ isBookmarked: Bool, for reference: VerseReference) async {
+        let previous = bookmarkedVerses
+
+        if isBookmarked {
+            bookmarkedVerses.insert(reference)
+        } else {
+            bookmarkedVerses.remove(reference)
+        }
+
+        do {
+            try await progress.setBookmark(isBookmarked, for: reference)
+            // Re-read rather than splicing the array by hand: the store owns the order, and a
+            // repository has no `@Query` to push the change back on its own.
+            bookmarks = try await progress.bookmarks()
+            bookmarkedVerses = Set(bookmarks.map(\.reference))
+        } catch {
+            bookmarkedVerses = previous
+        }
+    }
+
+    func isBookmarked(_ reference: VerseReference) -> Bool {
+        bookmarkedVerses.contains(reference)
+    }
+
+    /// Called by every `VerseRow` as it scrolls into view. Cheap by construction — see
+    /// `verseInView`.
+    func noteVerseInView(_ reference: VerseReference) {
+        verseInView = reference
+    }
+
+    /// Forgets the verse in view, so leaving a chapter cannot write a position belonging to the
+    /// one before it. Called when a new span starts loading.
+    private func clearVerseInView() {
+        verseInView = nil
+    }
+
+    /// Persists the last verse that came into view.
+    ///
+    /// Written when the reader leaves the reading screen rather than as they scroll, because a
+    /// write per verse boundary is a SwiftData save per verse boundary. What it records is the
+    /// last verse to *appear*, which going down the page is the furthest they reached — the
+    /// honest answer to "where was I" — and going back up is the verse they scrolled to.
+    ///
+    /// Not `async`: the caller is an `onDisappear`, which cannot await anything. The work is
+    /// parked on `pendingPositionWrite` instead, and `loadProgress()` waits on it — which is what
+    /// keeps the list from re-reading the store mid-write.
+    func saveReadingPosition() {
+        guard let verse = verseInView else { return }
+
+        let previous = pendingPositionWrite
+        pendingPositionWrite = Task { [progress] in
+            // Ordered behind whatever was already in flight, so two quick exits cannot land
+            // out of sequence and leave the older verse stored.
+            await previous?.value
+
+            do {
+                try await progress.recordLastRead(verse)
+                self.lastRead = try await progress.lastRead()
+            } catch {
+                // Losing a position is not worth telling the reader about: the text is
+                // unaffected, and the next thing they read overwrites it anyway.
+            }
         }
     }
 

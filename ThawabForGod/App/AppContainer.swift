@@ -73,6 +73,12 @@ final class AppContainer {
     let quranRepository: any QuranRepositoring
     let getQuran: GetQuranUseCase
 
+    /// The reader's own marks — bookmarks and where they left off. The other half of the Quran's
+    /// storage split: `quranCorpus` above is read-only and bundled, this writes to the same
+    /// SwiftData container the tasbih counts do.
+    let quranProgressRepository: any QuranProgressRepositoring
+    let quranProgress: QuranProgressUseCase
+
     /// How the reader has asked the page to look. Built here rather than lazily like the view
     /// models because it reads nothing onboarding seeds — the panel is the only thing that ever
     /// writes these three keys, and it cannot have run before launch.
@@ -226,6 +232,12 @@ final class AppContainer {
         self.getQuran = GetQuranUseCase(repository: quranRepository)
         self.readerSettings = ReaderSettings(settingsStore: settingsStore)
 
+        let quranProgressRepository = QuranProgressRepository(
+            modelContainer: persistence.container
+        )
+        self.quranProgressRepository = quranProgressRepository
+        self.quranProgress = QuranProgressUseCase(repository: quranProgressRepository)
+
         let onboardingRepository = OnboardingRepository(settingsStore: settingsStore)
         self.onboardingRepository = onboardingRepository
 
@@ -378,7 +390,7 @@ final class AppContainer {
             return cachedQuranViewModel
         }
 
-        let viewModel = QuranViewModel(useCase: getQuran)
+        let viewModel = QuranViewModel(useCase: getQuran, progress: quranProgress)
         cachedQuranViewModel = viewModel
         return viewModel
     }

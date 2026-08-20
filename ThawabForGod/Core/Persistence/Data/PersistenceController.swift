@@ -17,7 +17,9 @@ nonisolated struct PersistenceController: Sendable {
 
     static let schema = Schema([
         BookmarkRecord.self,
-        TasbihSessionModel.self
+        TasbihSessionModel.self,
+        QuranBookmarkRecord.self,
+        ReadingPositionRecord.self
     ])
 
     init(inMemory: Bool = false) throws {

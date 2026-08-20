@@ -10,8 +10,14 @@ import Testing
 @MainActor
 struct QuranViewModelTests {
 
-    private func viewModel(_ repository: StubQuranRepository) -> QuranViewModel {
-        QuranViewModel(useCase: GetQuranUseCase(repository: repository))
+    private func viewModel(
+        _ repository: StubQuranRepository,
+        progress: StubQuranProgressRepository = StubQuranProgressRepository()
+    ) -> QuranViewModel {
+        QuranViewModel(
+            useCase: GetQuranUseCase(repository: repository),
+            progress: QuranProgressUseCase(repository: progress)
+        )
     }
 
     // MARK: The list
@@ -83,6 +89,136 @@ struct QuranViewModelTests {
 
         #expect(model.readingPhase == .unavailable)
     }
+
+    // MARK: The reader's own marks
+
+    private let kursi = VerseReference(surah: 2, verse: 255)
+
+    @Test func loadsKeptVersesAndTheLastPosition() async {
+        let progress = StubQuranProgressRepository(
+            bookmarks: [QuranBookmark(reference: kursi)],
+            position: ReadingPosition(reference: VerseReference(surah: 3, verse: 8))
+        )
+        let model = viewModel(StubQuranRepository(), progress: progress)
+
+        await model.loadProgress()
+
+        #expect(model.bookmarks.map(\.reference) == [kursi])
+        #expect(model.isBookmarked(kursi))
+        #expect(model.lastRead?.reference == VerseReference(surah: 3, verse: 8))
+    }
+
+    /// The marks come out of a different store than the text does. Failing to read them must not
+    /// take the chapters off the screen — the corpus is what this screen is for.
+    @Test func failingToReadTheMarksLeavesTheListsAlone() async {
+        let model = viewModel(
+            StubQuranRepository(surahs: .success([.stub(id: 1)])),
+            progress: StubQuranProgressRepository(failure: QuranStubError())
+        )
+
+        await model.loadList()
+        await model.loadProgress()
+
+        #expect(model.listPhase != .unavailable)
+        #expect(model.surahs.count == 1)
+        #expect(model.bookmarks.isEmpty)
+        #expect(model.lastRead == nil)
+    }
+
+    @Test func keepingAVerseMarksItAndStoresIt() async {
+        let progress = StubQuranProgressRepository()
+        let model = viewModel(StubQuranRepository(), progress: progress)
+
+        await model.setBookmark(true, for: kursi)
+
+        #expect(model.isBookmarked(kursi))
+        #expect(progress.writes == [.added(kursi)])
+    }
+
+    @Test func forgettingAVerseUnmarksIt() async {
+        let progress = StubQuranProgressRepository(
+            bookmarks: [QuranBookmark(reference: kursi)]
+        )
+        let model = viewModel(StubQuranRepository(), progress: progress)
+
+        await model.loadProgress()
+        await model.setBookmark(false, for: kursi)
+
+        #expect(model.isBookmarked(kursi) == false)
+        #expect(model.bookmarks.isEmpty)
+    }
+
+    /// The screen moves first so the tap does not lag the finger; a failed write has to put it
+    /// back, or the reader is left looking at a bookmark that was never saved.
+    @Test func aFailedWriteRollsTheMarkBack() async {
+        let model = viewModel(
+            StubQuranRepository(),
+            progress: StubQuranProgressRepository(failure: QuranStubError())
+        )
+
+        await model.setBookmark(true, for: kursi)
+
+        #expect(model.isBookmarked(kursi) == false)
+    }
+
+    // MARK: Position
+
+    @Test func savesTheLastVerseThatCameIntoView() async {
+        let progress = StubQuranProgressRepository()
+        let model = viewModel(StubQuranRepository(), progress: progress)
+
+        model.noteVerseInView(VerseReference(surah: 2, verse: 100))
+        model.noteVerseInView(kursi)
+        model.saveReadingPosition()
+        // `loadProgress()` waits on the write before it reads, which is the ordering under test.
+        await model.loadProgress()
+
+        #expect(progress.writes == [.recordedPosition(kursi)])
+        #expect(model.lastRead?.reference == kursi)
+    }
+
+    /// Nothing seen means nothing to save. Without this guard, opening a chapter and leaving it
+    /// before a single row appeared would write a stale position from a previous sitting.
+    @Test func savesNothingWhenNoVerseHasAppeared() async {
+        let progress = StubQuranProgressRepository()
+        let model = viewModel(StubQuranRepository(), progress: progress)
+
+        model.saveReadingPosition()
+        await model.loadProgress()
+
+        #expect(progress.writes.isEmpty)
+    }
+
+    /// Losing a position is not worth surfacing: the text is unaffected and the next sitting
+    /// overwrites it. What matters is that it does not trap or leave a half-written state.
+    @Test func aFailedPositionWriteIsSwallowed() async {
+        let model = viewModel(
+            StubQuranRepository(),
+            progress: StubQuranProgressRepository(failure: QuranStubError())
+        )
+
+        model.noteVerseInView(kursi)
+        model.saveReadingPosition()
+        await model.loadProgress()
+
+        #expect(model.lastRead == nil)
+    }
+
+    /// The bug this ordering exists for: leaving the reader writes the position while the list
+    /// underneath re-reads it. Without the wait, the read lands first and "continue reading" goes
+    /// on naming the verse the reader opened at rather than the one they reached.
+    @Test func aPositionWrittenOnTheWayOutIsNotOvertakenByTheListReloading() async {
+        let progress = StubQuranProgressRepository(
+            position: ReadingPosition(reference: VerseReference(surah: 2, verse: 1))
+        )
+        let model = viewModel(StubQuranRepository(), progress: progress)
+
+        model.noteVerseInView(kursi)
+        model.saveReadingPosition()
+        await model.loadProgress()
+
+        #expect(model.lastRead?.reference == kursi)
+    }
 }
 
 /// The helpers the reading screen draws its headings from.
@@ -148,5 +284,66 @@ struct ReadingLayoutTests {
         let loaded = reading([.stub(surah: 1, number: 1)])
 
         #expect(!loaded.showsBismillah(forSurah: 1))
+    }
+
+    // MARK: The flattened rows
+
+    /// A single chapter draws no heading — the navigation title already names it. Taken from the
+    /// middle of one, where there is no basmala either, the rows are the verses and nothing else.
+    @Test func oneChapterFlattensToItsVersesAlone() {
+        let loaded = reading([.stub(surah: 2, number: 142), .stub(surah: 2, number: 143)])
+
+        #expect(loaded.items.count == 2)
+        #expect(loaded.items.allSatisfy { if case .verse = $0 { true } else { false } })
+    }
+
+    /// Opening a chapter at its first verse still draws the basmala above it, heading or no
+    /// heading — the two are separate questions.
+    @Test func aChapterOpenedAtItsStartKeepsItsBasmala() {
+        let loaded = reading([.stub(surah: 2, number: 1), .stub(surah: 2, number: 2)])
+
+        #expect(loaded.items.first == .bismillah(2))
+        #expect(!loaded.items.contains(.heading(2)))
+    }
+
+    /// A part crosses chapters, so each one is named where it starts.
+    @Test func aSpanAcrossChaptersNamesEachOne() {
+        let loaded = reading([.stub(surah: 1, number: 7), .stub(surah: 2, number: 1)])
+
+        #expect(loaded.items.first == .heading(1))
+        #expect(loaded.items.contains(.heading(2)))
+    }
+
+    /// The basmala belongs above the chapter's first verse and nowhere else — juz 2 opens at
+    /// 2:142, and a heading there would claim the reader is at the start of Al-Baqara.
+    @Test func theBasmalaIsARowOnlyWhereTheChapterActuallyBegins() {
+        let opening = reading([.stub(surah: 2, number: 1)])
+        let middle = reading([.stub(surah: 2, number: 142)])
+
+        #expect(opening.items.contains(.bismillah(2)))
+        #expect(!middle.items.contains(.bismillah(2)))
+    }
+
+    /// Every row needs a stable, distinct id: it is what `LazyVStack` diffs on and what
+    /// `scrollTo` aims at.
+    @Test func everyRowHasItsOwnIdentity() {
+        let loaded = reading([.stub(surah: 1, number: 7), .stub(surah: 2, number: 1)])
+
+        let ids = loaded.items.map(\.id)
+        #expect(Set(ids).count == ids.count)
+    }
+
+    /// The rows must come out in reading order, or the mushaf is not the mushaf.
+    @Test func versesKeepTheirOrder() {
+        let loaded = reading([
+            .stub(surah: 2, number: 1),
+            .stub(surah: 2, number: 2),
+            .stub(surah: 2, number: 3)
+        ])
+
+        let numbers = loaded.items.compactMap { item -> Int? in
+            if case .verse(let verse) = item { verse.number } else { nil }
+        }
+        #expect(numbers == [1, 2, 3])
     }
 }

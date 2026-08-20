@@ -76,6 +76,79 @@ nonisolated final class StubQuranRepository: QuranRepositoring, @unchecked Senda
     }
 }
 
+/// The reader's marks, in memory, with a record of what was written.
+///
+/// Locked rather than an `actor` for the same reason `StubQuranRepository` is: the protocol it
+/// witnesses is `nonisolated`.
+///
+/// Safety invariant for `@unchecked Sendable`: every stored property below is only ever touched
+/// while `lock` is held.
+nonisolated final class StubQuranProgressRepository: QuranProgressRepositoring, @unchecked Sendable {
+
+    enum Write: Equatable {
+        case added(VerseReference)
+        case removed(VerseReference)
+        case recordedPosition(VerseReference)
+    }
+
+    private let lock = NSLock()
+    private var _bookmarks: [QuranBookmark]
+    private var _position: ReadingPosition?
+    private var _writes: [Write] = []
+    private let failure: QuranStubError?
+
+    var writes: [Write] { lock.withLock { _writes } }
+
+    init(
+        bookmarks: [QuranBookmark] = [],
+        position: ReadingPosition? = nil,
+        failure: QuranStubError? = nil
+    ) {
+        self._bookmarks = bookmarks
+        self._position = position
+        self.failure = failure
+    }
+
+    private func check() throws {
+        if let failure { throw failure }
+    }
+
+    func bookmarks() async throws -> [QuranBookmark] {
+        try check()
+        return lock.withLock { _bookmarks }
+    }
+
+    func addBookmark(_ reference: VerseReference, at date: Date) async throws {
+        try check()
+        lock.withLock {
+            _writes.append(.added(reference))
+            guard !_bookmarks.contains(where: { $0.reference == reference }) else { return }
+            _bookmarks.insert(QuranBookmark(reference: reference, createdAt: date), at: 0)
+        }
+    }
+
+    func removeBookmark(_ reference: VerseReference) async throws {
+        try check()
+        lock.withLock {
+            _writes.append(.removed(reference))
+            _bookmarks.removeAll { $0.reference == reference }
+        }
+    }
+
+    func lastRead() async throws -> ReadingPosition? {
+        try check()
+        return lock.withLock { _position }
+    }
+
+    func recordLastRead(_ reference: VerseReference, at date: Date) async throws {
+        try check()
+        lock.withLock {
+            _writes.append(.recordedPosition(reference))
+            _position = ReadingPosition(reference: reference, updatedAt: date)
+        }
+    }
+}
+
 nonisolated extension Surah {
 
     /// A chapter with everything filled in, so a test only names the field it cares about.

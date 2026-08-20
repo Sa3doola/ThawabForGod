@@ -13,6 +13,8 @@ import SwiftUI
 /// single laid-out paragraph rather than two views that only look like one.
 struct VerseRow: View {
     let verse: Verse
+    let isBookmarked: Bool
+    let onSetBookmark: (Bool) -> Void
 
     @Environment(LocalizationManager.self) private var l10n
     /// The reader's paper and type metrics, resolved once by `ReaderView`. `fallback` outside it —
@@ -24,8 +26,14 @@ struct VerseRow: View {
         VStack(alignment: .leading, spacing: 6) {
             text
 
-            if let sajda = verse.sajda {
-                sajdaMarker(sajda)
+            HStack(spacing: 12) {
+                bookmarkButton
+
+                if let sajda = verse.sajda {
+                    sajdaMarker(sajda)
+                }
+
+                Spacer(minLength: 0)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -36,8 +44,10 @@ struct VerseRow: View {
         .environment(\.layoutDirection, .rightToLeft)
         // So VoiceOver reads it in Arabic rather than in the interface's voice.
         .environment(\.locale, AppLanguage.arabic.locale)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabel)
+        // `.contain` rather than `.combine`: combining would fold the bookmark button into the
+        // verse's own label and leave VoiceOver with no way to reach it. The text below carries
+        // the label; the button stays a separate, reachable element inside this group.
+        .accessibilityElement(children: .contain)
     }
 
     private var text: some View {
@@ -52,6 +62,29 @@ struct VerseRow: View {
         .lineSpacing(style.typography.lineSpacing)
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    /// Keeps or forgets this verse.
+    ///
+    /// Drawn on every verse rather than hidden behind a long press, because an affordance nobody
+    /// can see is one nobody uses — and outlined-when-unset keeps it quiet enough to live under
+    /// 286 verses without competing with them. The symbol is the state; there is no label, which
+    /// is also what keeps it out of the way of the Arabic.
+    private var bookmarkButton: some View {
+        Button {
+            onSetBookmark(!isBookmarked)
+        } label: {
+            Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
+                .appFont(.footnote, weight: .medium)
+                .foregroundStyle(isBookmarked ? style.palette.accent : style.palette.textSecondary)
+                // A fixed box, so filling the symbol does not nudge the sajda mark beside it.
+                .frame(width: 22, height: 22)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(l10n.string(isBookmarked ? .quranBookmarkRemove : .quranBookmarkAdd))
+        .accessibilityAddTraits(isBookmarked ? [.isButton, .isSelected] : .isButton)
     }
 
     /// The place-of-prostration mark, and the word for it.
@@ -87,7 +120,9 @@ struct VerseRow: View {
             rubElHizb: 17,
             page: 42,
             sajda: nil
-        )
+        ),
+        isBookmarked: true,
+        onSetBookmark: { _ in }
     )
     .padding()
     .themed(ThemeManager(settingsStore: settingsStore))

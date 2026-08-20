@@ -19,12 +19,35 @@ final class QuranCoordinator {
     /// What is being read, or `nil` at the list.
     private(set) var openReading: QuranReading?
 
+    /// Where in the open span the reader should be put, or `nil` to start at the top.
+    ///
+    /// Held here rather than inside `QuranReading` because it is not part of *what* is open: two
+    /// bookmarks in Al-Baqara open the same chapter, and folding the verse into the value would
+    /// make them two different destinations and push the screen twice. It is also consumed once
+    /// — the reader scrolls afterwards, and a target that outlived the scroll would drag them
+    /// back to it on the next redraw.
+    private(set) var scrollTarget: VerseReference?
+
     func open(_ reading: QuranReading) {
         openReading = reading
+        scrollTarget = nil
+    }
+
+    /// Opens the chapter a verse belongs to, positioned at that verse — how a bookmark and
+    /// "continue reading" both get back into the text.
+    func open(_ reference: VerseReference) {
+        openReading = .surah(reference.surah)
+        scrollTarget = reference
+    }
+
+    /// Called by the reader once it has scrolled. See `scrollTarget`.
+    func clearScrollTarget() {
+        scrollTarget = nil
     }
 
     func closeReading() {
         openReading = nil
+        scrollTarget = nil
     }
 
     // MARK: The reading panel
