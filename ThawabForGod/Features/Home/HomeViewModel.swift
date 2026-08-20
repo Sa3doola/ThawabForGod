@@ -69,6 +69,10 @@ final class HomeViewModel {
     /// screen, where it says what it will show once there is something to show.
     private(set) var recentActivities: [RecentActivityItem] = []
 
+    /// Today's five, and the run of complete days behind them.
+    private(set) var todaysPrayers: PrayerRecord
+    private(set) var prayerStreak = 0
+
     /// Where the reader stopped in the Quran, or `nil` if they have not started.
     ///
     /// The section is absent rather than empty when this is `nil`: a card that says "continue"
@@ -124,7 +128,13 @@ final class HomeViewModel {
     @ObservationIgnored private let quran: GetQuranUseCase?
     @ObservationIgnored private let tasbih: TasbihUseCase?
     @ObservationIgnored private let recentActivity: RecentActivityUseCase?
-    @ObservationIgnored private var coordinates: Coordinates
+    @ObservationIgnored private let tracker: PrayerTrackerUseCase?
+    /// Where the times are being computed for — the seeded point until a live fix replaces it.
+    ///
+    /// Readable from outside so the day sheet can compute *its* day for the same place without
+    /// capturing a value that a live fix would then leave stale. `@ObservationIgnored` still: it
+    /// changes at most once per appearance, and every screen that reads it reads it on load.
+    @ObservationIgnored private(set) var coordinates: Coordinates
     @ObservationIgnored private let locationService: (any LocationService)?
     @ObservationIgnored private let placeNames: (any PlaceNameResolving)?
     @ObservationIgnored private let reachability: (any NetworkReachability)?
@@ -181,6 +191,7 @@ final class HomeViewModel {
         quran: GetQuranUseCase? = nil,
         tasbih: TasbihUseCase? = nil,
         recentActivity: RecentActivityUseCase? = nil,
+        tracker: PrayerTrackerUseCase? = nil,
         clock: any ClockService = SystemClockService(),
         calendar: Calendar = .gregorianLocal
     ) {
@@ -190,6 +201,7 @@ final class HomeViewModel {
         self.quran = quran
         self.tasbih = tasbih
         self.recentActivity = recentActivity
+        self.tracker = tracker
         self.coordinates = coordinates
         self.locationService = locationService
         self.placeNames = placeNames
@@ -205,6 +217,7 @@ final class HomeViewModel {
         // header never flickers in behind the loading state.
         let instant = clock.now
         self.currentDate = instant
+        self.todaysPrayers = PrayerRecord(day: calendar.startOfDay(for: instant))
         self.hijriDate = hijriDates.hijriComponents(for: instant)
         self.todaysEvents = hijriDates.islamicEvents(on: instant)
 
@@ -237,6 +250,7 @@ final class HomeViewModel {
         async let name: Void = resolvePlaceName()
         async let reading: Void = loadContinueReading()
         async let activities: Void = loadRecentActivities()
+        async let tracked: Void = reloadTracker()
 
         for await _ in clock.ticks(every: .seconds(1)) {
             tick()
@@ -245,6 +259,7 @@ final class HomeViewModel {
         await name
         await reading
         await activities
+        await tracked
     }
 
     /// Re-reads the arrangement, for when the customization screen has just been dismissed.
@@ -300,6 +315,33 @@ final class HomeViewModel {
         guard let placeNames, reachability?.isOnline ?? true else { return }
 
         placeName = await placeNames.placeName(for: coordinates)
+    }
+
+    /// Re-reads today's marks and the streak.
+    ///
+    /// Called on the way in and again whenever the day sheet closes — that sheet marks past days
+    /// *and* today, so the row of circles behind it can be out of date by the time it is gone.
+    func reloadTracker() async {
+        guard let tracker else { return }
+
+        let instant = clock.now
+        todaysPrayers = (try? await tracker.record(on: instant))
+            ?? PrayerRecord(day: calendar.startOfDay(for: instant))
+        prayerStreak = (try? await tracker.streak(endingOn: instant)) ?? 0
+    }
+
+    /// Marks or unmarks one of today's prayers.
+    ///
+    /// The row moves first and the store follows, for the reason the sheet's own circles do: the
+    /// tap is on something the user is looking at, and a mark that waited on SwiftData would lag
+    /// behind the finger.
+    func setPrayerCompleted(_ isCompleted: Bool, of prayer: Prayer) async {
+        guard let tracker else { return }
+
+        todaysPrayers = todaysPrayers.setting(prayer, to: isCompleted)
+
+        try? await tracker.setCompleted(isCompleted, of: prayer, on: clock.now)
+        await reloadTracker()
     }
 
     /// Loads the recent-activity chips, resolving each one's name as it goes.

@@ -48,6 +48,9 @@ nonisolated struct PrayerTimeEngine: PrayerTimeCalculating {
             throw PrayerTimeError.notComputable(date)
         }
 
+        // A second pass over the same day's times, which is all Adhan needs for it.
+        let sunnah = Adhan.SunnahTimes(from: times)
+
         return PrayerSchedule(
             day: calendar.startOfDay(for: date),
             times: [
@@ -57,7 +60,13 @@ nonisolated struct PrayerTimeEngine: PrayerTimeCalculating {
                 PrayerTime(prayer: .asr, date: times.asr),
                 PrayerTime(prayer: .maghrib, date: times.maghrib),
                 PrayerTime(prayer: .isha, date: times.isha)
-            ]
+            ],
+            night: sunnah.map {
+                NightTimes(
+                    middleOfNight: $0.middleOfTheNight,
+                    lastThirdOfNight: $0.lastThirdOfTheNight
+                )
+            }
         )
     }
 

@@ -69,6 +69,11 @@ final class AppContainer {
     /// Built here rather than lazily like the view models because it reads nothing onboarding
     /// seeds — the customization screen is the only thing that ever writes this key, and it
     /// cannot have run before launch.
+    /// Which prayers were prayed, by day. Read and written by Home's tracker row and by the day
+    /// sheet, which are two views of one record.
+    let prayerTrackerRepository: any PrayerTrackerRepositoring
+    let prayerTracker: PrayerTrackerUseCase
+
     let homeLayoutRepository: any HomeLayoutRepositoring
     let getHomeLayout: GetHomeLayoutUseCase
     let updateHomeLayout: UpdateHomeLayoutUseCase
@@ -282,6 +287,12 @@ final class AppContainer {
         self.quranProgressRepository = quranProgressRepository
         self.quranProgress = QuranProgressUseCase(repository: quranProgressRepository)
 
+        let prayerTrackerRepository = PrayerTrackerRepository(
+            modelContainer: persistence.container
+        )
+        self.prayerTrackerRepository = prayerTrackerRepository
+        self.prayerTracker = PrayerTrackerUseCase(repository: prayerTrackerRepository)
+
         let homeLayoutRepository = HomeLayoutRepository(settingsStore: settingsStore)
         self.homeLayoutRepository = homeLayoutRepository
         self.getHomeLayout = GetHomeLayoutUseCase(repository: homeLayoutRepository)
@@ -411,9 +422,35 @@ final class AppContainer {
             // that owns them would be a second copy of the corpus's vocabulary.
             tasbih: tasbihUseCase,
             recentActivity: recentActivity,
+            tracker: prayerTracker,
             clock: clock
         )
         cachedHomeViewModel = viewModel
+        return viewModel
+    }
+
+    private var cachedPrayerTimesSheetViewModel: PrayerTimesSheetViewModel?
+
+    /// The day sheet's view model, built on first use and kept.
+    ///
+    /// Kept so the date the user stepped to is still there if they close the sheet and reopen it
+    /// in the same sitting — and reads its coordinates through Home's rather than capturing them,
+    /// so a live fix that lands while Home is open reaches it too.
+    func prayerTimesSheetViewModel() -> PrayerTimesSheetViewModel {
+        if let cachedPrayerTimesSheetViewModel {
+            return cachedPrayerTimesSheetViewModel
+        }
+
+        let home = homeViewModel()
+        let viewModel = PrayerTimesSheetViewModel(
+            useCase: getPrayerSchedule,
+            tracker: prayerTracker,
+            calculation: calculationSettings(),
+            hijriDates: hijriDates,
+            coordinates: { home.coordinates },
+            clock: clock
+        )
+        cachedPrayerTimesSheetViewModel = viewModel
         return viewModel
     }
 

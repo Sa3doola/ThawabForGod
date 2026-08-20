@@ -35,6 +35,9 @@ struct HomeCoordinatorView: View {
     /// The arranging screen, which is Home's own rather than another tab's.
     let customizationViewModel: HomeCustomizationViewModel
 
+    /// The day sheet, which Home puts up over itself.
+    let prayerTimesViewModel: PrayerTimesSheetViewModel
+
     @Environment(LocalizationManager.self) private var l10n
 
     var body: some View {
@@ -42,10 +45,18 @@ struct HomeCoordinatorView: View {
             HomeView(
                 viewModel: viewModel,
                 open: open,
+                showPrayerTimes: { coordinator.isShowingPrayerTimes = true },
+                isShowingPrayerTimes: $coordinator.isShowingPrayerTimes,
                 customize: { coordinator.show(.customize) }
             )
-                .toolbar { toolbar }
+//                .toolbar { toolbar }
                 .navigationDestination(for: HomeCoordinator.Destination.self, destination: destination)
+                .sheet(isPresented: $coordinator.isShowingPrayerTimes) {
+                    PrayerTimesSheet(viewModel: prayerTimesViewModel)
+                        // Two heights: the glance — the date and the six times — and the read,
+                        // which reaches the night section below them.
+                        .presentationDetents([.medium, .large])
+                }
         }
     }
 

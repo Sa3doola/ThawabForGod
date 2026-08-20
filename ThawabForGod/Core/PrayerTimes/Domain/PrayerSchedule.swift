@@ -18,8 +18,16 @@ nonisolated struct PrayerSchedule: Equatable, Sendable {
     /// The day's markers in chronological order.
     let times: [PrayerTime]
 
-    init(day: Date, times: [PrayerTime]) {
+    /// Where this night divides, if it could be computed.
+    ///
+    /// Optional because it is a second calculation over the same day and the sheet that shows it
+    /// is the only thing that wants it — a schedule built by hand in a test has no reason to
+    /// invent one, and a day that has times but no resolvable night should still have its times.
+    let night: NightTimes?
+
+    init(day: Date, times: [PrayerTime], night: NightTimes? = nil) {
         self.day = day
+        self.night = night
         // Sorting rather than trusting the caller: the order is load-bearing for both
         // lookups below, and a schedule built by hand in a test is easy to get wrong.
         self.times = times.sorted { $0.date < $1.date }

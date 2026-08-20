@@ -15,9 +15,23 @@ struct NextPrayerCard: View {
     let viewModel: HomeViewModel
     let state: NextPrayerState
 
+    /// Opens the day sheet. The whole card is the target, not a chevron in the corner — the card
+    /// *is* a summary of the day, and tapping a summary to see the thing it summarises is what a
+    /// reader expects of it.
+    let open: () -> Void
+
+    @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
 
     var body: some View {
+        Button(action: open) {
+            card
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(l10n.string(.prayerTimesSheetHint))
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 16) {
             NextPrayerHeadline(state: state, placeName: viewModel.placeName)
             NextPrayerCountdown(viewModel: viewModel, state: state)

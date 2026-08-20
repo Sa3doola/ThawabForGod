@@ -43,24 +43,29 @@ struct HomeLayoutTests {
         #expect(layout.shortcuts.map(\.shortcut) == HomeShortcut.allCases)
     }
 
-    @Test func theDefaultShowsTheBuiltSectionsAndTheDefaultShortcuts() {
+    /// Derived from `isAvailable` rather than listed out, so shipping a reserved section moves
+    /// this test's expectation with it instead of breaking it.
+    @Test func theDefaultShowsEverythingThatIsBuilt() {
         let layout = HomeLayout.default
 
-        #expect(layout.visibleSections == [.nextPrayer, .shortcuts, .continueReading, .lastActivity])
-        #expect(
-            layout.visibleShortcuts == [.morningAdhkar, .eveningAdhkar, .tasbih, .qibla, .namesOfAllah]
-        )
+        #expect(layout.visibleSections == HomeSectionKind.allCases.filter(\.isAvailable))
+        #expect(layout.visibleShortcuts == HomeShortcut.allCases.filter(\.isAvailable))
     }
 
-    /// A section can be visible *and* unrendered: `prayerTracker` ships switched on so that it
-    /// appears the moment its feature lands, but it is not available yet, so Home skips it.
-    @Test func aVisibleButUnavailableSectionIsNotDrawnAndIsNotOffered() {
+    /// A reserved section is in the layout, out of the stack, and out of the editor — a switch
+    /// that turns on nothing is worse than no switch.
+    @Test func reservedSectionsAreNeitherDrawnNorOffered() {
         let layout = HomeLayout.default
+        let reserved = HomeSectionKind.allCases.filter { !$0.isAvailable }
 
-        #expect(layout.isVisible(.prayerTracker))
-        #expect(layout.visibleSections.contains(.prayerTracker) == false)
-        #expect(layout.editableSections.map(\.kind).contains(.prayerTracker) == false)
-        #expect(layout.canChangeVisibility(of: .prayerTracker) == false)
+        #expect(reserved.isEmpty == false)
+
+        for kind in reserved {
+            #expect(layout.sections.map(\.kind).contains(kind))
+            #expect(layout.visibleSections.contains(kind) == false)
+            #expect(layout.editableSections.map(\.kind).contains(kind) == false)
+            #expect(layout.canChangeVisibility(of: kind) == false)
+        }
     }
 
     @Test func unavailableShortcutsAreNeitherDrawnNorOffered() {
@@ -92,7 +97,10 @@ struct HomeLayoutTests {
         layout.moveSections(from: IndexSet(integer: 2), to: 0)
 
         #expect(layout.sections.first?.kind == .nextPrayer)
-        #expect(layout.visibleSections == [.nextPrayer, .continueReading, .shortcuts, .lastActivity])
+        #expect(
+            layout.visibleSections
+                == [.nextPrayer, .continueReading, .shortcuts, .lastActivity, .prayerTracker]
+        )
     }
 
     @Test func draggingThePinItselfLeavesItWhereItWas() {
@@ -100,7 +108,7 @@ struct HomeLayoutTests {
 
         layout.moveSections(from: IndexSet(integer: 0), to: 3)
 
-        #expect(layout.visibleSections == [.nextPrayer, .shortcuts, .continueReading, .lastActivity])
+        #expect(layout.visibleSections == HomeLayout.default.visibleSections)
     }
 
     @Test func aStoredLayoutThatHidesThePinIsRepaired() throws {
@@ -124,10 +132,11 @@ struct HomeLayoutTests {
     @Test func hidingIsAllowedUntilTheFloorAndRefusedAtIt() {
         var layout = HomeLayout.default
 
-        #expect(layout.visibleSections.count == 4)
+        #expect(layout.visibleSections.count == 5)
         #expect(layout.canChangeVisibility(of: .continueReading))
 
         layout.setVisibility(false, of: .continueReading)
+        layout.setVisibility(false, of: .prayerTracker)
 
         #expect(layout.visibleSections.count == HomeLayout.minimumVisibleSections)
 
@@ -146,12 +155,13 @@ struct HomeLayoutTests {
     @Test func showingASectionIsAlwaysAllowed() {
         var layout = HomeLayout.default
         layout.setVisibility(false, of: .continueReading)
+        #expect(layout.visibleSections.count == 4)
 
         #expect(layout.canChangeVisibility(of: .continueReading))
 
         layout.setVisibility(true, of: .continueReading)
 
-        #expect(layout.visibleSections.count == 4)
+        #expect(layout.visibleSections.count == 5)
     }
 
     /// `setVisibility` will not let a user reach this state, but an older build or a withdrawn
@@ -160,12 +170,7 @@ struct HomeLayoutTests {
     @Test func aStoredLayoutBelowTheFloorIsRefilledInDeclarationOrder() throws {
         let layout = try decode(
             stored(
-                sections: [
-                    ("nextPrayer", true),
-                    ("shortcuts", false),
-                    ("continueReading", false),
-                    ("lastActivity", false)
-                ]
+                sections: HomeSectionKind.allCases.map { ($0.rawValue, $0.isPinned) }
             )
         )
 
@@ -271,18 +276,24 @@ struct HomeLayoutTests {
     @Test func movingDownwardsUsesTheOffsetSwiftUIWouldSend() {
         var layout = HomeLayout.default
 
-        // [nextPrayer, shortcuts, continueReading, lastActivity] → move `shortcuts` to the end.
-        layout.moveSections(from: IndexSet(integer: 1), to: 4)
+        // Move `shortcuts` from second place to the end of the editable list.
+        layout.moveSections(from: IndexSet(integer: 1), to: 5)
 
-        #expect(layout.visibleSections == [.nextPrayer, .continueReading, .lastActivity, .shortcuts])
+        #expect(
+            layout.visibleSections
+                == [.nextPrayer, .continueReading, .lastActivity, .prayerTracker, .shortcuts]
+        )
     }
 
     @Test func movingSeveralRowsKeepsTheirRelativeOrder() {
         var layout = HomeLayout.default
 
-        layout.moveSections(from: IndexSet([1, 2]), to: 4)
+        layout.moveSections(from: IndexSet([1, 2]), to: 5)
 
-        #expect(layout.visibleSections == [.nextPrayer, .lastActivity, .shortcuts, .continueReading])
+        #expect(
+            layout.visibleSections
+                == [.nextPrayer, .lastActivity, .prayerTracker, .shortcuts, .continueReading]
+        )
     }
 
     /// Offsets index the *editable* list, so the reserved kinds are not something the caller has
@@ -290,7 +301,7 @@ struct HomeLayoutTests {
     @Test func reorderingLeavesTheReservedKindsBehindTheEditableOnes() {
         var layout = HomeLayout.default
 
-        layout.moveSections(from: IndexSet(integer: 1), to: 4)
+        layout.moveSections(from: IndexSet(integer: 1), to: 5)
 
         let reserved = layout.sections.map(\.kind).filter { !$0.isAvailable }
         #expect(reserved == HomeSectionKind.allCases.filter { !$0.isAvailable })

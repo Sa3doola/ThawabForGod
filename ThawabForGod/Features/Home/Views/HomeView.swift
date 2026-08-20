@@ -28,6 +28,13 @@ struct HomeView: View {
     /// shape of the whole app — see `AppRoute`.
     let open: (AppRoute) -> Void
 
+    /// Opens the day sheet — the full day, for any day.
+    let showPrayerTimes: () -> Void
+
+    /// Whether that sheet is up. A binding rather than a callback, because a sheet is dismissed
+    /// by the system as well as by the app and both have to reach the same value.
+    @Binding var isShowingPrayerTimes: Bool
+
     /// Opens the screen where this stack is arranged.
     ///
     /// Separate from `open` because it is not a route: every `AppRoute` lands in some tab's own
@@ -75,6 +82,12 @@ struct HomeView: View {
             guard phase == .active else { return }
             viewModel.refresh()
         }
+        // The sheet marks past days *and* today, so the row of circles behind it can be out of
+        // date by the time it is gone.
+        .onChange(of: isShowingPrayerTimes) { _, isShowing in
+            guard !isShowing else { return }
+            Task { await viewModel.reloadTracker() }
+        }
     }
 
     /// One section of the stack.
@@ -107,7 +120,15 @@ struct HomeView: View {
                 RecentActivitySection(items: viewModel.recentActivities, open: open)
             }
 
-        case .prayerTracker, .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
+        case .prayerTracker:
+            PrayerTrackerSection(
+                record: viewModel.todaysPrayers,
+                streak: viewModel.prayerStreak
+            ) { prayer, isCompleted in
+                Task { await viewModel.setPrayerCompleted(isCompleted, of: prayer) }
+            }
+
+        case .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
             EmptyView()
         }
     }
@@ -121,7 +142,7 @@ struct HomeView: View {
             StatusNotice(message: l10n.string(.prayerTimesLoading), showsProgress: true)
 
         case .ready(let state):
-            NextPrayerCard(viewModel: viewModel, state: state)
+            NextPrayerCard(viewModel: viewModel, state: state, open: showPrayerTimes)
                 // Anchored to the card because the card is what the tip is about. A popover
                 // mirrors for Arabic without any help: it is positioned relative to its anchor
                 // view, which the layout direction has already moved.
@@ -187,6 +208,8 @@ private struct StatusNotice: View {
                 calculation: CalculationSettings(config: .default, settingsStore: settingsStore)
             ),
             open: { _ in },
+            showPrayerTimes: {},
+            isShowingPrayerTimes: .constant(false),
             customize: {}
         )
     }

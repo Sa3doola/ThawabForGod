@@ -80,7 +80,11 @@ private struct DayPrayerEntry: View {
         .lineLimit(1)
         .minimumScaleFactor(0.7)
         .multilineTextAlignment(.center)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
+        // Horizontal padding on this row is width taken straight out of the labels: eight points
+        // a side is ninety-six across six entries, which on a 4.7-inch phone is a third of the
+        // card. At that width "4:52 AM" cannot shrink far enough to fit and truncates instead.
+        // The vertical padding costs nothing and stays.
         .padding(.horizontal, 3)
         .background(isUpcoming ? theme.accent.opacity(0.15) : .clear, in: .capsule)
         // Behind us, and not the thing being counted down to — the day reads left to right (or

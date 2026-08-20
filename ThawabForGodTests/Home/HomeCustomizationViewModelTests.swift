@@ -85,9 +85,12 @@ struct HomeCustomizationViewModelTests {
         let (viewModel, _) = makeViewModel()
 
         let before = viewModel.sections.map(\.kind)
+        var swapped = before
+        swapped.swapAt(1, 2)
+
         viewModel.move(before[2], by: -1)
 
-        #expect(viewModel.sections.map(\.kind) == [before[0], before[2], before[1], before[3]])
+        #expect(viewModel.sections.map(\.kind) == swapped)
 
         viewModel.move(before[2], by: 1)
 

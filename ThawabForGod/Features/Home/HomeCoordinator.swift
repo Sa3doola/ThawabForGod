@@ -32,6 +32,13 @@ final class HomeCoordinator {
 
     var path = NavigationPath()
 
+    /// Whether the day sheet is up.
+    ///
+    /// A sheet rather than a destination, and so a flag rather than a case: it is a *look* at the
+    /// day the user is already on, not a place they navigate to and come back from — the same
+    /// distinction `QuranCoordinator` draws for its reading panel.
+    var isShowingPrayerTimes = false
+
     func show(_ destination: Destination) {
         path.append(destination)
     }

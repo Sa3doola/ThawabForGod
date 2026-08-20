@@ -45,11 +45,8 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
     /// to `true` is the one-line change that ships a reserved section.
     var isAvailable: Bool {
         switch self {
-        case .nextPrayer, .shortcuts, .continueReading, .lastActivity:
+        case .nextPrayer, .shortcuts, .continueReading, .lastActivity, .prayerTracker:
             true
-        // Built in its own slice; the toggle here is what reveals it.
-        case .prayerTracker:
-            false
         // Phase 3 and beyond: there is no calendar screen, no verse-of-the-day corpus, and no
         // hadith yet.
         case .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:

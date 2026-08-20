@@ -40,6 +40,21 @@ nonisolated enum Prayer: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// A sentence on what this marker is, for the info button in the day sheet.
+    ///
+    /// Sunrise has one for the reason it is on the timeline at all: it is the marker users most
+    /// often mistake for a prayer, and the app is the right place to say that it is not.
+    var explanationKey: L10nKey {
+        switch self {
+        case .fajr: .prayerInfoFajr
+        case .sunrise: .prayerInfoSunrise
+        case .dhuhr: .prayerInfoDhuhr
+        case .asr: .prayerInfoAsr
+        case .maghrib: .prayerInfoMaghrib
+        case .isha: .prayerInfoIsha
+        }
+    }
+
     var labelKey: L10nKey {
         switch self {
         case .fajr: .prayerFajr

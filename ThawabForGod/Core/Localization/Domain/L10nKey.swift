@@ -141,6 +141,27 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case currentPrayerLabel = "current_prayer_label"
     case tomorrowLabel = "tomorrow_label"
     case timeRemainingLabel = "time_remaining_label"
+
+    case prayerTimesSheetTitle = "prayer_times_sheet_title"
+    case prayerTimesSheetHint = "prayer_times_sheet_hint"
+    case nextPrayerBadge = "next_prayer_badge"
+    case previousDayAction = "previous_day_action"
+    case nextDayAction = "next_day_action"
+    case todayAction = "today_action"
+    case doneAction = "done_action"
+    case aboutThisPrayerAction = "about_this_prayer_action"
+    case nightSectionTitle = "night_section_title"
+    case middleOfNightLabel = "middle_of_night_label"
+    case lastThirdOfNightLabel = "last_third_of_night_label"
+    /// Followed by a number of days.
+    case prayerStreakLabel = "prayer_streak_label"
+
+    case prayerInfoFajr = "prayer_info_fajr"
+    case prayerInfoSunrise = "prayer_info_sunrise"
+    case prayerInfoDhuhr = "prayer_info_dhuhr"
+    case prayerInfoAsr = "prayer_info_asr"
+    case prayerInfoMaghrib = "prayer_info_maghrib"
+    case prayerInfoIsha = "prayer_info_isha"
     /// Spoken, never drawn: `%1$@` is a worded duration, `%2$@` a prayer name.
     case countdownAccessibility = "countdown_accessibility"
     case prayerTimesUnavailable = "prayer_times_unavailable"

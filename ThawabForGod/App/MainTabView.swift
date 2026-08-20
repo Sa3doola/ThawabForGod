@@ -66,7 +66,8 @@ struct MainTabView: View {
             namesViewModel: container.namesViewModel(),
             // The one layer entitled to know that a tap on Home can land in another tab.
             open: container.open,
-            customizationViewModel: container.homeCustomizationViewModel()
+            customizationViewModel: container.homeCustomizationViewModel(),
+            prayerTimesViewModel: container.prayerTimesSheetViewModel()
         )
     }
 
