@@ -3660,6 +3660,40 @@
         }
       }
     },
+    "settings_calculation_reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استعادة الإعدادات الافتراضية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore defaults"
+          }
+        }
+      }
+    },
+    "settings_calculation_reset_confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد استعادة طريقة الحساب والمذهب الافتراضيين؟"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the default calculation method and madhab?"
+          }
+        }
+      }
+    },
     "settings_calculation_section": {
       "extractionState": "manual",
       "localizations": {
@@ -3711,6 +3745,23 @@
         }
       }
     },
+    "settings_privacy_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُستخدم موقعك لحساب مواقيت الصلاة واتجاه القبلة فقط، ولا يغادر جهازك أبداً."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your location is used only to compute prayer times and the Qibla, and never leaves your device."
+          }
+        }
+      }
+    },
     "settings_reminders_denied": {
       "extractionState": "manual",
       "localizations": {
@@ -3741,6 +3792,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "A reminder arrives at each prayer time you leave switched on. They are scheduled about ten days ahead and refill whenever you open the app."
+          }
+        }
+      }
+    },
+    "settings_reminders_prayer_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصلاة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prayers"
           }
         }
       }

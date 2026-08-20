@@ -98,11 +98,12 @@ struct MainTabView: View {
 
     #if os(iOS)
     private var settingsTab: some View {
-        NavigationStack {
+        @Bindable var coordinator = container.settingsCoordinator
+
+        return NavigationStack(path: $coordinator.path) {
             SettingsView(
-                viewModel: container.settingsViewModel(),
-                coordinator: container.settingsCoordinator,
-                customizationViewModel: container.homeCustomizationViewModel()
+                container: container.settings,
+                coordinator: container.settingsCoordinator
             )
         }
     }

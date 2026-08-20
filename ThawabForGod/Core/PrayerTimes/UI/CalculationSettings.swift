@@ -42,4 +42,17 @@ final class CalculationSettings {
         config.madhab = madhab
         settingsStore.set(madhab.rawValue, for: .asrMadhab)
     }
+
+    /// Back to no choice at all.
+    ///
+    /// Clears the keys rather than writing today's defaults into them, the same way
+    /// `ReaderSettings.reset()` does and for the same reason: an unset key means "never
+    /// opinionated", so a later change to what the default *is* still reaches this user. Note the
+    /// consequence — this also discards what onboarding seeded, which is what a user asking for
+    /// defaults back is asking for.
+    func reset() {
+        settingsStore.set(nil as String?, for: .calculationMethod)
+        settingsStore.set(nil as String?, for: .asrMadhab)
+        config = .default
+    }
 }

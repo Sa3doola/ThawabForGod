@@ -4,32 +4,29 @@
 //
 
 import Observation
+import SwiftUI
 
-/// Owns which Settings sub-screen is open, and nothing else.
+/// Owns where Settings is, and nothing else.
 ///
-/// No `NavigationPath`, for the same reason `NamesCoordinator` has none: on iOS this screen is
-/// the root of the settings tab's own stack, and a second path here would mean a
-/// `NavigationStack` nested inside that one — which breaks the back gesture and the toolbar both.
-/// A single value driving `navigationDestination(item:)` also works unchanged inside the stack
-/// the macOS Settings scene puts up, so one mechanism covers both platforms.
+/// A `NavigationPath` now, where a single optional destination used to do. The reason is `about`:
+/// it opens a screen that itself opens the sources list, and a one-value destination cannot
+/// express two levels. The path also means a back swipe, a Back button and a programmatic pop are
+/// the same operation.
+///
+/// It still puts up no stack of its own. On iOS this screen is the root of the settings tab's,
+/// and on macOS it is inside the one the `Settings` scene provides — a `NavigationStack` here
+/// would be nested inside either, which breaks the back gesture and the toolbar both.
 @Observable
 @MainActor
 final class SettingsCoordinator {
 
-    /// Where Settings can go.
-    enum Destination: Hashable {
-        case homeCustomization
-        case sources
+    var path = NavigationPath()
+
+    func show(_ route: SettingsRoute) {
+        path.append(route)
     }
 
-    /// The open sub-screen, or `nil` at the settings list itself.
-    private(set) var destination: Destination?
-
-    func show(_ destination: Destination) {
-        self.destination = destination
-    }
-
-    func close() {
-        destination = nil
+    func popToRoot() {
+        path = NavigationPath()
     }
 }

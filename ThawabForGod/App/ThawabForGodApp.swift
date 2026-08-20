@@ -28,11 +28,12 @@ struct ThawabForGodApp: App {
         //
         // No `.modelContainer(_:)`: nothing on this screen touches SwiftData.
         Settings {
-            NavigationStack {
+            @Bindable var coordinator = container.settingsCoordinator
+
+            NavigationStack(path: $coordinator.path) {
                 SettingsView(
-                    viewModel: container.settingsViewModel(),
-                    coordinator: container.settingsCoordinator,
-                    customizationViewModel: container.homeCustomizationViewModel()
+                    container: container.settings,
+                    coordinator: container.settingsCoordinator
                 )
             }
             .frame(minWidth: 420, minHeight: 520)

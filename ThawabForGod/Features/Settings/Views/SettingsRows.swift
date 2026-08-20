@@ -189,3 +189,42 @@ struct SettingsDisclosureRow: View {
         .buttonStyle(.plain)
     }
 }
+
+/// A root row: a symbol in a tinted square, a title, and a chevron.
+///
+/// The square is what makes seven rows scannable rather than a wall of words — the eye finds the
+/// bell before it reads "Reminders". `chevron.forward` rather than `chevron.right`: the semantic
+/// direction flips for Arabic, the literal one does not.
+struct SettingsIconRow: View {
+    let route: SettingsRoute
+    let action: () -> Void
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+
+    @ScaledMetric private var side: CGFloat = 28
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: route.symbol)
+                    .appFont(.footnote, weight: .semibold)
+                    .foregroundStyle(theme.accent)
+                    .frame(width: side, height: side)
+                    .background(theme.accent.opacity(0.15), in: .rect(cornerRadius: 7))
+
+                Text(l10n.string(route.titleKey))
+                    .foregroundStyle(theme.textPrimary)
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "chevron.forward")
+                    .appFont(.footnote, weight: .semibold)
+                    .foregroundStyle(theme.textSecondary)
+            }
+            // So the whole width of the row is the target, not just the text.
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+    }
+}

@@ -8,15 +8,18 @@ import SwiftUI // LayoutDirection; MEMBER_IMPORT_VISIBILITY means it is not re-e
 import Testing
 @testable import ThawabForGod
 
-/// What these check, mostly, is that nothing is *stored* here. Each assertion follows a setting
-/// from the view model through to the manager that owns it and on into the store, because a copy
-/// living on the view model would pass a naive "did the property change" test and still leave the
-/// rest of the app on the old value.
+/// What these check, mostly, is that nothing is *stored* on a view model. Each assertion follows
+/// a setting from the screen it is changed on, through the manager that owns it, and on into the
+/// store — because a copy living on a view model would pass a naive "did the property change"
+/// test and still leave the rest of the app on the old value.
+///
+/// One suite for the six screens rather than six suites, because they share the whole of their
+/// scaffolding: the same store, the same managers, wired the way the composition root wires them.
 @MainActor
-struct SettingsViewModelTests {
+struct SettingsScreensTests {
 
     private struct Context {
-        let viewModel: SettingsViewModel
+        let screens: SettingsScreenModels
         let store: InMemorySettingsStore
         let theme: ThemeManager
         let localization: LocalizationManager
@@ -49,18 +52,34 @@ struct SettingsViewModelTests {
         let notifications = MockNotificationService(status: .authorized)
         let tips = SpyTipsService()
 
-        let viewModel = SettingsViewModel(
-            theme: theme,
-            localization: localization,
-            calculation: calculation,
-            reminders: reminders,
-            notifications: notifications,
-            resetTips: ResetTipsUseCase(tips: tips),
-            now: { Self.fixedNow }
+        let screens = SettingsScreenModels(
+            homeCustomization: HomeCustomizationViewModel(
+                getLayout: GetHomeLayoutUseCase(
+                    repository: HomeLayoutRepository(settingsStore: store)
+                ),
+                updateLayout: UpdateHomeLayoutUseCase(
+                    repository: HomeLayoutRepository(settingsStore: store)
+                ),
+                resetLayout: ResetHomeLayoutUseCase(
+                    repository: HomeLayoutRepository(settingsStore: store)
+                )
+            ),
+            appearance: AppearanceSettingsViewModel(theme: theme),
+            languageAndFormat: LanguageFormatSettingsViewModel(
+                localization: localization,
+                now: { Self.fixedNow }
+            ),
+            prayerCalculation: PrayerCalculationSettingsViewModel(calculation: calculation),
+            reminders: RemindersSettingsViewModel(
+                reminders: reminders,
+                notifications: notifications
+            ),
+            tips: TipsSettingsViewModel(resetTips: ResetTipsUseCase(tips: tips)),
+            about: AboutViewModel()
         )
 
         return Context(
-            viewModel: viewModel,
+            screens: screens,
             store: store,
             theme: theme,
             localization: localization,
@@ -76,7 +95,7 @@ struct SettingsViewModelTests {
     @Test func settingTheAccentDrivesTheThemeAndPersists() {
         let context = makeContext()
 
-        context.viewModel.accent = .sapphire
+        context.screens.appearance.accent = .sapphire
 
         #expect(context.theme.accent == .sapphire)
         #expect(context.theme.theme.accent == AppColor.accent(.sapphire))
@@ -86,7 +105,7 @@ struct SettingsViewModelTests {
     @Test func settingTheAppearanceDrivesTheThemeAndPersists() {
         let context = makeContext()
 
-        context.viewModel.appearance = .dark
+        context.screens.appearance.appearance = .dark
 
         #expect(context.theme.appearance == .dark)
         #expect(context.store.string(for: .appearance) == AppearanceOverride.dark.rawValue)
@@ -101,9 +120,9 @@ struct SettingsViewModelTests {
         context.localization.select(numberSystem: .arabicIndic)
         context.calculation.select(method: .qatar)
 
-        #expect(context.viewModel.accent == .rose)
-        #expect(context.viewModel.numberSystem == .arabicIndic)
-        #expect(context.viewModel.method == .qatar)
+        #expect(context.screens.appearance.accent == .rose)
+        #expect(context.screens.languageAndFormat.numberSystem == .arabicIndic)
+        #expect(context.screens.prayerCalculation.method == .qatar)
     }
 
     // MARK: Language and format
@@ -116,14 +135,14 @@ struct SettingsViewModelTests {
     /// better guard than a test for that one, and it is the rule the whole change exists to
     /// keep: a stored language would outrank the system's choice forever.
     @Test func theLanguageIsReportedFromTheProcessRatherThanStored() {
-        #expect(makeContext(language: .arabic).viewModel.language == .arabic)
-        #expect(makeContext(language: .english).viewModel.language == .english)
+        #expect(makeContext(language: .arabic).screens.languageAndFormat.language == .arabic)
+        #expect(makeContext(language: .english).screens.languageAndFormat.language == .english)
     }
 
     @Test func settingTheDigitsDrivesLocalizationAndPersists() {
         let context = makeContext()
 
-        context.viewModel.numberSystem = .arabicIndic
+        context.screens.languageAndFormat.numberSystem = .arabicIndic
 
         #expect(context.localization.numberSystem == .arabicIndic)
         #expect(context.store.string(for: .numberSystem) == NumberSystem.arabicIndic.rawValue)
@@ -132,7 +151,7 @@ struct SettingsViewModelTests {
     @Test func settingTheClockFormatDrivesLocalizationAndPersists() {
         let context = makeContext()
 
-        context.viewModel.clockFormat = .twentyFourHour
+        context.screens.languageAndFormat.clockFormat = .twentyFourHour
 
         #expect(context.localization.clockFormat == .twentyFourHour)
         #expect(context.store.string(for: .clockFormat) == ClockFormat.twentyFourHour.rawValue)
@@ -145,23 +164,23 @@ struct SettingsViewModelTests {
     @Test func theDigitsSampleFollowsTheChoice() {
         let context = makeContext()
 
-        context.viewModel.numberSystem = .latin
-        #expect(context.viewModel.digitsSample == "123")
+        context.screens.languageAndFormat.numberSystem = .latin
+        #expect(context.screens.languageAndFormat.digitsSample == "123")
 
-        context.viewModel.numberSystem = .arabicIndic
-        #expect(context.viewModel.digitsSample == "١٢٣")
+        context.screens.languageAndFormat.numberSystem = .arabicIndic
+        #expect(context.screens.languageAndFormat.digitsSample == "١٢٣")
     }
 
     @Test func theClockSampleFollowsTheChoice() {
         let context = makeContext()
-        context.viewModel.numberSystem = .latin
+        context.screens.languageAndFormat.numberSystem = .latin
 
-        context.viewModel.clockFormat = .twentyFourHour
-        #expect(context.viewModel.clockSample.contains("17"))
+        context.screens.languageAndFormat.clockFormat = .twentyFourHour
+        #expect(context.screens.languageAndFormat.clockSample.contains("17"))
 
-        context.viewModel.clockFormat = .twelveHour
-        #expect(context.viewModel.clockSample.contains("5"))
-        #expect(!context.viewModel.clockSample.contains("17"))
+        context.screens.languageAndFormat.clockFormat = .twelveHour
+        #expect(context.screens.languageAndFormat.clockSample.contains("5"))
+        #expect(!context.screens.languageAndFormat.clockSample.contains("17"))
     }
 
     // MARK: Prayer calculation
@@ -169,7 +188,7 @@ struct SettingsViewModelTests {
     @Test func settingTheMethodDrivesTheSharedCalculationSettings() {
         let context = makeContext()
 
-        context.viewModel.method = .northAmerica
+        context.screens.prayerCalculation.method = .northAmerica
 
         #expect(context.calculation.config.method == .northAmerica)
         #expect(context.store.string(for: .calculationMethod) == PrayerCalculationMethod.northAmerica.rawValue)
@@ -178,7 +197,7 @@ struct SettingsViewModelTests {
     @Test func settingTheMadhabDrivesTheSharedCalculationSettings() {
         let context = makeContext()
 
-        context.viewModel.madhab = .hanafi
+        context.screens.prayerCalculation.madhab = .hanafi
 
         #expect(context.calculation.config.madhab == .hanafi)
         #expect(context.store.string(for: .asrMadhab) == AsrMadhab.hanafi.rawValue)
@@ -201,8 +220,8 @@ struct SettingsViewModelTests {
             clock: TestClock(PrayerTimeFixtures.instant(day, hour: 13))
         )
 
-        context.viewModel.method = .singapore
-        context.viewModel.madhab = .hanafi
+        context.screens.prayerCalculation.method = .singapore
+        context.screens.prayerCalculation.madhab = .hanafi
         home.refresh()
 
         #expect(home.config == CalculationConfig(method: .singapore, madhab: .hanafi))
@@ -216,7 +235,7 @@ struct SettingsViewModelTests {
     @Test func onlyTheObligatoryPrayersCanBeReminded() {
         let context = makeContext()
 
-        #expect(context.viewModel.remindablePrayers == [.fajr, .dhuhr, .asr, .maghrib, .isha])
+        #expect(context.screens.reminders.remindablePrayers == [.fajr, .dhuhr, .asr, .maghrib, .isha])
     }
 
     /// Every reminder is on before anyone has opened this screen — and nothing has been written
@@ -224,30 +243,33 @@ struct SettingsViewModelTests {
     @Test func remindersStartOnWithoutBeingWritten() {
         let context = makeContext()
 
-        #expect(context.viewModel.remindablePrayers.allSatisfy(context.viewModel.isReminderEnabled))
+        #expect(
+            context.screens.reminders.remindablePrayers
+                .allSatisfy(context.screens.reminders.isEnabled)
+        )
         #expect(SettingsKey.allCases.allSatisfy { context.store.bool(for: $0) == nil })
     }
 
     @Test func switchingAReminderOffDrivesThePreferencesAndPersists() {
         let context = makeContext()
 
-        context.viewModel.setReminder(false, for: .fajr)
+        context.screens.reminders.setEnabled(false, for: .fajr)
 
-        #expect(context.viewModel.isReminderEnabled(.fajr) == false)
+        #expect(context.screens.reminders.isEnabled(.fajr) == false)
         #expect(context.reminders.enabledPrayers.contains(.fajr) == false)
         #expect(context.store.bool(for: .reminderFajr) == false)
         // The others are untouched, and still unwritten.
-        #expect(context.viewModel.isReminderEnabled(.dhuhr))
+        #expect(context.screens.reminders.isEnabled(.dhuhr))
         #expect(context.store.bool(for: .reminderDhuhr) == nil)
     }
 
     @Test func switchingAReminderBackOnPersistsThatToo() {
         let context = makeContext()
 
-        context.viewModel.setReminder(false, for: .isha)
-        context.viewModel.setReminder(true, for: .isha)
+        context.screens.reminders.setEnabled(false, for: .isha)
+        context.screens.reminders.setEnabled(true, for: .isha)
 
-        #expect(context.viewModel.isReminderEnabled(.isha))
+        #expect(context.screens.reminders.isEnabled(.isha))
         #expect(context.store.bool(for: .reminderIsha) == true)
     }
 
@@ -255,20 +277,20 @@ struct SettingsViewModelTests {
     /// live-looking switches to someone iOS is dropping every notification for.
     @Test func theNotificationStatusIsUnknownUntilAsked() async {
         let context = makeContext()
-        #expect(context.viewModel.notificationsAllowed == nil)
+        #expect(context.screens.reminders.notificationsAllowed == nil)
 
-        await context.viewModel.loadNotificationStatus()
+        await context.screens.reminders.loadNotificationStatus()
 
-        #expect(context.viewModel.notificationsAllowed == true)
+        #expect(context.screens.reminders.notificationsAllowed == true)
     }
 
     @Test func arefusedPermissionIsReportedAsSuch() async {
         let context = makeContext()
         context.notifications.status = .denied
 
-        await context.viewModel.loadNotificationStatus()
+        await context.screens.reminders.loadNotificationStatus()
 
-        #expect(context.viewModel.notificationsAllowed == false)
+        #expect(context.screens.reminders.notificationsAllowed == false)
     }
 
     // MARK: Tips
@@ -276,18 +298,18 @@ struct SettingsViewModelTests {
     @Test func resettingTipsCallsThroughToTheService() {
         let context = makeContext()
 
-        context.viewModel.resetTipsTapped()
+        context.screens.tips.resetTipsTapped()
 
         #expect(context.tips.resetCount == 1)
         // The flag the footer reads. It is what tells the user the tips come back next launch
         // rather than now — see `ResetTipsUseCase`.
-        #expect(context.viewModel.hasResetTips)
+        #expect(context.screens.tips.hasResetTips)
     }
 
     @Test func tipsHaveNotBeenResetToBeginWith() {
         let context = makeContext()
 
-        #expect(context.viewModel.hasResetTips == false)
+        #expect(context.screens.tips.hasResetTips == false)
         #expect(context.tips.resetCount == 0)
     }
 
@@ -297,8 +319,8 @@ struct SettingsViewModelTests {
     @Test func theVersionReadsAsAVersionAndABuild() {
         let context = makeContext()
 
-        #expect(context.viewModel.versionText.contains(" ("))
-        #expect(context.viewModel.versionText.hasSuffix(")"))
+        #expect(context.screens.about.versionText.contains(" ("))
+        #expect(context.screens.about.versionText.hasSuffix(")"))
     }
 
     /// The attribution list is the plan's in-app requirement, so its shape is worth pinning:
@@ -307,9 +329,9 @@ struct SettingsViewModelTests {
         let context = makeContext()
         let l10n = context.localization
 
-        #expect(!context.viewModel.sources.isEmpty)
+        #expect(!context.screens.about.sources.isEmpty)
 
-        for source in context.viewModel.sources {
+        for source in context.screens.about.sources {
             #expect(l10n.string(source.titleKey) != source.titleKey.rawValue)
             #expect(l10n.string(source.attributionKey) != source.attributionKey.rawValue)
             #expect(l10n.string(source.licenceKey) != source.licenceKey.rawValue)
@@ -321,8 +343,73 @@ struct SettingsViewModelTests {
     /// reminder to update the list rather than the screen.
     @Test func theUnverifiedContentIsMarkedAsSuch() {
         let context = makeContext()
-        let noted = context.viewModel.sources.filter { $0.noteKey != nil }.map(\.id)
+        let noted = context.screens.about.sources.filter { $0.noteKey != nil }.map(\.id)
 
         #expect(noted.sorted() == ["adhkar", "names"])
+    }
+
+    // MARK: Restoring the calculation defaults
+
+    @Test func thereIsNothingToRestoreUntilSomethingIsChanged() {
+        let context = makeContext()
+
+        #expect(context.screens.prayerCalculation.hasChoices == false)
+
+        context.screens.prayerCalculation.method = .karachi
+
+        #expect(context.screens.prayerCalculation.hasChoices)
+    }
+
+    /// The reset clears the keys rather than writing today's defaults into them, so "never
+    /// opinionated" stays distinguishable from "chose what the default happens to be" — the
+    /// standing rule for every preference in this app.
+    @Test func restoringDefaultsClearsTheKeysRatherThanStoringThem() {
+        let context = makeContext()
+
+        context.screens.prayerCalculation.method = .karachi
+        context.screens.prayerCalculation.madhab = .hanafi
+        #expect(context.store.string(for: .calculationMethod) != nil)
+
+        context.screens.prayerCalculation.reset()
+
+        #expect(context.screens.prayerCalculation.method == CalculationConfig.default.method)
+        #expect(context.screens.prayerCalculation.madhab == CalculationConfig.default.madhab)
+        #expect(context.store.string(for: .calculationMethod) == nil)
+        #expect(context.store.string(for: .asrMadhab) == nil)
+    }
+
+    /// The shared object, not a copy: Home computes from the same `CalculationSettings`, so a
+    /// reset here has to reach it too.
+    @Test func restoringDefaultsReachesTheSharedCalculationSettings() {
+        let context = makeContext()
+
+        context.screens.prayerCalculation.method = .tehran
+        #expect(context.calculation.config.method == .tehran)
+
+        context.screens.prayerCalculation.reset()
+
+        #expect(context.calculation.config == .default)
+    }
+}
+
+/// The root list itself: seven rows, and one screen that is not among them.
+struct SettingsRouteTests {
+
+    @Test func theRootListsEverythingExceptTheSourcesScreen() {
+        #expect(SettingsRoute.root.contains(.sources) == false)
+        #expect(SettingsRoute.root.count == SettingsRoute.allCases.count - 1)
+    }
+
+    @Test func homeCustomizationComesFirst() {
+        #expect(SettingsRoute.root.first == .homeCustomization)
+    }
+
+    /// A row with no title is a row nobody can read, and a symbol name is a string the compiler
+    /// cannot check — so this is the tripwire for both.
+    @Test func everyRouteHasATitleAndASymbol() {
+        for route in SettingsRoute.allCases {
+            #expect(route.symbol.isEmpty == false)
+            #expect(route.titleKey.rawValue.isEmpty == false)
+        }
     }
 }

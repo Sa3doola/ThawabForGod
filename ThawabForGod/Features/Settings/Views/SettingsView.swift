@@ -5,118 +5,86 @@
 
 import SwiftUI
 
-/// Every preference the app has, in one grouped list.
+/// Settings' root: seven rows, each opening a screen about one subject.
 ///
-/// The screen holds no preference of its own. Each section writes through `SettingsViewModel` to
-/// the object that already owns that concern — `ThemeManager`, `LocalizationManager`,
-/// `CalculationSettings` — all three of which persist through `SettingsStore` and are applied at
-/// the root, so a change here is a change everywhere rather than a change that has to be
-/// propagated.
+/// It was one long `Form` until it grew past four groups. A list you have to scroll to find the
+/// thing you came for has outgrown being a list — and the groups had stopped being comparable
+/// anyway: an accent swatch and a rolling notification window are not two settings of the same
+/// kind, and putting them in one column implied they were.
 ///
-/// A `Form` on all three platforms. On iPhone and iPad it is the root of its own tab; on macOS
-/// the same view is the content of the `Settings` scene, reached with ⌘, where a Mac user expects
-/// to find it — which is why there is no settings tab in that build. `.formStyle(.grouped)` is
-/// what makes the second of those look native rather than like a phone screen in a window.
+/// **This screen owns nothing.** Every preference belongs to a manager built at the composition
+/// root — `ThemeManager`, `LocalizationManager`, `CalculationSettings`, `ReminderPreferences` —
+/// all of which persist through `SettingsStore`. The sub-screens forward to those; this one only
+/// routes.
+///
+/// The same view on all three platforms. On iPhone and iPad it is the root of its own tab; on
+/// macOS it is the content of the `Settings` scene, reached with ⌘, where a Mac user expects to
+/// find it — which is why there is no settings tab in that build.
 struct SettingsView: View {
-    let viewModel: SettingsViewModel
-    let coordinator: SettingsCoordinator
+    let container: SettingsScreens
 
-    /// The Home-arranging screen, which Settings pushes and Home also pushes onto its own stack.
-    /// One instance, handed to both — see `AppContainer.homeCustomizationViewModel()`.
-    let customizationViewModel: HomeCustomizationViewModel
+    @Bindable var coordinator: SettingsCoordinator
 
     @Environment(LocalizationManager.self) private var l10n
-    @Environment(\.theme) private var theme
 
     var body: some View {
         Form {
-            // First, because it is the only row here that changes what the user *sees* rather
-            // than how something is computed — and because Home is where they just came from.
             Section {
-                SettingsDisclosureRow(titleKey: .homeCustomizeTitle) {
-                    coordinator.show(.homeCustomization)
+                ForEach(SettingsRoute.root, id: \.self) { route in
+                    SettingsIconRow(route: route) { coordinator.show(route) }
                 }
-            }
-
-            AppearanceSettingsSection(viewModel: viewModel)
-            FormatSettingsSection(viewModel: viewModel)
-            CalculationSettingsSection(viewModel: viewModel)
-            RemindersSettingsSection(viewModel: viewModel)
-            TipsSettingsSection(viewModel: viewModel)
-            AboutSettingsSection(viewModel: viewModel) {
-                coordinator.show(.sources)
             }
         }
         .formStyle(.grouped)
         .navigationTitle(l10n.string(.settingsTitle))
-        // Re-read on each appearance rather than once: notification permission can be revoked
-        // in the Settings app while this app sits in the background.
-        .task { await viewModel.loadNotificationStatus() }
-        // Pushes into whichever stack encloses this screen: the settings tab's on iOS, the one
-        // the Settings scene puts up on macOS. Two-way, so a back swipe writes `nil` and the
-        // coordinator follows — the same idiom the names grid uses.
-        .navigationDestination(item: openDestination) { destination in
-            switch destination {
-            case .homeCustomization:
-                HomeCustomizationView(viewModel: customizationViewModel)
-
-            case .sources:
-                SourcesView(sources: viewModel.sources)
-            }
-        }
+        // One destination for the whole path, so `about` can push `sources` without either
+        // screen knowing how deep it is.
+        .navigationDestination(for: SettingsRoute.self, destination: screen)
     }
 
-    /// Built here rather than reached for with `@Bindable`, because the coordinator exposes its
-    /// destination read-only — so a dismissal by swipe goes through the same method a Back button
-    /// would call.
-    private var openDestination: Binding<SettingsCoordinator.Destination?> {
-        Binding(
-            get: { coordinator.destination },
-            set: { if $0 == nil { coordinator.close() } }
-        )
+    @ViewBuilder
+    private func screen(for route: SettingsRoute) -> some View {
+        switch route {
+        case .homeCustomization:
+            HomeCustomizationView(viewModel: container.homeCustomization)
+
+        case .appearance:
+            AppearanceSettingsView(viewModel: container.appearance)
+
+        case .languageAndFormat:
+            LanguageFormatSettingsView(viewModel: container.languageAndFormat)
+
+        case .prayerCalculation:
+            PrayerCalculationSettingsView(viewModel: container.prayerCalculation)
+
+        case .reminders:
+            RemindersSettingsView(viewModel: container.reminders)
+
+        case .tips:
+            TipsSettingsView(viewModel: container.tips)
+
+        case .about:
+            AboutView(viewModel: container.about) { coordinator.show(.sources) }
+
+        case .sources:
+            SourcesView(sources: container.about.sources)
+        }
     }
 }
 
-#Preview {
-    let settingsStore = InMemorySettingsStore()
-    let layoutRepository = HomeLayoutRepository(settingsStore: settingsStore)
-    let themeManager = ThemeManager(settingsStore: settingsStore)
-    let localizationManager = LocalizationManager(
-        settingsStore: settingsStore,
-        numberFormatting: LocaleNumberFormattingService(),
-        timeFormatting: LocaleTimeFormattingService()
-    )
-
-    NavigationStack {
-        SettingsView(
-            viewModel: SettingsViewModel(
-                theme: themeManager,
-                localization: localizationManager,
-                calculation: CalculationSettings(config: .default, settingsStore: settingsStore),
-                reminders: ReminderPreferences(settingsStore: settingsStore),
-                // The real service, but pointed at nothing the preview can disturb: it only
-                // ever gets asked for the authorization status here.
-                notifications: UserNotificationService(
-                    center: UserNotificationCenterClient(),
-                    planner: PrayerReminderPlanner(
-                        repository: PrayerTimeRepository(engine: PrayerTimeEngine())
-                    ),
-                    content: LocalizedReminderContent(l10n: localizationManager),
-                    inputs: AppReminderInputs(
-                        location: CoreLocationService(),
-                        settingsStore: settingsStore
-                    )
-                ),
-                resetTips: ResetTipsUseCase(tips: TipsService())
-            ),
-            coordinator: SettingsCoordinator(),
-            customizationViewModel: HomeCustomizationViewModel(
-                getLayout: GetHomeLayoutUseCase(repository: layoutRepository),
-                updateLayout: UpdateHomeLayoutUseCase(repository: layoutRepository),
-                resetLayout: ResetHomeLayoutUseCase(repository: layoutRepository)
-            )
-        )
-    }
-    .themed(themeManager)
-    .localized(localizationManager)
+/// What Settings needs to build its screens.
+///
+/// A protocol rather than passing seven view models down, and rather than handing this view the
+/// whole `AppContainer`: the root's job is to route, and a route is answered by a view model it
+/// does not otherwise care about. `AppContainer` conforms, so the wiring stays at the composition
+/// root while this file names only what it uses.
+@MainActor
+protocol SettingsScreens {
+    var homeCustomization: HomeCustomizationViewModel { get }
+    var appearance: AppearanceSettingsViewModel { get }
+    var languageAndFormat: LanguageFormatSettingsViewModel { get }
+    var prayerCalculation: PrayerCalculationSettingsViewModel { get }
+    var reminders: RemindersSettingsViewModel { get }
+    var tips: TipsSettingsViewModel { get }
+    var about: AboutViewModel { get }
 }

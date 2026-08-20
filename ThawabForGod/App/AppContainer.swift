@@ -361,29 +361,43 @@ final class AppContainer {
 
     // MARK: Settings
 
-    private var cachedSettingsViewModel: SettingsViewModel?
-
-    /// Settings' view model, built on first use and kept.
+    /// Settings' seven screens, each with a view model of its own.
     ///
-    /// It holds no preference of its own — every one of them belongs to a manager built above —
-    /// so this is cached for its one piece of screen state, the tips-reset confirmation, rather
-    /// than to protect anything the user typed.
-    func settingsViewModel() -> SettingsViewModel {
-        if let cachedSettingsViewModel {
-            return cachedSettingsViewModel
+    /// Cached, and for two different reasons depending on the screen. Most of them hold no
+    /// preference at all — they forward to the manager that owns it — but they do hold *screen*
+    /// state: a confirmation that is up, a status that has been read. Rebuilding one on each push
+    /// would discard that, which is how a reset confirmation ends up dismissing itself.
+    ///
+    /// Built lazily, together, because two of them need what onboarding seeded and none of them
+    /// is needed before Settings is opened.
+    private var cachedSettingsScreens: SettingsScreenModels?
+
+    private func settingsScreens() -> SettingsScreenModels {
+        if let cachedSettingsScreens {
+            return cachedSettingsScreens
         }
 
-        let viewModel = SettingsViewModel(
-            theme: themeManager,
-            localization: localizationManager,
-            calculation: calculationSettings(),
-            reminders: reminderPreferences,
-            notifications: notificationService,
-            resetTips: ResetTipsUseCase(tips: tipsService)
+        let screens = SettingsScreenModels(
+            homeCustomization: homeCustomizationViewModel(),
+            appearance: AppearanceSettingsViewModel(theme: themeManager),
+            languageAndFormat: LanguageFormatSettingsViewModel(localization: localizationManager),
+            prayerCalculation: PrayerCalculationSettingsViewModel(
+                calculation: calculationSettings()
+            ),
+            reminders: RemindersSettingsViewModel(
+                reminders: reminderPreferences,
+                notifications: notificationService
+            ),
+            tips: TipsSettingsViewModel(resetTips: ResetTipsUseCase(tips: tipsService)),
+            about: AboutViewModel()
         )
-        cachedSettingsViewModel = viewModel
-        return viewModel
+        cachedSettingsScreens = screens
+        return screens
     }
+
+    /// What `SettingsView` routes to. See `SettingsScreens` for why the view names a protocol
+    /// rather than taking the container.
+    var settings: any SettingsScreens { settingsScreens() }
 
     // MARK: Home
 

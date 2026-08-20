@@ -145,6 +145,11 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case prayerTimesSheetTitle = "prayer_times_sheet_title"
     case prayerTimesSheetHint = "prayer_times_sheet_hint"
     case nextPrayerBadge = "next_prayer_badge"
+
+    case settingsRemindersPrayerSection = "settings_reminders_prayer_section"
+    case settingsCalculationReset = "settings_calculation_reset"
+    case settingsCalculationResetConfirm = "settings_calculation_reset_confirm"
+    case settingsPrivacyNote = "settings_privacy_note"
     case previousDayAction = "previous_day_action"
     case nextDayAction = "next_day_action"
     case todayAction = "today_action"
