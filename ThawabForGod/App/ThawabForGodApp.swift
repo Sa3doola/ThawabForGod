@@ -31,7 +31,8 @@ struct ThawabForGodApp: App {
             NavigationStack {
                 SettingsView(
                     viewModel: container.settingsViewModel(),
-                    coordinator: container.settingsCoordinator
+                    coordinator: container.settingsCoordinator,
+                    customizationViewModel: container.homeCustomizationViewModel()
                 )
             }
             .frame(minWidth: 420, minHeight: 520)

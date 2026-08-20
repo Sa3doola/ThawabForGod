@@ -24,6 +24,10 @@ final class HomeCoordinator {
         case qibla
         case tasbih
         case names
+        /// Arranging Home itself, reached from the shortcuts section's own header. Settings
+        /// pushes the same screen onto its own stack — two doors to a screen that edits what is
+        /// on the other side of one of them, which is the case where a second door earns itself.
+        case customize
     }
 
     var path = NavigationPath()

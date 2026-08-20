@@ -16,8 +16,9 @@ import Observation
 @MainActor
 final class SettingsCoordinator {
 
-    /// Where Settings can go. Only one place today; the enum is what makes the second one cheap.
+    /// Where Settings can go.
     enum Destination: Hashable {
+        case homeCustomization
         case sources
     }
 

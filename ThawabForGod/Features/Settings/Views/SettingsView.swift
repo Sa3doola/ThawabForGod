@@ -21,11 +21,23 @@ struct SettingsView: View {
     let viewModel: SettingsViewModel
     let coordinator: SettingsCoordinator
 
+    /// The Home-arranging screen, which Settings pushes and Home also pushes onto its own stack.
+    /// One instance, handed to both — see `AppContainer.homeCustomizationViewModel()`.
+    let customizationViewModel: HomeCustomizationViewModel
+
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
 
     var body: some View {
         Form {
+            // First, because it is the only row here that changes what the user *sees* rather
+            // than how something is computed — and because Home is where they just came from.
+            Section {
+                SettingsDisclosureRow(titleKey: .homeCustomizeTitle) {
+                    coordinator.show(.homeCustomization)
+                }
+            }
+
             AppearanceSettingsSection(viewModel: viewModel)
             FormatSettingsSection(viewModel: viewModel)
             CalculationSettingsSection(viewModel: viewModel)
@@ -45,6 +57,9 @@ struct SettingsView: View {
         // coordinator follows — the same idiom the names grid uses.
         .navigationDestination(item: openDestination) { destination in
             switch destination {
+            case .homeCustomization:
+                HomeCustomizationView(viewModel: customizationViewModel)
+
             case .sources:
                 SourcesView(sources: viewModel.sources)
             }
@@ -64,6 +79,7 @@ struct SettingsView: View {
 
 #Preview {
     let settingsStore = InMemorySettingsStore()
+    let layoutRepository = HomeLayoutRepository(settingsStore: settingsStore)
     let themeManager = ThemeManager(settingsStore: settingsStore)
     let localizationManager = LocalizationManager(
         settingsStore: settingsStore,
@@ -93,7 +109,12 @@ struct SettingsView: View {
                 ),
                 resetTips: ResetTipsUseCase(tips: TipsService())
             ),
-            coordinator: SettingsCoordinator()
+            coordinator: SettingsCoordinator(),
+            customizationViewModel: HomeCustomizationViewModel(
+                getLayout: GetHomeLayoutUseCase(repository: layoutRepository),
+                updateLayout: UpdateHomeLayoutUseCase(repository: layoutRepository),
+                resetLayout: ResetHomeLayoutUseCase(repository: layoutRepository)
+            )
         )
     }
     .themed(themeManager)

@@ -65,7 +65,8 @@ struct MainTabView: View {
             namesCoordinator: container.namesCoordinator,
             namesViewModel: container.namesViewModel(),
             // The one layer entitled to know that a tap on Home can land in another tab.
-            open: container.open
+            open: container.open,
+            customizationViewModel: container.homeCustomizationViewModel()
         )
     }
 
@@ -99,7 +100,8 @@ struct MainTabView: View {
         NavigationStack {
             SettingsView(
                 viewModel: container.settingsViewModel(),
-                coordinator: container.settingsCoordinator
+                coordinator: container.settingsCoordinator,
+                customizationViewModel: container.homeCustomizationViewModel()
             )
         }
     }

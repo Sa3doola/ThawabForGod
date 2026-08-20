@@ -32,11 +32,18 @@ struct HomeCoordinatorView: View {
     /// down from the composition root rather than resolved here; see `AppRoute`.
     let open: (AppRoute) -> Void
 
+    /// The arranging screen, which is Home's own rather than another tab's.
+    let customizationViewModel: HomeCustomizationViewModel
+
     @Environment(LocalizationManager.self) private var l10n
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
-            HomeView(viewModel: viewModel, open: open)
+            HomeView(
+                viewModel: viewModel,
+                open: open,
+                customize: { coordinator.show(.customize) }
+            )
                 .toolbar { toolbar }
                 .navigationDestination(for: HomeCoordinator.Destination.self, destination: destination)
         }
@@ -53,6 +60,9 @@ struct HomeCoordinatorView: View {
 
         case .names:
             NamesGridView(viewModel: namesViewModel, coordinator: namesCoordinator)
+
+        case .customize:
+            HomeCustomizationView(viewModel: customizationViewModel)
         }
     }
 

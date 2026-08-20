@@ -97,6 +97,33 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case greetingMorning = "greeting_morning"
     case greetingAfternoon = "greeting_afternoon"
     case greetingEvening = "greeting_evening"
+
+    /// The sections Home can stack, named for the customization screen — and, where a section
+    /// draws its own heading, for that too.
+    case homeSectionNextPrayer = "home_section_next_prayer"
+    case homeSectionShortcuts = "home_section_shortcuts"
+    case homeSectionContinueReading = "home_section_continue_reading"
+    case homeSectionLastActivity = "home_section_last_activity"
+    case homeSectionPrayerTracker = "home_section_prayer_tracker"
+    case homeSectionIslamicCalendar = "home_section_islamic_calendar"
+    case homeSectionAyahOfDay = "home_section_ayah_of_day"
+    case homeSectionHadithOfDay = "home_section_hadith_of_day"
+    case homeSectionDuaOfDay = "home_section_dua_of_day"
+
+    case homeShortcutMorningAdhkar = "home_shortcut_morning_adhkar"
+    case homeShortcutEveningAdhkar = "home_shortcut_evening_adhkar"
+
+    case homeCustomizeAction = "home_customize_action"
+    case homeCustomizeTitle = "home_customize_title"
+    case homeCustomizeSectionsHeader = "home_customize_sections_header"
+    case homeCustomizeSectionsFooter = "home_customize_sections_footer"
+    case homeCustomizeReset = "home_customize_reset"
+    case homeCustomizeResetConfirm = "home_customize_reset_confirm"
+
+    /// Reordering as an action rather than a drag — drag handles are reachable by neither
+    /// VoiceOver nor a switch control.
+    case reorderMoveUp = "reorder_move_up"
+    case reorderMoveDown = "reorder_move_down"
     /// The tab-bar label for the same screen `homeTitle` titles. Short on purpose: a tab item
     /// truncates where a navigation title wraps, and "مواقيت الصلاة" does not fit one.
     case homeTabLabel = "home_tab_label"

@@ -395,6 +395,30 @@ final class AppContainer {
         return viewModel
     }
 
+    private var cachedHomeCustomizationViewModel: HomeCustomizationViewModel?
+
+    /// The arranging screen's view model, built on first use and kept.
+    ///
+    /// One instance for both doors into it — Home's shortcuts header and Settings — so a change
+    /// made through one is on screen when the other is opened. It calls back into Home's view
+    /// model after each write, which is what makes the screen behind follow along rather than
+    /// waiting to be re-entered.
+    func homeCustomizationViewModel() -> HomeCustomizationViewModel {
+        if let cachedHomeCustomizationViewModel {
+            return cachedHomeCustomizationViewModel
+        }
+
+        let home = homeViewModel()
+        let viewModel = HomeCustomizationViewModel(
+            getLayout: getHomeLayout,
+            updateLayout: updateHomeLayout,
+            resetLayout: resetHomeLayout,
+            onChange: { home.reloadLayout() }
+        )
+        cachedHomeCustomizationViewModel = viewModel
+        return viewModel
+    }
+
     // MARK: Qibla
 
     private var cachedQiblaViewModel: QiblaViewModel?

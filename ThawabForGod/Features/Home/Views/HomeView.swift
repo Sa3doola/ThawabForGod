@@ -28,6 +28,12 @@ struct HomeView: View {
     /// shape of the whole app — see `AppRoute`.
     let open: (AppRoute) -> Void
 
+    /// Opens the screen where this stack is arranged.
+    ///
+    /// Separate from `open` because it is not a route: every `AppRoute` lands in some tab's own
+    /// stack, and this one is pushed onto whichever stack Home happens to be in.
+    let customize: () -> Void
+
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
     @Environment(\.scenePhase) private var scenePhase
@@ -74,8 +80,8 @@ struct HomeView: View {
     /// One section of the stack.
     ///
     /// Every case of `HomeSectionKind` is answered here, including the ones whose features do not
-    /// exist yet. `shortcuts` and `lastActivity` are the next two slices; the rest are reserved
-    /// and filtered out of `viewModel.sections` by `isAvailable` before they ever reach this.
+    /// exist yet. `lastActivity` is the next slice; the rest are reserved and filtered out of
+    /// `viewModel.sections` by `isAvailable` before they ever reach this.
     @ViewBuilder
     private func section(for kind: HomeSectionKind) -> some View {
         switch kind {
@@ -87,7 +93,14 @@ struct HomeView: View {
                 ContinueReadingSection(reading: reading, open: open)
             }
 
-        case .shortcuts, .lastActivity, .prayerTracker,
+        case .shortcuts:
+            ShortcutsSection(
+                shortcuts: viewModel.shortcuts,
+                open: open,
+                edit: customize
+            )
+
+        case .lastActivity, .prayerTracker,
              .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
             EmptyView()
         }
@@ -167,7 +180,8 @@ private struct StatusNotice: View {
                 hijriDates: HijriDateService(),
                 calculation: CalculationSettings(config: .default, settingsStore: settingsStore)
             ),
-            open: { _ in }
+            open: { _ in },
+            customize: {}
         )
     }
     .themed(ThemeManager(settingsStore: settingsStore))

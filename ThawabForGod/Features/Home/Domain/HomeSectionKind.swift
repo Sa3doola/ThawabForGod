@@ -57,6 +57,37 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
         }
     }
 
+    /// The section's name, for the customization screen — and for the heading a section draws
+    /// above itself where it has one.
+    var labelKey: L10nKey {
+        switch self {
+        case .nextPrayer: .homeSectionNextPrayer
+        case .shortcuts: .homeSectionShortcuts
+        case .continueReading: .homeSectionContinueReading
+        case .lastActivity: .homeSectionLastActivity
+        case .prayerTracker: .homeSectionPrayerTracker
+        case .islamicCalendar: .homeSectionIslamicCalendar
+        case .ayahOfDay: .homeSectionAyahOfDay
+        case .hadithOfDay: .homeSectionHadithOfDay
+        case .duaOfDay: .homeSectionDuaOfDay
+        }
+    }
+
+    /// The SF Symbol beside its row in the customization screen.
+    var symbol: String {
+        switch self {
+        case .nextPrayer: "clock"
+        case .shortcuts: "square.grid.2x2"
+        case .continueReading: "book"
+        case .lastActivity: "clock.arrow.circlepath"
+        case .prayerTracker: "checkmark.circle"
+        case .islamicCalendar: "calendar"
+        case .ayahOfDay: "text.quote"
+        case .hadithOfDay: "text.book.closed"
+        case .duaOfDay: "hands.sparkles"
+        }
+    }
+
     /// Whether a fresh install shows this section — and, because unknown kinds are appended
     /// with this value, whether an existing user finds it switched on when it lands.
     ///
