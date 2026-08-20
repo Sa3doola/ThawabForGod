@@ -73,6 +73,11 @@ final class AppContainer {
     let quranRepository: any QuranRepositoring
     let getQuran: GetQuranUseCase
 
+    /// How the reader has asked the page to look. Built here rather than lazily like the view
+    /// models because it reads nothing onboarding seeds — the panel is the only thing that ever
+    /// writes these three keys, and it cannot have run before launch.
+    let readerSettings: ReaderSettings
+
     // MARK: Adhkar
 
     let adhkarRepository: any AdhkarRepositoring
@@ -219,6 +224,7 @@ final class AppContainer {
         self.quranCorpus = quranCorpus
         self.quranRepository = quranRepository
         self.getQuran = GetQuranUseCase(repository: quranRepository)
+        self.readerSettings = ReaderSettings(settingsStore: settingsStore)
 
         let onboardingRepository = OnboardingRepository(settingsStore: settingsStore)
         self.onboardingRepository = onboardingRepository

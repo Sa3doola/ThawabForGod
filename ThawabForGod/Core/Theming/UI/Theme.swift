@@ -41,5 +41,28 @@ nonisolated struct Theme: Equatable, Sendable {
         AppColor.accent(palette)
     }
 
+    /// The page a given paper produces.
+    ///
+    /// `.system` returns this theme's own colours, which is what makes "follows the app" a real
+    /// case rather than a branch every caller repeats. The other papers are fixed, so they carry
+    /// the same value in light and dark and the appearance never reaches them.
+    func reading(_ paper: ReaderPaper) -> ReadingPalette {
+        guard let prefix = paper.assetPrefix else {
+            return ReadingPalette(
+                background: background,
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                accent: accent
+            )
+        }
+
+        return ReadingPalette(
+            background: AppColor.paper(prefix),
+            textPrimary: AppColor.paper(prefix, .text),
+            textSecondary: AppColor.paper(prefix, .secondary),
+            accent: AppColor.paper(prefix, .accent)
+        )
+    }
+
     static let fallback = Theme()
 }

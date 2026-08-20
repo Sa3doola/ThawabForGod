@@ -75,7 +75,8 @@ struct MainTabView: View {
         NavigationStack {
             QuranListView(
                 viewModel: container.quranViewModel(),
-                coordinator: container.quranCoordinator
+                coordinator: container.quranCoordinator,
+                settings: container.readerSettings
             )
         }
     }

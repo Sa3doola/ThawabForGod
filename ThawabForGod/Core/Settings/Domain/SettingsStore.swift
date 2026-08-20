@@ -22,6 +22,13 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case latitude
     case longitude
 
+    // The reading screen's own look. Unset means the app's colours at the app's size — the
+    // reader has to have opened the panel and moved something for any of these to exist, which
+    // is what lets "reset" write `nil` back rather than the defaults.
+    case readerPaper
+    case readerTextSize
+    case readerLineSpacing
+
     // One per obligatory prayer. Unset means on — a reminder the user has never opinionated
     // about should arrive, and writing `true` at first launch would breach the rule above.
     case reminderFajr

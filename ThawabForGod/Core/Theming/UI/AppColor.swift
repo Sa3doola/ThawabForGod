@@ -26,4 +26,21 @@ nonisolated enum AppColor {
     static func accent(_ palette: AccentPalette) -> Color {
         Color("Accents/\(palette.assetName)", bundle: .main)
     }
+
+    /// One tone of a reading paper.
+    ///
+    /// A suffix rather than four named constants per paper, because the sets are named as a
+    /// family — `PaperParchment`, `PaperParchmentText` — and a `switch` over eight cases would
+    /// only be that same string joined by hand. The prefix comes from `ReaderPaper`, which is
+    /// the type entitled to know a paper has assets at all.
+    enum PaperTone: String {
+        case background = ""
+        case text = "Text"
+        case secondary = "Secondary"
+        case accent = "Accent"
+    }
+
+    static func paper(_ prefix: String, _ tone: PaperTone = .background) -> Color {
+        Color("Papers/\(prefix)\(tone.rawValue)", bundle: .main)
+    }
 }

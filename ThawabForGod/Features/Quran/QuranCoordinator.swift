@@ -26,6 +26,24 @@ final class QuranCoordinator {
     func closeReading() {
         openReading = nil
     }
+
+    // MARK: The reading panel
+
+    /// Whether the customization panel is up.
+    ///
+    /// Here rather than as `@State` on `ReaderView` for the reason `QiblaCoordinator` holds its
+    /// manual-location sheet: what is on screen is this type's subject, and a flag on the view
+    /// would be the one presentation in the feature that nothing outside the view could reach.
+    /// It also survives the reader scrolling, which view state recreated by a redraw need not.
+    private(set) var isCustomizing = false
+
+    func customize() {
+        isCustomizing = true
+    }
+
+    func finishCustomizing() {
+        isCustomizing = false
+    }
 }
 
 /// The two ways into the text, which are the two lists the tab offers.

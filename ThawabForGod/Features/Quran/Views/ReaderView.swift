@@ -11,15 +11,26 @@ import SwiftUI
 /// chapter boundaries, and giving it a screen of its own would mean two places to change when
 /// the reader gains a translation, a bookmark or a font control.
 ///
-/// Minimal on purpose — Arabic text, one theme, no translation. The customization panel, the
-/// translations and the bookmarks are the slices that come after this one; what this establishes
-/// is the shape they land in.
+/// The reader's own look is resolved here and put into the environment once, rather than handed
+/// down through `chapter(_:in:)` to `VerseRow` — the row is three levels below this and the panel
+/// that edits the value is presented from the top, so the environment is what lets the value reach
+/// the leaf without every view in between naming it.
+///
+/// Still no translation and no bookmark: those are the slices after this one, and they land in
+/// this shape.
 struct ReaderView: View {
     let viewModel: QuranViewModel
+    let coordinator: QuranCoordinator
+    let settings: ReaderSettings
     let reading: QuranReading
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+
+    /// Recomputed on each redraw rather than stored, which is what makes a change in the panel
+    /// show through here: reading `settings.paper` inside `body` is the observation that brings
+    /// this view back.
+    private var style: ReadingStyle { settings.style(on: theme) }
 
     var body: some View {
         ScrollView {
@@ -30,9 +41,46 @@ struct ReaderView: View {
             .frame(maxWidth: 620)
             .frame(maxWidth: .infinity, alignment: .center)
         }
-        .background(theme.background)
+        .background(background)
         .navigationTitle(title)
+        .environment(\.readingStyle, style)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    coordinator.customize()
+                } label: {
+                    Label(l10n.string(.readerOptionsTitle), systemImage: "textformat.size")
+                }
+            }
+        }
+        .sheet(isPresented: isCustomizing) {
+            ReaderSettingsSheet(settings: settings, coordinator: coordinator)
+        }
         .task { await viewModel.load(reading) }
+    }
+
+    /// The chosen paper, but only under text that is actually there.
+    ///
+    /// The loading and unavailable states draw themselves in `Theme`'s colours, and those are
+    /// picked against `Theme`'s background — an `InlineNotice` in the app's light-on-dark text
+    /// sitting on parchment would be the one unreadable screen in the feature. The paper is for
+    /// the page; a spinner is not the page.
+    private var background: Color {
+        if case .ready = viewModel.readingPhase {
+            style.palette.background
+        } else {
+            theme.background
+        }
+    }
+
+    /// Two-way, as the reading destination is: dragging the sheet down writes `false` back and
+    /// the coordinator follows, so a dismiss by gesture and one by the Done button are the same
+    /// value changing.
+    private var isCustomizing: Binding<Bool> {
+        Binding(
+            get: { coordinator.isCustomizing },
+            set: { if !$0 { coordinator.finishCustomizing() } }
+        )
     }
 
     @ViewBuilder
@@ -68,8 +116,8 @@ struct ReaderView: View {
 
             if loaded.showsBismillah(forSurah: number), let bismillah = loaded.surahs[number]?.bismillah {
                 Text(bismillah)
-                    .appFont(.title3)
-                    .foregroundStyle(theme.accent)
+                    .readingFont(size: style.typography.textSize)
+                    .foregroundStyle(style.palette.accent)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .environment(\.layoutDirection, .rightToLeft)
                     .environment(\.locale, AppLanguage.arabic.locale)
@@ -85,12 +133,12 @@ struct ReaderView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(surah.arabicName)
                 .appFont(.headline)
-                .foregroundStyle(theme.textPrimary)
+                .foregroundStyle(style.palette.textPrimary)
                 .environment(\.locale, AppLanguage.arabic.locale)
 
             Text(l10n.language == .arabic ? surah.transliteration : surah.englishName)
                 .appFont(.caption)
-                .foregroundStyle(theme.textSecondary)
+                .foregroundStyle(style.palette.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 4)
@@ -123,6 +171,8 @@ struct ReaderView: View {
                     repository: QuranRepository(database: CorpusDatabase(name: "quran"))
                 )
             ),
+            coordinator: QuranCoordinator(),
+            settings: ReaderSettings(settingsStore: settingsStore),
             reading: .surah(1)
         )
     }

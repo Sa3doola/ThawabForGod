@@ -15,7 +15,10 @@ struct VerseRow: View {
     let verse: Verse
 
     @Environment(LocalizationManager.self) private var l10n
-    @Environment(\.theme) private var theme
+    /// The reader's paper and type metrics, resolved once by `ReaderView`. `fallback` outside it —
+    /// the app's colours at the app's size — so this row still draws correctly in a preview or
+    /// anywhere else it is reused.
+    @Environment(\.readingStyle) private var style
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -44,9 +47,9 @@ struct VerseRow: View {
                 + Text(l10n.string(verse.number, grouped: false))
                 + Text(verbatim: "﴾")
         )
-        .appFont(.title3)
-        .foregroundStyle(theme.textPrimary)
-        .lineSpacing(14)
+        .readingFont(size: style.typography.textSize)
+        .foregroundStyle(style.palette.textPrimary)
+        .lineSpacing(style.typography.lineSpacing)
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -62,7 +65,7 @@ struct VerseRow: View {
             Text(l10n.string(.quranSajda))
         }
         .appFont(.caption, weight: .medium)
-        .foregroundStyle(theme.accent)
+        .foregroundStyle(style.palette.accent)
     }
 
     /// Spoken as "verse 255", then the verse — so the reference comes before the recitation

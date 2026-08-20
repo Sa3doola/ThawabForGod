@@ -14,6 +14,9 @@ import SwiftUI
 struct QuranListView: View {
     @Bindable var viewModel: QuranViewModel
     let coordinator: QuranCoordinator
+    /// Passed straight through to `ReaderView`. This screen has no look of its own to configure —
+    /// it holds it only because it is the view that builds the destination.
+    let settings: ReaderSettings
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
@@ -34,7 +37,12 @@ struct QuranListView: View {
         // Pushes into the stack this tab owns, rather than opening one of its own. Two-way: a
         // back swipe writes `nil` through the binding and the coordinator follows.
         .navigationDestination(item: openReading) { reading in
-            ReaderView(viewModel: viewModel, reading: reading)
+            ReaderView(
+                viewModel: viewModel,
+                coordinator: coordinator,
+                settings: settings,
+                reading: reading
+            )
         }
     }
 
@@ -98,7 +106,8 @@ struct QuranListView: View {
                     repository: QuranRepository(database: CorpusDatabase(name: "quran"))
                 )
             ),
-            coordinator: QuranCoordinator()
+            coordinator: QuranCoordinator(),
+            settings: ReaderSettings(settingsStore: settingsStore)
         )
     }
     .themed(ThemeManager(settingsStore: settingsStore))

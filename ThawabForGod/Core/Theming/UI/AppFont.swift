@@ -11,11 +11,27 @@ import SwiftUI
 /// without touching a single call site.
 nonisolated protocol AppFontProviding: Sendable {
     func font(_ style: AppTextStyle, weight: Font.Weight) -> Font
+
+    /// The face a long passage of scripture is set in, at a size the reader chose.
+    ///
+    /// The one place a size comes from outside the type scale — see `ReaderTypography` for why
+    /// the reader gets points rather than a step. It is on the protocol rather than free-standing
+    /// so that the bespoke Uthmani face this protocol exists to allow can override *this* without
+    /// touching the ten steps above it: a Quranic face is a different design at a different
+    /// optical size, and the reader is the only screen that would want it.
+    func readingFont(size: Double) -> Font
 }
 
 nonisolated extension AppFontProviding {
     func font(_ style: AppTextStyle) -> Font {
         font(style, weight: .regular)
+    }
+
+    /// Takes a size that has *already* been scaled for Dynamic Type — see `ReadingFontModifier`,
+    /// which is where that happens and why it has to. A conforming provider should treat this
+    /// argument as final and not scale it a second time.
+    func readingFont(size: Double) -> Font {
+        .system(size: size)
     }
 }
 
@@ -51,6 +67,12 @@ extension View {
     func appFont(_ style: AppTextStyle, weight: Font.Weight = .regular) -> some View {
         modifier(AppFontModifier(style: style, weight: weight))
     }
+
+    /// Applies the reading face at the reader's chosen size. Only the scripture uses this;
+    /// everything around it stays on `appFont(_:weight:)`.
+    func readingFont(size: Double) -> some View {
+        modifier(ReadingFontModifier(size: size))
+    }
 }
 
 private struct AppFontModifier: ViewModifier {
@@ -60,5 +82,24 @@ private struct AppFontModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.font(provider.font(style, weight: weight))
+    }
+}
+
+/// Applies the reader's chosen size, scaled for Dynamic Type.
+///
+/// The scaling is here rather than inside the `Font` because SwiftUI has no system-font
+/// equivalent of `Font.custom(_:size:relativeTo:)` — `Font.system(size:)` is a fixed number of
+/// points and ignores the content size category entirely. `@ScaledMetric` is what closes that
+/// gap: seeded with `1` it scales *itself* by the same factor `UIFontMetrics` would apply at
+/// `.title3`, which makes it a multiplier rather than a size. Without this, a reader who has
+/// enlarged text system-wide would find the one screen in the app made of nothing but text was
+/// also the only one that ignored the setting.
+private struct ReadingFontModifier: ViewModifier {
+    @Environment(\.appFont) private var provider
+    @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
+    let size: Double
+
+    func body(content: Content) -> some View {
+        content.font(provider.readingFont(size: size * Double(typeScale)))
     }
 }
