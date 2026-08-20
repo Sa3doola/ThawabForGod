@@ -24,6 +24,14 @@ nonisolated protocol TimeFormattingService: Sendable {
         clock: ClockFormat
     ) -> String
 
+    /// A calendar date — `20 August 2026`, `٢٠ أغسطس ٢٠٢٦`.
+    ///
+    /// Gregorian, always. The Hijri date is a separate thing the app computes itself through
+    /// `HijriDateServicing`, and letting this one follow the device's calendar would mean a user
+    /// who set iOS to the Islamic calendar saw the same date twice, in two conversions that do
+    /// not always agree.
+    func dateString(from date: Date, language: AppLanguage, system: NumberSystem) -> String
+
     /// A remaining duration as `h:mm:ss`, dropping the hours component below an hour.
     /// Negative intervals clamp to zero, so a countdown that has just elapsed reads `0:00`.
     func countdownString(from interval: TimeInterval, system: NumberSystem) -> String

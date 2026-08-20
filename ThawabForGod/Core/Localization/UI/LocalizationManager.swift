@@ -128,6 +128,11 @@ final class LocalizationManager {
         )
     }
 
+    /// A Gregorian calendar date in the user's language and digits.
+    func dateString(_ date: Date) -> String {
+        timeFormatting.dateString(from: date, language: language, system: numberSystem)
+    }
+
     /// A remaining duration as `h:mm:ss`.
     func countdownString(_ interval: TimeInterval) -> String {
         timeFormatting.countdownString(from: interval, system: numberSystem)

@@ -51,3 +51,16 @@ final class StubReachability: NetworkReachability {
         self.isOnline = isOnline
     }
 }
+
+/// A layout use case over an empty store, which reads as `HomeLayout.default`.
+///
+/// Most of Home's tests are about prayer times and have no opinion about the arrangement — this
+/// keeps them from having to say so in five lines each.
+@MainActor
+enum HomeLayoutFixtures {
+    static func getLayout(
+        _ store: any SettingsStore = InMemorySettingsStore()
+    ) -> GetHomeLayoutUseCase {
+        GetHomeLayoutUseCase(repository: HomeLayoutRepository(settingsStore: store))
+    }
+}

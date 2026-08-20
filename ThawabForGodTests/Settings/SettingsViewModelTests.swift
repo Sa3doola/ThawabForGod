@@ -193,6 +193,7 @@ struct SettingsViewModelTests {
         let repository = RecordingPrayerTimeRepository(schedules: [day: PrayerTimeFixtures.schedule(on: day)])
         let home = HomeViewModel(
             useCase: GetPrayerScheduleUseCase(repository: repository, calendar: PrayerTimeFixtures.calendar),
+            getLayout: HomeLayoutFixtures.getLayout(),
             coordinates: .makkah,
             hijriDates: StubHijriDateService(),
             calculation: context.calculation,

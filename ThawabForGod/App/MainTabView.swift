@@ -63,7 +63,9 @@ struct MainTabView: View {
             tasbihCoordinator: container.tasbihCoordinator,
             tasbihViewModel: container.tasbihViewModel(),
             namesCoordinator: container.namesCoordinator,
-            namesViewModel: container.namesViewModel()
+            namesViewModel: container.namesViewModel(),
+            // The one layer entitled to know that a tap on Home can land in another tab.
+            open: container.open
         )
     }
 

@@ -94,6 +94,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: Prayer times
 
     case homeTitle = "home_title"
+    case greetingMorning = "greeting_morning"
+    case greetingAfternoon = "greeting_afternoon"
+    case greetingEvening = "greeting_evening"
     /// The tab-bar label for the same screen `homeTitle` titles. Short on purpose: a tab item
     /// truncates where a navigation title wraps, and "مواقيت الصلاة" does not fit one.
     case homeTabLabel = "home_tab_label"

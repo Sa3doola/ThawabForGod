@@ -28,11 +28,15 @@ struct HomeCoordinatorView: View {
     let namesCoordinator: NamesCoordinator
     let namesViewModel: NamesViewModel
 
+    /// Where a tap on one of Home's sections goes — which may be another tab entirely. Handed
+    /// down from the composition root rather than resolved here; see `AppRoute`.
+    let open: (AppRoute) -> Void
+
     @Environment(LocalizationManager.self) private var l10n
 
     var body: some View {
         NavigationStack(path: $coordinator.path) {
-            HomeView(viewModel: viewModel)
+            HomeView(viewModel: viewModel, open: open)
                 .toolbar { toolbar }
                 .navigationDestination(for: HomeCoordinator.Destination.self, destination: destination)
         }

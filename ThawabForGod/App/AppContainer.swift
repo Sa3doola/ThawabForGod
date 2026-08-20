@@ -53,6 +53,18 @@ final class AppContainer {
     let prayerTimeRepository: any PrayerTimeRepositoring
     let getPrayerSchedule: GetPrayerScheduleUseCase
 
+    // MARK: Home
+
+    /// How Home is arranged, and the three things that can be done to it.
+    ///
+    /// Built here rather than lazily like the view models because it reads nothing onboarding
+    /// seeds — the customization screen is the only thing that ever writes this key, and it
+    /// cannot have run before launch.
+    let homeLayoutRepository: any HomeLayoutRepositoring
+    let getHomeLayout: GetHomeLayoutUseCase
+    let updateHomeLayout: UpdateHomeLayoutUseCase
+    let resetHomeLayout: ResetHomeLayoutUseCase
+
     // MARK: Qibla
 
     /// Built on the same engine as the prayer times above — one implementation of the Qibla
@@ -253,6 +265,12 @@ final class AppContainer {
         self.quranProgressRepository = quranProgressRepository
         self.quranProgress = QuranProgressUseCase(repository: quranProgressRepository)
 
+        let homeLayoutRepository = HomeLayoutRepository(settingsStore: settingsStore)
+        self.homeLayoutRepository = homeLayoutRepository
+        self.getHomeLayout = GetHomeLayoutUseCase(repository: homeLayoutRepository)
+        self.updateHomeLayout = UpdateHomeLayoutUseCase(repository: homeLayoutRepository)
+        self.resetHomeLayout = ResetHomeLayoutUseCase(repository: homeLayoutRepository)
+
         let onboardingRepository = OnboardingRepository(settingsStore: settingsStore)
         self.onboardingRepository = onboardingRepository
 
@@ -355,6 +373,7 @@ final class AppContainer {
 
         let viewModel = HomeViewModel(
             useCase: getPrayerSchedule,
+            getLayout: getHomeLayout,
             coordinates: onboardingRepository.seededCoordinates ?? fallbackCoordinates,
             locationService: locationService,
             placeNames: placeNameResolver,
@@ -365,6 +384,11 @@ final class AppContainer {
             // The same object Settings edits, not a snapshot of it — which is what lets a method
             // changed in Settings redraw today's times.
             calculation: calculationSettings(),
+            // Home reaching into the Quran's use cases, on purpose: the "continue reading"
+            // section is *about* the Quran, and a second way to ask where the reader stopped
+            // would be a second answer waiting to disagree with the first.
+            quranProgress: quranProgress,
+            quran: getQuran,
             clock: clock
         )
         cachedHomeViewModel = viewModel

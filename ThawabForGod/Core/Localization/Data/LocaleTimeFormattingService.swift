@@ -20,6 +20,14 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
 
     private let timeFormatters: [Style: DateFormatter]
 
+    /// Calendar dates, which need no clock choice — four rather than twelve.
+    private struct DateStyle: Hashable {
+        let language: AppLanguage
+        let system: NumberSystem
+    }
+
+    private let dateFormatters: [DateStyle: DateFormatter]
+
     /// Two digits, zero-padded, per numbering system. Padding a countdown by hand would mean
     /// prepending a Latin `"0"` in front of Arabic-Indic digits.
     private let paddedFormatters: [NumberSystem: NumberFormatter]
@@ -54,7 +62,24 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
             }
         }
 
+        var dates: [DateStyle: DateFormatter] = [:]
+
+        for language in AppLanguage.allCases {
+            for system in NumberSystem.allCases {
+                let formatter = DateFormatter()
+                formatter.locale = Locale(
+                    identifier: "\(language.rawValue)@numbers=\(system.numberingSystemTag)"
+                )
+                formatter.timeZone = .autoupdatingCurrent
+                // Gregorian explicitly, not whatever the locale carries — see the protocol.
+                formatter.calendar = Calendar(identifier: .gregorian)
+                formatter.setLocalizedDateFormatFromTemplate("dMMMMy")
+                dates[DateStyle(language: language, system: system)] = formatter
+            }
+        }
+
         self.timeFormatters = times
+        self.dateFormatters = dates
         self.paddedFormatters = Self.numberFormatters(minimumIntegerDigits: 2)
         self.plainFormatters = Self.numberFormatters(minimumIntegerDigits: 1)
     }
@@ -86,6 +111,10 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
             return ""
         }
         return formatter.string(from: date)
+    }
+
+    func dateString(from date: Date, language: AppLanguage, system: NumberSystem) -> String {
+        dateFormatters[DateStyle(language: language, system: system)]?.string(from: date) ?? ""
     }
 
     func countdownString(from interval: TimeInterval, system: NumberSystem) -> String {

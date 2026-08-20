@@ -21,7 +21,10 @@ struct HomeViewModelTests {
         calculation: CalculationSettings? = nil,
         tips: any HomeTipReporting = SpyHomeTipReporter(),
         placeNames: (any PlaceNameResolving)? = nil,
-        reachability: (any NetworkReachability)? = nil
+        reachability: (any NetworkReachability)? = nil,
+        settingsStore: any SettingsStore = InMemorySettingsStore(),
+        quranProgress: QuranProgressUseCase? = nil,
+        quran: GetQuranUseCase? = nil
     ) -> (HomeViewModel, TestClock) {
         let repository: StubPrayerTimeRepository = if let failure {
             StubPrayerTimeRepository(failure: failure)
@@ -35,6 +38,7 @@ struct HomeViewModelTests {
                 repository: repository,
                 calendar: PrayerTimeFixtures.calendar
             ),
+            getLayout: HomeLayoutFixtures.getLayout(settingsStore),
             coordinates: .makkah,
             placeNames: placeNames,
             reachability: reachability,
@@ -44,6 +48,8 @@ struct HomeViewModelTests {
                 settingsStore: InMemorySettingsStore()
             ),
             tips: tips,
+            quranProgress: quranProgress,
+            quran: quran,
             clock: clock,
             // The fixtures are pinned to GMT, and the day boundary is what the roll-over tests
             // turn on — inheriting the machine's zone would make them pass or fail by geography.
@@ -255,6 +261,7 @@ struct HomeViewModelTests {
         let clock = TestClock(PrayerTimeFixtures.instant(today, hour: 13))
         let viewModel = HomeViewModel(
             useCase: GetPrayerScheduleUseCase(repository: repository, calendar: PrayerTimeFixtures.calendar),
+            getLayout: HomeLayoutFixtures.getLayout(),
             coordinates: .makkah,
             hijriDates: StubHijriDateService(),
             calculation: calculation,
@@ -289,6 +296,7 @@ struct HomeViewModelTests {
         let clock = TestClock(PrayerTimeFixtures.instant(today, hour: 13))
         let viewModel = HomeViewModel(
             useCase: GetPrayerScheduleUseCase(repository: repository, calendar: PrayerTimeFixtures.calendar),
+            getLayout: HomeLayoutFixtures.getLayout(),
             coordinates: .makkah,
             locationService: location,
             hijriDates: StubHijriDateService(),
@@ -321,6 +329,7 @@ struct HomeViewModelTests {
         let clock = TestClock(PrayerTimeFixtures.instant(today, hour: 13))
         let viewModel = HomeViewModel(
             useCase: GetPrayerScheduleUseCase(repository: repository, calendar: PrayerTimeFixtures.calendar),
+            getLayout: HomeLayoutFixtures.getLayout(),
             coordinates: .makkah,
             locationService: location,
             hijriDates: StubHijriDateService(),
@@ -556,5 +565,124 @@ struct HomeViewModelTests {
 
         #expect(places.askCount == 0)
         #expect(viewModel.placeName == nil)
+    }
+
+    // MARK: The arrangement
+
+    /// Read at construction rather than in `start()`, so the stack is in its final order on the
+    /// first frame instead of rearranging itself once the screen is already up.
+    @Test func theArrangementIsKnownBeforeAnythingHasLoaded() {
+        let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
+
+        #expect(viewModel.phase == .loading)
+        #expect(viewModel.sections == HomeLayout.default.visibleSections)
+        #expect(viewModel.sections.first == .nextPrayer)
+    }
+
+    @Test func aStoredArrangementIsWhatTheScreenDraws() {
+        let store = InMemorySettingsStore()
+        var layout = HomeLayout.default
+        layout.moveSections(from: IndexSet(integer: 1), to: 4)
+        HomeLayoutRepository(settingsStore: store).save(layout)
+
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            settingsStore: store
+        )
+
+        #expect(viewModel.sections == layout.visibleSections)
+    }
+
+    /// What the customization screen's dismissal calls. Without it the screen behind would keep
+    /// drawing the arrangement the user has just finished changing.
+    @Test func reloadingPicksUpAnArrangementChangedElsewhere() {
+        let store = InMemorySettingsStore()
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            settingsStore: store
+        )
+
+        let before = viewModel.sections
+
+        var layout = HomeLayout.default
+        layout.setVisibility(false, of: .continueReading)
+        HomeLayoutRepository(settingsStore: store).save(layout)
+
+        #expect(viewModel.sections == before)
+
+        viewModel.reloadLayout()
+
+        #expect(viewModel.sections.contains(.continueReading) == false)
+    }
+
+    // MARK: Continue reading
+
+    @Test(.timeLimit(.minutes(1)))
+    func theLastReadVerseAndItsChapterAreLoaded() async {
+        let reference = VerseReference(surah: 2, verse: 142)
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            quranProgress: QuranProgressUseCase(
+                repository: StubQuranProgressRepository(
+                    position: ReadingPosition(reference: reference, updatedAt: .distantPast)
+                )
+            ),
+            quran: GetQuranUseCase(
+                repository: StubQuranRepository(surahs: .success([.stub(id: 2, arabicName: "البقرة")]))
+            )
+        )
+
+        let task = Task { await viewModel.start() }
+        while viewModel.continueReading == nil {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.continueReading?.position.reference == reference)
+        #expect(viewModel.continueReading?.surah?.arabicName == "البقرة")
+    }
+
+    /// A reader who has never opened the Quran gets no card at all — "continue" with nothing to
+    /// continue is worse than nothing.
+    @Test(.timeLimit(.minutes(1)))
+    func nothingReadMeansNoCard() async {
+        let (viewModel, clock) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            quranProgress: QuranProgressUseCase(repository: StubQuranProgressRepository()),
+            quran: GetQuranUseCase(repository: StubQuranRepository())
+        )
+
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.continueReading == nil)
+    }
+
+    /// Somebody else's store, and a nice-to-have besides: a failure to read it must leave the
+    /// prayer times on screen rather than taking Home down with it.
+    @Test(.timeLimit(.minutes(1)))
+    func aFailureToReadTheReadingPositionIsSilent() async throws {
+        let (viewModel, clock) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            quranProgress: QuranProgressUseCase(
+                repository: StubQuranProgressRepository(failure: QuranStubError())
+            ),
+            quran: GetQuranUseCase(repository: StubQuranRepository())
+        )
+
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.continueReading == nil)
+        #expect(try ready(viewModel).schedule.times.count == 6)
     }
 }

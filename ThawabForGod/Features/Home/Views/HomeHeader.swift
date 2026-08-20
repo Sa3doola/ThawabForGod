@@ -6,18 +6,29 @@
 import SwiftUI
 import TipKit // `.popoverTip(_:)`; MEMBER_IMPORT_VISIBILITY means it is not re-exported
 
-/// Today's Hijri date, and whatever the Islamic calendar marks on it.
+/// Home's chrome: who is being greeted, what day it is, and anything the calendar marks on it.
 ///
-/// Sits above the prayer times in every phase — including `.unavailable`, where the times
-/// could not be computed but the date is still the date.
-struct HijriDateHeader: View {
+/// **Not a section.** Everything below it is ordered and hideable by the user; this is the
+/// screen's own frame and is neither. It sits outside the `LazyVStack`'s section loop for that
+/// reason rather than as an accident of layout.
+///
+/// It shows both calendars side by side because the app has two and they disagree: the Hijri
+/// date is what the content is organised around, and the Gregorian one is what the reader's phone
+/// and diary say. Showing only the first makes the app hard to use; only the second makes it
+/// hard to trust.
+struct HomeHeader: View {
     let viewModel: HomeViewModel
 
     @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HijriDateLabel(date: viewModel.hijriDate)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(l10n.string(viewModel.greeting.labelKey))
+                .appFont(.title2, weight: .bold)
+                .foregroundStyle(theme.textPrimary)
+
+            DateLine(date: viewModel.currentDate, hijri: viewModel.hijriDate)
                 .popoverTip(hijriDateTip)
 
             ForEach(viewModel.todaysEvents) { event in
@@ -34,6 +45,29 @@ struct HijriDateHeader: View {
             titleText: l10n.string(.tipHomeHijriTitle),
             messageText: l10n.string(.tipHomeHijriMessage)
         )
+    }
+}
+
+/// Both calendars on one line.
+private struct DateLine: View {
+    let date: Date
+    let hijri: HijriDate
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Text(text)
+            .appFont(.callout, weight: .medium)
+            .foregroundStyle(theme.textSecondary)
+            // One string rather than two `Text`s in a stack, for the reason `HijriDateLabel`
+            // gives: a stack would fix the visual order of the two dates, where a single run
+            // lets the bidi algorithm lay them out the way the reading direction requires.
+            .accessibilityLabel(text)
+    }
+
+    private var text: String {
+        "\(l10n.dateString(date)) · \(HijriDateLabel.text(for: hijri, l10n: l10n))"
     }
 }
 
@@ -60,6 +94,12 @@ struct HijriDateLabel: View {
     }
 
     private var text: String {
+        Self.text(for: date, l10n: l10n)
+    }
+
+    /// Shared with `HomeHeader`'s date line, which shows this reading beside the Gregorian one.
+    /// Static rather than duplicated, so the three parts are assembled once.
+    static func text(for date: HijriDate, l10n: LocalizationManager) -> String {
         // The year is ungrouped: it names a year, it does not count 1,448 of anything.
         "\(l10n.string(date.day)) \(l10n.string(date.month.labelKey)) \(l10n.string(date.year, grouped: false))"
     }

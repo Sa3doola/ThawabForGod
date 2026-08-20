@@ -26,7 +26,34 @@ final class HomeViewModel {
         case unavailable
     }
 
+    /// The whole of a "continue reading" card: where the reader stopped, and the chapter it is
+    /// in. The chapter is optional because the position is the user's data and the chapter is the
+    /// corpus's — a card that says the verse but not the name is still a way back into the text.
+    struct ContinueReading: Equatable {
+        let position: ReadingPosition
+        let surah: Surah?
+    }
+
     private(set) var phase: Phase = .loading
+
+    /// How Home is arranged, as the user left it.
+    ///
+    /// Held whole rather than as a list of kinds, because the customization screen edits *this*
+    /// value and hands it back — see `reloadLayout()`.
+    private(set) var layout: HomeLayout
+
+    /// The sections to draw, in order. Already filtered to what is visible and built.
+    var sections: [HomeSectionKind] { layout.visibleSections }
+
+    /// The shortcut circles to draw, in order.
+    var shortcuts: [HomeShortcut] { layout.visibleShortcuts }
+
+    /// Where the reader stopped in the Quran, or `nil` if they have not started.
+    ///
+    /// The section is absent rather than empty when this is `nil`: a card that says "continue"
+    /// when there is nothing to continue is worse than no card — the same rule the Quran tab's
+    /// own version of it follows.
+    private(set) var continueReading: ContinueReading?
 
     /// Seconds remaining until the upcoming prayer.
     ///
@@ -50,6 +77,18 @@ final class HomeViewModel {
     private(set) var hijriDate: HijriDate
     private(set) var todaysEvents: [IslamicEvent]
 
+    /// The instant the screen was last recomputed from, which is what the header's date and
+    /// greeting are drawn from.
+    ///
+    /// Stored rather than read from the clock on demand, because a computed property reading a
+    /// clock observes nothing and the header would never redraw. It moves on every recomputation
+    /// — a prayer arriving, midnight passing, the app returning to the foreground — which is
+    /// often enough that a greeting is never more than one prayer out of date.
+    private(set) var currentDate: Date
+
+    /// How Home says hello, by the hour of `currentDate`.
+    var greeting: HomeGreeting { HomeGreeting.at(currentDate, calendar: calendar) }
+
     /// How the times are being calculated right now.
     ///
     /// A window onto `CalculationSettings` rather than a copy, and the reason it is exposed at
@@ -59,6 +98,9 @@ final class HomeViewModel {
     var config: CalculationConfig { calculation.config }
 
     @ObservationIgnored private let useCase: GetPrayerScheduleUseCase
+    @ObservationIgnored private let getLayout: GetHomeLayoutUseCase
+    @ObservationIgnored private let quranProgress: QuranProgressUseCase?
+    @ObservationIgnored private let quran: GetQuranUseCase?
     @ObservationIgnored private var coordinates: Coordinates
     @ObservationIgnored private let locationService: (any LocationService)?
     @ObservationIgnored private let placeNames: (any PlaceNameResolving)?
@@ -89,6 +131,13 @@ final class HomeViewModel {
     ///   - hijriDates: the Hijri conversion and the events table.
     ///   - tips: where TipKit's rule inputs are reported. Behind a protocol so this type never
     ///     imports TipKit and its tests never open a datastore.
+    ///   - getLayout: which sections this user wants, in what order.
+    ///   - quranProgress: where the reader stopped, for the "continue reading" section, and
+    ///   - quran: the chapter that verse is in. Both optional, and both a deliberate reach across
+    ///     a feature boundary: the section is *about* the Quran, so Home composes that feature's
+    ///     use cases rather than growing a second way to ask the same question. Wired at the
+    ///     composition root like everything else; `nil` in previews and in tests about prayer
+    ///     times, which leaves the section absent.
     ///   - clock: the time, and the heartbeat. Injected so tests can place themselves at any
     ///     moment of the day *and* step the countdown without sleeping — see `ClockService`.
     ///   - calendar: used only to notice that midnight has passed. Gregorian in the device's own
@@ -97,6 +146,7 @@ final class HomeViewModel {
     ///     compares against is a civil one.
     init(
         useCase: GetPrayerScheduleUseCase,
+        getLayout: GetHomeLayoutUseCase,
         coordinates: Coordinates,
         locationService: (any LocationService)? = nil,
         placeNames: (any PlaceNameResolving)? = nil,
@@ -104,10 +154,15 @@ final class HomeViewModel {
         hijriDates: any HijriDateServicing,
         calculation: CalculationSettings,
         tips: any HomeTipReporting = HomeTipReporter(),
+        quranProgress: QuranProgressUseCase? = nil,
+        quran: GetQuranUseCase? = nil,
         clock: any ClockService = SystemClockService(),
         calendar: Calendar = .gregorianLocal
     ) {
         self.useCase = useCase
+        self.getLayout = getLayout
+        self.quranProgress = quranProgress
+        self.quran = quran
         self.coordinates = coordinates
         self.locationService = locationService
         self.placeNames = placeNames
@@ -122,8 +177,13 @@ final class HomeViewModel {
         // no computation that can fail, so the screen has one from its first frame and the
         // header never flickers in behind the loading state.
         let instant = clock.now
+        self.currentDate = instant
         self.hijriDate = hijriDates.hijriComponents(for: instant)
         self.todaysEvents = hijriDates.islamicEvents(on: instant)
+
+        // Read here rather than in `start()` so the stack is in its final order on the first
+        // frame. It is a synchronous read of `UserDefaults`, not a trip to a database.
+        self.layout = getLayout()
     }
 
     /// Loads the day, then ticks until cancelled.
@@ -148,12 +208,40 @@ final class HomeViewModel {
         // `async let` is awaited below so the child is still structured: cancelling the screen's
         // task cancels this too.
         async let name: Void = resolvePlaceName()
+        async let reading: Void = loadContinueReading()
 
         for await _ in clock.ticks(every: .seconds(1)) {
             tick()
         }
 
         await name
+        await reading
+    }
+
+    /// Re-reads the arrangement, for when the customization screen has just been dismissed.
+    ///
+    /// Cheap enough to do unconditionally: one `UserDefaults` read and a decode, against a screen
+    /// the user has just spent time arranging.
+    func reloadLayout() {
+        layout = getLayout()
+    }
+
+    /// Loads where the reader stopped in the Quran.
+    ///
+    /// Silent on failure, and the section simply stays absent. This is somebody else's store and
+    /// a nice-to-have besides — a Home screen that could not read it should still show the times,
+    /// which is what it is for.
+    private func loadContinueReading() async {
+        guard let quranProgress, let quran, let position = try? await quranProgress.lastRead()
+        else {
+            continueReading = nil
+            return
+        }
+
+        continueReading = ContinueReading(
+            position: position,
+            surah: try? await quran.surah(position.reference.surah)
+        )
     }
 
     /// Reads a live fix, if the app has a location service and is already authorized.
@@ -188,6 +276,7 @@ final class HomeViewModel {
     /// Recomputes everything from the current instant.
     func refresh() {
         let instant = clock.now
+        currentDate = instant
 
         // Ahead of the schedule, and outside the `do`: the date is what the day is, whether or
         // not the times worked out. It also lets the roll into a new day — which `tick()`

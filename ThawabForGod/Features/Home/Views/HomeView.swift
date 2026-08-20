@@ -6,14 +6,27 @@
 import SwiftUI
 import TipKit // `.popoverTip(_:)`; MEMBER_IMPORT_VISIBILITY means it is not re-exported
 
-/// Today's prayer times, with the current one marked and a countdown to the next.
+/// Home: a header, and then whatever the user has arranged below it.
 ///
-/// The view model is injected rather than owned: the container builds it once and it outlives
-/// any redraw of this view. Every colour comes from `@Environment(\.theme)`, every string and
-/// digit from `LocalizationManager`, so the screen follows the accent, language and digit
-/// choices without branching on any of them.
+/// **The stack is data, not code.** The order and the membership come from `HomeLayout`, which
+/// the user edits in the customization screen, so this view iterates a list of kinds and switches
+/// over it rather than hard-coding a sequence of cards. That is what makes adding a section a new
+/// case here plus a case in the enum — and what makes hiding one a preference rather than a
+/// branch.
+///
+/// The `switch` is a `@ViewBuilder`, never `AnyView`: the branches have different types and that
+/// is fine, because SwiftUI's builder is built for exactly this and erasing them would throw away
+/// the identity that keeps each section's state across a redraw.
+///
+/// A `LazyVStack` rather than a `VStack`, so a section scrolled off the bottom of a long
+/// arrangement is not built until it is reached.
 struct HomeView: View {
     let viewModel: HomeViewModel
+
+    /// Where a tap goes. A plain closure rather than a coordinator, because Home's sections open
+    /// screens in three different tabs and a view that knew that would be a feature knowing the
+    /// shape of the whole app — see `AppRoute`.
+    let open: (AppRoute) -> Void
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
@@ -21,16 +34,27 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                HijriDateHeader(viewModel: viewModel)
-                content
+            LazyVStack(alignment: .leading, spacing: 24) {
+                HomeHeader(viewModel: viewModel)
+
+                ForEach(viewModel.sections, id: \.self) { kind in
+                    section(for: kind)
+                }
             }
             .padding(20)
             .frame(maxWidth: 560, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .center)
         }
         .background(theme.background)
-        .navigationTitle(l10n.string(.homeTitle))
+        // "Home", not "Prayer Times": the screen stopped being only prayer times when it became
+        // a stack the user arranges, and the header's greeting is what titles it now.
+        .navigationTitle(l10n.string(.homeTabLabel))
+        // Inline on iOS, so the large-title band does not sit above a greeting that is already
+        // doing that job — on a 4.7-inch phone it was a hundred points of saying it twice.
+        // macOS has no such modifier, and no large title to suppress.
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
         // Structured concurrency does the lifecycle work: SwiftUI cancels this when the
         // screen disappears, which stops the ticking loop inside `start()`.
         .task { await viewModel.start() }
@@ -47,8 +71,32 @@ struct HomeView: View {
         }
     }
 
+    /// One section of the stack.
+    ///
+    /// Every case of `HomeSectionKind` is answered here, including the ones whose features do not
+    /// exist yet. `shortcuts` and `lastActivity` are the next two slices; the rest are reserved
+    /// and filtered out of `viewModel.sections` by `isAvailable` before they ever reach this.
     @ViewBuilder
-    private var content: some View {
+    private func section(for kind: HomeSectionKind) -> some View {
+        switch kind {
+        case .nextPrayer:
+            nextPrayer
+
+        case .continueReading:
+            if let reading = viewModel.continueReading {
+                ContinueReadingSection(reading: reading, open: open)
+            }
+
+        case .shortcuts, .lastActivity, .prayerTracker,
+             .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
+            EmptyView()
+        }
+    }
+
+    /// The pinned card, which is the one section with a loading and a failure state of its own —
+    /// everything else on this screen either has something to show or is absent.
+    @ViewBuilder
+    private var nextPrayer: some View {
         switch viewModel.phase {
         case .loading:
             StatusNotice(message: l10n.string(.prayerTimesLoading), showsProgress: true)
@@ -112,10 +160,14 @@ private struct StatusNotice: View {
         HomeView(
             viewModel: HomeViewModel(
                 useCase: useCase,
+                getLayout: GetHomeLayoutUseCase(
+                    repository: HomeLayoutRepository(settingsStore: settingsStore)
+                ),
                 coordinates: .makkah,
                 hijriDates: HijriDateService(),
                 calculation: CalculationSettings(config: .default, settingsStore: settingsStore)
-            )
+            ),
+            open: { _ in }
         )
     }
     .themed(ThemeManager(settingsStore: settingsStore))
