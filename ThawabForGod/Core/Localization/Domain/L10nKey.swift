@@ -113,6 +113,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case homeShortcutMorningAdhkar = "home_shortcut_morning_adhkar"
     case homeShortcutEveningAdhkar = "home_shortcut_evening_adhkar"
 
+    /// A count against a target — `7 / 28`. Both parts arrive already in the user's digits.
+    case activityProgress = "activity_progress"
+
     case homeCustomizeAction = "home_customize_action"
     case homeCustomizeTitle = "home_customize_title"
     case homeCustomizeSectionsHeader = "home_customize_sections_header"

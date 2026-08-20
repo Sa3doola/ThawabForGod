@@ -38,6 +38,12 @@ struct AdhkarReadingView: View {
         .task(id: l10n.language) {
             await viewModel.load(category, language: l10n.language)
         }
+        // Home's recent-activity chip is written on a delay, so a reader who counts a dhikr and
+        // leaves in the same breath would otherwise lose the last count. Unstructured on purpose:
+        // the recorder outlives this screen, which is the whole point of flushing from here.
+        .onDisappear {
+            Task { await viewModel.flushActivity() }
+        }
     }
 
     @ViewBuilder

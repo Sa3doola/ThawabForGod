@@ -51,15 +51,20 @@ final class TasbihViewModel {
 
     @ObservationIgnored private let useCase: TasbihUseCase
     @ObservationIgnored private let tips: any TasbihTipReporting
+
+    /// Where Home's recent-activity chip is fed from. Optional: counting is unchanged without it.
+    @ObservationIgnored private let activity: ActivityRecorder?
     @ObservationIgnored private let now: @Sendable () -> Date
 
     init(
         useCase: TasbihUseCase,
         tips: any TasbihTipReporting = TasbihTipReporter(),
+        activity: ActivityRecorder? = nil,
         now: @escaping @Sendable () -> Date = Date.init
     ) {
         self.useCase = useCase
         self.tips = tips
+        self.activity = activity
         self.now = now
     }
 
@@ -132,6 +137,19 @@ final class TasbihViewModel {
 
         tips.counted()
 
+        // Home's chip. Debounced by the recorder, which is why this can sit on the tap path at
+        // all — a hundred-count dhikr is one write, not a hundred.
+        if let dhikr {
+            activity?.record(
+                .tasbih(
+                    dhikrID: dhikr.id,
+                    count: outcome.session.currentCount,
+                    of: outcome.session.targetCount,
+                    at: now()
+                )
+            )
+        }
+
         if outcome.completedLap {
             // A checkpoint worth keeping. Unstructured on purpose: the write has to outlive
             // whatever redraw the tap kicked off, and there is no view whose lifetime it belongs
@@ -163,6 +181,10 @@ final class TasbihViewModel {
     /// Idempotent and cheap to call — the view leans on that, firing it from both `onDisappear`
     /// and a scene-phase change without either having to know the other exists.
     func persistPendingCount() async {
+        // Ahead of the guard, and unconditional: the count may be safely stored already and the
+        // chip still be holding an older number, because the two are written on different rules.
+        await activity?.flush()
+
         guard hasUnsavedCount, let session else { return }
 
         // Cleared before the await, not after: a tap arriving mid-save marks the session dirty

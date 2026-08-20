@@ -144,6 +144,10 @@ final class QuranViewModel {
     @ObservationIgnored private let useCase: GetQuranUseCase
     @ObservationIgnored private let progress: QuranProgressUseCase
 
+    /// Where Home's recent-activity chip is fed from. Optional because it is a convenience on a
+    /// different screen: a reader whose activity is not being recorded reads exactly the same.
+    @ObservationIgnored private let activity: ActivityRecorder?
+
     /// The last verse to come into view, held *outside* observation.
     ///
     /// Every visible `VerseRow` reports itself as it appears, which on a fast scroll is many
@@ -160,9 +164,14 @@ final class QuranViewModel {
     /// they opened at rather than the one they got to. Seen on device, not reasoned about.
     @ObservationIgnored private var pendingPositionWrite: Task<Void, Never>?
 
-    init(useCase: GetQuranUseCase, progress: QuranProgressUseCase) {
+    init(
+        useCase: GetQuranUseCase,
+        progress: QuranProgressUseCase,
+        activity: ActivityRecorder? = nil
+    ) {
         self.useCase = useCase
         self.progress = progress
+        self.activity = activity
     }
 
     // MARK: Derived
@@ -332,11 +341,22 @@ final class QuranViewModel {
     func saveReadingPosition() {
         guard let verse = verseInView else { return }
 
+        // Home's recent-activity chip, recorded from the same moment and the same verse — the
+        // two answer the same question and must not be able to disagree. Flushed rather than
+        // left to the debounce, because this *is* the exit the debounce was waiting for.
+        let verseCount = surah(verse.surah)?.verseCount
+        let recorder = activity
+
         let previous = pendingPositionWrite
         pendingPositionWrite = Task { [progress] in
             // Ordered behind whatever was already in flight, so two quick exits cannot land
             // out of sequence and leave the older verse stored.
             await previous?.value
+
+            if let recorder, let verseCount {
+                recorder.record(.quran(verse, of: verseCount, at: Date()))
+                await recorder.flush()
+            }
 
             do {
                 try await progress.recordLastRead(verse)

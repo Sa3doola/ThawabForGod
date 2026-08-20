@@ -19,7 +19,8 @@ nonisolated struct PersistenceController: Sendable {
         BookmarkRecord.self,
         TasbihSessionModel.self,
         QuranBookmarkRecord.self,
-        ReadingPositionRecord.self
+        ReadingPositionRecord.self,
+        RecentActivityRecord.self
     ])
 
     init(inMemory: Bool = false) throws {

@@ -79,9 +79,9 @@ struct HomeView: View {
 
     /// One section of the stack.
     ///
-    /// Every case of `HomeSectionKind` is answered here, including the ones whose features do not
-    /// exist yet. `lastActivity` is the next slice; the rest are reserved and filtered out of
-    /// `viewModel.sections` by `isAvailable` before they ever reach this.
+    /// Every case of `HomeSectionKind` is answered here, including the reserved ones — which are
+    /// filtered out of `viewModel.sections` by `isAvailable` before they ever reach this, so
+    /// those branches are unreachable rather than merely unused.
     @ViewBuilder
     private func section(for kind: HomeSectionKind) -> some View {
         switch kind {
@@ -100,8 +100,14 @@ struct HomeView: View {
                 edit: customize
             )
 
-        case .lastActivity, .prayerTracker,
-             .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
+        case .lastActivity:
+            // Absent, not empty. A user who has done none of the three sees no heading rather
+            // than a heading with nothing under it — the same rule "continue reading" follows.
+            if !viewModel.recentActivities.isEmpty {
+                RecentActivitySection(items: viewModel.recentActivities, open: open)
+            }
+
+        case .prayerTracker, .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
             EmptyView()
         }
     }

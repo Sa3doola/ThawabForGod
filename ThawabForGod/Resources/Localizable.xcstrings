@@ -86,6 +86,23 @@
         }
       }
     },
+    "activity_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⁦%1$@ / %2$@⁩"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⁦%1$@ / %2$@⁩"
+          }
+        }
+      }
+    },
     "adhkar_category_evening": {
       "extractionState": "manual",
       "localizations": {

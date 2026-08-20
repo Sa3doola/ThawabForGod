@@ -43,6 +43,15 @@ final class AppContainer {
     /// key watches. The scheduler itself re-reads the store rather than this object.
     let reminderPreferences: ReminderPreferences
 
+    /// Where the user last got to, in each of the three things they can be in the middle of.
+    /// Written by the Quran, the adhkar and the tasbih; read by Home.
+    let recentActivityRepository: any RecentActivityRepositoring
+    let recentActivity: RecentActivityUseCase
+
+    /// The one recorder the three writers share, so a pending write from one cannot cancel a
+    /// pending write from another — see the type's own note on why there is one per kind.
+    let activityRecorder: ActivityRecorder
+
     let tipsService: any TipsServicing
     let hijriDates: any HijriDateServicing
     let reachability = ReachabilityMonitor()
@@ -201,6 +210,14 @@ final class AppContainer {
         self.bookmarkRepository = SwiftDataBookmarkRepository(
             modelContainer: persistence.container
         )
+
+        let recentActivityRepository = RecentActivityRepository(
+            modelContainer: persistence.container
+        )
+        let recentActivity = RecentActivityUseCase(repository: recentActivityRepository)
+        self.recentActivityRepository = recentActivityRepository
+        self.recentActivity = recentActivity
+        self.activityRecorder = ActivityRecorder(useCase: recentActivity)
 
         // Engine → repository → use case. Each link depends on the protocol above it, so any
         // one of them can be swapped in a test without the others noticing.
@@ -389,6 +406,11 @@ final class AppContainer {
             // would be a second answer waiting to disagree with the first.
             quranProgress: quranProgress,
             quran: getQuran,
+            // Two more of somebody else's use cases, for the same reason: the chips name a
+            // chapter and a dhikr, and resolving those names anywhere but through the feature
+            // that owns them would be a second copy of the corpus's vocabulary.
+            tasbih: tasbihUseCase,
+            recentActivity: recentActivity,
             clock: clock
         )
         cachedHomeViewModel = viewModel
@@ -458,7 +480,11 @@ final class AppContainer {
             return cachedQuranViewModel
         }
 
-        let viewModel = QuranViewModel(useCase: getQuran, progress: quranProgress)
+        let viewModel = QuranViewModel(
+            useCase: getQuran,
+            progress: quranProgress,
+            activity: activityRecorder
+        )
         cachedQuranViewModel = viewModel
         return viewModel
     }
@@ -477,7 +503,7 @@ final class AppContainer {
             return cachedAdhkarViewModel
         }
 
-        let viewModel = AdhkarViewModel(useCase: getAdhkar)
+        let viewModel = AdhkarViewModel(useCase: getAdhkar, activity: activityRecorder)
         cachedAdhkarViewModel = viewModel
         return viewModel
     }
@@ -496,7 +522,7 @@ final class AppContainer {
             return cachedTasbihViewModel
         }
 
-        let viewModel = TasbihViewModel(useCase: tasbihUseCase)
+        let viewModel = TasbihViewModel(useCase: tasbihUseCase, activity: activityRecorder)
         cachedTasbihViewModel = viewModel
         return viewModel
     }

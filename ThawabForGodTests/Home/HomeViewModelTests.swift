@@ -24,7 +24,9 @@ struct HomeViewModelTests {
         reachability: (any NetworkReachability)? = nil,
         settingsStore: any SettingsStore = InMemorySettingsStore(),
         quranProgress: QuranProgressUseCase? = nil,
-        quran: GetQuranUseCase? = nil
+        quran: GetQuranUseCase? = nil,
+        tasbih: TasbihUseCase? = nil,
+        recentActivity: RecentActivityUseCase? = nil
     ) -> (HomeViewModel, TestClock) {
         let repository: StubPrayerTimeRepository = if let failure {
             StubPrayerTimeRepository(failure: failure)
@@ -50,6 +52,8 @@ struct HomeViewModelTests {
             tips: tips,
             quranProgress: quranProgress,
             quran: quran,
+            tasbih: tasbih,
+            recentActivity: recentActivity,
             clock: clock,
             // The fixtures are pinned to GMT, and the day boundary is what the roll-over tests
             // turn on — inheriting the machine's zone would make them pass or fail by geography.
@@ -684,5 +688,105 @@ struct HomeViewModelTests {
 
         #expect(viewModel.continueReading == nil)
         #expect(try ready(viewModel).schedule.times.count == 6)
+    }
+
+    // MARK: Recent activity
+
+    /// The names are resolved when the row is *drawn*, not when the activity was recorded — which
+    /// is what lets the digit system and the language change afterwards without rewriting history.
+    @Test(.timeLimit(.minutes(1)))
+    func theChipsCarryNamesResolvedFromTheCorpus() async {
+        let repository = SpyRecentActivityRepository()
+        try? await repository.record(
+            .quran(VerseReference(surah: 2, verse: 142), of: 286, at: Date())
+        )
+
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            quran: GetQuranUseCase(
+                repository: StubQuranRepository(surahs: .success([.stub(id: 2, arabicName: "البقرة")]))
+            ),
+            recentActivity: RecentActivityUseCase(repository: repository)
+        )
+
+        let task = Task { await viewModel.start() }
+        while viewModel.recentActivities.isEmpty {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.recentActivities.map(\.id) == [.quran])
+        #expect(viewModel.recentActivities.first?.subject == "البقرة")
+    }
+
+    /// An adhkar category names itself through a localization key, so the chip needs nothing
+    /// resolved for it — and must not invent something.
+    @Test(.timeLimit(.minutes(1)))
+    func anAdhkarChipCarriesNoResolvedName() async {
+        let repository = SpyRecentActivityRepository()
+        try? await repository.record(.adhkar(.morning, completed: 7, of: 28, at: Date()))
+
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            recentActivity: RecentActivityUseCase(repository: repository)
+        )
+
+        let task = Task { await viewModel.start() }
+        while viewModel.recentActivities.isEmpty {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.recentActivities.first?.subject == nil)
+        #expect(viewModel.recentActivities.first?.activity.adhkarCategory == .morning)
+    }
+
+    /// Nothing done means no chips, which is what the section is hidden on.
+    @Test(.timeLimit(.minutes(1)))
+    func nothingDoneMeansNoChips() async {
+        let (viewModel, clock) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            recentActivity: RecentActivityUseCase(repository: SpyRecentActivityRepository())
+        )
+
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.recentActivities.isEmpty)
+    }
+
+    /// A chip with nowhere to go is dropped rather than offered as a tap that does nothing.
+    @Test(.timeLimit(.minutes(1)))
+    func anUnroutableActivityIsNotShown() async {
+        let repository = SpyRecentActivityRepository()
+        try? await repository.record(
+            RecentActivity(
+                kind: .adhkar,
+                subject: "after_prayer",
+                progressValue: 1,
+                progressTotal: 3,
+                occurredAt: Date()
+            )
+        )
+
+        let (viewModel, clock) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            recentActivity: RecentActivityUseCase(repository: repository)
+        )
+
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.recentActivities.isEmpty)
     }
 }

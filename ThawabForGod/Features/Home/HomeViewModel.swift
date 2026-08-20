@@ -34,6 +34,20 @@ final class HomeViewModel {
         let surah: Surah?
     }
 
+    /// One chip in the recent-activity row: what was recorded, plus the name of the thing it
+    /// refers to, resolved from the corpus when the row is loaded.
+    ///
+    /// The name is resolved *here* rather than stored with the activity, because storing it would
+    /// freeze the language and the digit system at the moment of writing — and both are choices
+    /// the user makes later and changes freely. `nil` where the kind's own title already says
+    /// everything: an adhkar category names itself through a localization key.
+    struct RecentActivityItem: Equatable, Identifiable {
+        let activity: RecentActivity
+        let subject: String?
+
+        var id: ActivityKind { activity.kind }
+    }
+
     private(set) var phase: Phase = .loading
 
     /// How Home is arranged, as the user left it.
@@ -47,6 +61,13 @@ final class HomeViewModel {
 
     /// The shortcut circles to draw, in order.
     var shortcuts: [HomeShortcut] { layout.visibleShortcuts }
+
+    /// The last thing done in each of the Quran, the adhkar and the tasbih, most recent first.
+    ///
+    /// Empty until something has been done, and the section is hidden entirely when it is — a
+    /// heading over nothing is worse than no heading. It still appears in the customization
+    /// screen, where it says what it will show once there is something to show.
+    private(set) var recentActivities: [RecentActivityItem] = []
 
     /// Where the reader stopped in the Quran, or `nil` if they have not started.
     ///
@@ -101,6 +122,8 @@ final class HomeViewModel {
     @ObservationIgnored private let getLayout: GetHomeLayoutUseCase
     @ObservationIgnored private let quranProgress: QuranProgressUseCase?
     @ObservationIgnored private let quran: GetQuranUseCase?
+    @ObservationIgnored private let tasbih: TasbihUseCase?
+    @ObservationIgnored private let recentActivity: RecentActivityUseCase?
     @ObservationIgnored private var coordinates: Coordinates
     @ObservationIgnored private let locationService: (any LocationService)?
     @ObservationIgnored private let placeNames: (any PlaceNameResolving)?
@@ -156,6 +179,8 @@ final class HomeViewModel {
         tips: any HomeTipReporting = HomeTipReporter(),
         quranProgress: QuranProgressUseCase? = nil,
         quran: GetQuranUseCase? = nil,
+        tasbih: TasbihUseCase? = nil,
+        recentActivity: RecentActivityUseCase? = nil,
         clock: any ClockService = SystemClockService(),
         calendar: Calendar = .gregorianLocal
     ) {
@@ -163,6 +188,8 @@ final class HomeViewModel {
         self.getLayout = getLayout
         self.quranProgress = quranProgress
         self.quran = quran
+        self.tasbih = tasbih
+        self.recentActivity = recentActivity
         self.coordinates = coordinates
         self.locationService = locationService
         self.placeNames = placeNames
@@ -209,6 +236,7 @@ final class HomeViewModel {
         // task cancels this too.
         async let name: Void = resolvePlaceName()
         async let reading: Void = loadContinueReading()
+        async let activities: Void = loadRecentActivities()
 
         for await _ in clock.ticks(every: .seconds(1)) {
             tick()
@@ -216,6 +244,7 @@ final class HomeViewModel {
 
         await name
         await reading
+        await activities
     }
 
     /// Re-reads the arrangement, for when the customization screen has just been dismissed.
@@ -271,6 +300,50 @@ final class HomeViewModel {
         guard let placeNames, reachability?.isOnline ?? true else { return }
 
         placeName = await placeNames.placeName(for: coordinates)
+    }
+
+    /// Loads the recent-activity chips, resolving each one's name as it goes.
+    ///
+    /// Silent on failure and empty on nothing, which are the same outcome as far as the screen is
+    /// concerned: no chips, no section. Sequential rather than concurrent — there are at most
+    /// three, each is a single indexed read, and a task group for that would cost more to read
+    /// than it saves to run.
+    private func loadRecentActivities() async {
+        guard let recentActivity, let activities = try? await recentActivity.recent() else {
+            recentActivities = []
+            return
+        }
+
+        var items: [RecentActivityItem] = []
+
+        for activity in activities where activity.route != nil {
+            items.append(
+                RecentActivityItem(activity: activity, subject: await subject(of: activity))
+            )
+        }
+
+        recentActivities = items
+    }
+
+    /// The name of the thing an activity refers to — a chapter, a dhikr — or `nil` where the
+    /// kind's own title is the whole answer.
+    private func subject(of activity: RecentActivity) async -> String? {
+        switch activity.kind {
+        case .quran:
+            guard let quran, let reference = activity.verseReference else { return nil }
+            return try? await quran.surah(reference.surah)?.arabicName
+
+        case .adhkar:
+            // The category names itself through a localization key, which the chip resolves in
+            // the language it is being drawn in rather than the one it was recorded in.
+            return nil
+
+        case .tasbih:
+            guard let tasbih, let id = activity.tasbihDhikrID else { return nil }
+            // Always the Arabic phrase, whatever the interface language — the same treatment the
+            // dhikr gets on its own screen. The language is only what the translation would need.
+            return try? await tasbih.presets(in: .current()).first { $0.id == id }?.arabicText
+        }
     }
 
     /// Recomputes everything from the current instant.

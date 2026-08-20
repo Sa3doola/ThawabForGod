@@ -53,8 +53,13 @@ final class AdhkarViewModel {
 
     @ObservationIgnored private let useCase: GetAdhkarUseCase
 
-    init(useCase: GetAdhkarUseCase) {
+    /// Where Home's recent-activity chip is fed from. Optional: reading the adhkar is unchanged
+    /// without it.
+    @ObservationIgnored private let activity: ActivityRecorder?
+
+    init(useCase: GetAdhkarUseCase, activity: ActivityRecorder? = nil) {
         self.useCase = useCase
+        self.activity = activity
     }
 
     // MARK: Loading
@@ -124,11 +129,32 @@ final class AdhkarViewModel {
         let counted = repeats(of: dhikr)
         guard counted < dhikr.repeatCount else { return }
         repeatCounts[dhikr.id] = counted + 1
+        recordActivity()
     }
 
     /// Starts this dhikr again — a mis-tap, or a second reading.
     func resetRepeats(of dhikr: Dhikr) {
         repeatCounts[dhikr.id] = nil
+        recordActivity()
+    }
+
+    /// Reports how far through the open category the reader is, for Home's chip.
+    ///
+    /// Debounced by the recorder, which is why it can be called from every tap: a hundred-count
+    /// dhikr must not be a hundred saves of a number only the last value of matters.
+    private func recordActivity() {
+        guard let category, totalCount > 0 else { return }
+
+        activity?.record(
+            .adhkar(category, completed: completedCount, of: totalCount, at: Date())
+        )
+    }
+
+    /// Writes anything the debounce is still holding. Driven from the reading screen's
+    /// `onDisappear` — leaving straight after the last tap is exactly when the delay would
+    /// otherwise lose it.
+    func flushActivity() async {
+        await activity?.flush()
     }
 
     /// How many adhkar in the loaded category have been completed, for the progress line at the
