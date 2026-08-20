@@ -22,6 +22,15 @@ final class AppContainer {
     let httpClient: any HTTPClient
     let locationService: any LocationService
     let headingProvider: any HeadingProviding
+
+    /// The one part of the location story that needs the network. Held here rather than built
+    /// inside Home so a later screen — the prayer-times sheet, a widget — shares the one cache
+    /// rather than geocoding the same point again.
+    let placeNameResolver: any PlaceNameResolving
+
+    /// The time, and the heartbeat every countdown runs on. One instance, because a clock has no
+    /// state worth duplicating and every screen should agree about what "now" is.
+    let clock: any ClockService
     let notificationService: any NotificationService
 
     #if os(iOS)
@@ -132,6 +141,8 @@ final class AppContainer {
         httpClient: any HTTPClient = URLSessionHTTPClient(),
         locationService: (any LocationService)? = nil,
         headingProvider: (any HeadingProviding)? = nil,
+        placeNameResolver: (any PlaceNameResolving)? = nil,
+        clock: any ClockService = SystemClockService(),
         notificationService: (any NotificationService)? = nil,
         tipsService: any TipsServicing = TipsService(),
         hijriDates: any HijriDateServicing = HijriDateService(),
@@ -163,6 +174,10 @@ final class AppContainer {
         // for a caller supplying its own.
         self.locationService = locationService ?? CoreLocationService()
         self.headingProvider = headingProvider ?? CoreLocationHeadingProvider()
+        // Same reason as the two above: constructing a `CLGeocoder` in a default argument would
+        // run it even for a caller supplying its own.
+        self.placeNameResolver = placeNameResolver ?? CoreLocationPlaceNameResolver()
+        self.clock = clock
         self.reminderPreferences = ReminderPreferences(settingsStore: settingsStore)
 
         self.themeManager = ThemeManager(settingsStore: settingsStore)
@@ -342,10 +357,15 @@ final class AppContainer {
             useCase: getPrayerSchedule,
             coordinates: onboardingRepository.seededCoordinates ?? fallbackCoordinates,
             locationService: locationService,
+            placeNames: placeNameResolver,
+            // Consulted before the card asks for a city name, so a device with the radio off
+            // never makes a request that can only fail.
+            reachability: reachability,
             hijriDates: hijriDates,
             // The same object Settings edits, not a snapshot of it — which is what lets a method
             // changed in Settings redraw today's times.
-            calculation: calculationSettings()
+            calculation: calculationSettings(),
+            clock: clock
         )
         cachedHomeViewModel = viewModel
         return viewModel

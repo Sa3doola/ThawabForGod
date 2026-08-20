@@ -19,7 +19,9 @@ struct HomeViewModelTests {
         failure: PrayerTimeError? = nil,
         hijriDates: any HijriDateServicing = StubHijriDateService(),
         calculation: CalculationSettings? = nil,
-        tips: any HomeTipReporting = SpyHomeTipReporter()
+        tips: any HomeTipReporting = SpyHomeTipReporter(),
+        placeNames: (any PlaceNameResolving)? = nil,
+        reachability: (any NetworkReachability)? = nil
     ) -> (HomeViewModel, TestClock) {
         let repository: StubPrayerTimeRepository = if let failure {
             StubPrayerTimeRepository(failure: failure)
@@ -34,24 +36,29 @@ struct HomeViewModelTests {
                 calendar: PrayerTimeFixtures.calendar
             ),
             coordinates: .makkah,
+            placeNames: placeNames,
+            reachability: reachability,
             hijriDates: hijriDates,
             calculation: calculation ?? CalculationSettings(
                 config: .default,
                 settingsStore: InMemorySettingsStore()
             ),
             tips: tips,
-            now: clock.provider
+            clock: clock,
+            // The fixtures are pinned to GMT, and the day boundary is what the roll-over tests
+            // turn on — inheriting the machine's zone would make them pass or fail by geography.
+            calendar: PrayerTimeFixtures.calendar
         )
 
         return (viewModel, clock)
     }
 
-    private func ready(_ viewModel: HomeViewModel) throws -> HomeViewModel.Day {
-        guard case .ready(let day) = viewModel.phase else {
+    private func ready(_ viewModel: HomeViewModel) throws -> NextPrayerState {
+        guard case .ready(let state) = viewModel.phase else {
             Issue.record("expected a loaded day, got \(viewModel.phase)")
             throw CancellationError()
         }
-        return day
+        return state
     }
 
     // MARK: Loading
@@ -66,12 +73,12 @@ struct HomeViewModelTests {
         let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
 
         viewModel.refresh()
-        let day = try ready(viewModel)
+        let state = try ready(viewModel)
 
-        #expect(day.schedule.times.count == 6)
-        #expect(day.currentPrayer == .dhuhr)
-        #expect(day.upcoming.prayer == .asr)
-        #expect(day.upcoming.isTomorrow == false)
+        #expect(state.schedule.times.count == 6)
+        #expect(state.currentPrayer == .dhuhr)
+        #expect(state.upcoming.prayer == .asr)
+        #expect(state.upcoming.isTomorrow == false)
     }
 
     @Test func theCountdownIsTheGapToTheNextPrayer() throws {
@@ -121,9 +128,9 @@ struct HomeViewModelTests {
         clock.move(to: PrayerTimeFixtures.instant(today, hour: 15, minute: 31))
         viewModel.tick()
 
-        let day = try ready(viewModel)
-        #expect(day.currentPrayer == .asr)
-        #expect(day.upcoming.prayer == .maghrib)
+        let state = try ready(viewModel)
+        #expect(state.currentPrayer == .asr)
+        #expect(state.upcoming.prayer == .maghrib)
         #expect(viewModel.countdown == (2 * 3600) + (29 * 60))
     }
 
@@ -146,11 +153,11 @@ struct HomeViewModelTests {
         let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 22))
 
         viewModel.refresh()
-        let day = try ready(viewModel)
+        let state = try ready(viewModel)
 
-        #expect(day.currentPrayer == .isha)
-        #expect(day.upcoming.prayer == .fajr)
-        #expect(day.upcoming.isTomorrow)
+        #expect(state.currentPrayer == .isha)
+        #expect(state.upcoming.prayer == .fajr)
+        #expect(state.upcoming.isTomorrow)
         // 22:00 → 05:00 the next morning.
         #expect(viewModel.countdown == 7 * 3600)
     }
@@ -161,21 +168,21 @@ struct HomeViewModelTests {
         let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 22))
 
         viewModel.refresh()
-        let day = try ready(viewModel)
+        let state = try ready(viewModel)
 
-        #expect(day.isUpcoming(.fajr) == false)
-        #expect(day.isCurrent(.isha))
+        #expect(state.isUpcoming(.fajr) == false)
+        #expect(state.isCurrent(.isha))
     }
 
     @Test func beforeFajrNothingIsCurrentAndFajrIsNext() throws {
         let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 3))
 
         viewModel.refresh()
-        let day = try ready(viewModel)
+        let state = try ready(viewModel)
 
-        #expect(day.currentPrayer == nil)
-        #expect(day.upcoming.prayer == .fajr)
-        #expect(day.isUpcoming(.fajr))
+        #expect(state.currentPrayer == nil)
+        #expect(state.upcoming.prayer == .fajr)
+        #expect(state.isUpcoming(.fajr))
         #expect(viewModel.countdown == 2 * 3600)
     }
 
@@ -252,7 +259,7 @@ struct HomeViewModelTests {
             hijriDates: StubHijriDateService(),
             calculation: calculation,
             tips: SpyHomeTipReporter(),
-            now: clock.provider
+            clock: clock
         )
 
         viewModel.refresh()
@@ -287,7 +294,7 @@ struct HomeViewModelTests {
             hijriDates: StubHijriDateService(),
             calculation: CalculationSettings(config: .default, settingsStore: InMemorySettingsStore()),
             tips: SpyHomeTipReporter(),
-            now: clock.provider
+            clock: clock
         )
 
         let task = Task { await viewModel.start() }
@@ -319,7 +326,7 @@ struct HomeViewModelTests {
             hijriDates: StubHijriDateService(),
             calculation: CalculationSettings(config: .default, settingsStore: InMemorySettingsStore()),
             tips: SpyHomeTipReporter(),
-            now: clock.provider
+            clock: clock
         )
 
         let task = Task { await viewModel.start() }
@@ -405,5 +412,149 @@ struct HomeViewModelTests {
         viewModel.refresh()
 
         #expect(tips.isCountingDownToTomorrow == false)
+    }
+
+    // MARK: The heartbeat
+
+    /// The countdown is driven by the clock's own stream rather than by a timer this type owns —
+    /// which is what lets a test step a minute in microseconds instead of sleeping through one.
+    @Test(.timeLimit(.minutes(1)))
+    func theHeartbeatDrivesTheCountdownDown() async {
+        let (viewModel, clock) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 15))
+
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+
+        #expect(viewModel.countdown == 30 * 60)
+
+        clock.tick(after: 60)
+        while viewModel.countdown != 29 * 60 {
+            await Task.yield()
+        }
+
+        task.cancel()
+        await task.value
+    }
+
+    /// Cancelling the screen's task ends the stream, which is the whole reason the beat is an
+    /// `AsyncStream` and not a `Timer`: there is nothing left running behind a screen nobody is
+    /// looking at, and nothing anyone has to remember to invalidate.
+    @Test(.timeLimit(.minutes(1)))
+    func cancellingTheTaskStopsTheHeartbeat() async {
+        let (viewModel, clock) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 15))
+
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+
+        task.cancel()
+        await task.value
+
+        while clock.isTicking {
+            await Task.yield()
+        }
+
+        #expect(clock.isTicking == false)
+    }
+
+    // MARK: Midnight
+
+    /// The case a decrementing countdown cannot see. Between Isha and Fajr the countdown is
+    /// perfectly healthy — it is counting towards a real prayer — but the six entries beneath it
+    /// belong to a day that ended at midnight, so the tick has to recompute rather than subtract.
+    @Test func crossingMidnightMovesOntoTheNewDaysSchedule() throws {
+        let (viewModel, clock) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 22))
+
+        viewModel.refresh()
+        #expect(try ready(viewModel).schedule.day == today)
+        #expect(try ready(viewModel).upcoming.isTomorrow)
+
+        clock.move(to: PrayerTimeFixtures.instant(today, hour: 24, minute: 1))
+        viewModel.tick()
+
+        let state = try ready(viewModel)
+        #expect(state.schedule.day == tomorrow)
+        #expect(state.currentPrayer == nil)
+        #expect(state.upcoming.prayer == .fajr)
+        // The same prayer it was counting towards a minute ago, but no longer "tomorrow's".
+        #expect(state.upcoming.isTomorrow == false)
+        #expect(viewModel.countdown == (4 * 3600) + (59 * 60))
+    }
+
+    // MARK: The city name
+
+    /// The card is complete before the name arrives and complete again after it — the coordinates
+    /// work offline, and only the name needs a network.
+    @Test(.timeLimit(.minutes(1)))
+    func aNameArrivesWithoutTheCardEverWaitingForIt() async throws {
+        let places = StubPlaceNameResolver(name: "London")
+        let (viewModel, _) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            placeNames: places
+        )
+
+        let task = Task { await viewModel.start() }
+        while viewModel.placeName == nil {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(viewModel.placeName == "London")
+    }
+
+    /// The non-blocking claim, tested rather than asserted: a lookup that has not come back yet
+    /// leaves the countdown ticking. Before the resolution was moved beside the heartbeat instead
+    /// of in front of it, this test hung.
+    @Test(.timeLimit(.minutes(1)))
+    func aSlowLookupDoesNotHoldUpTheCountdown() async {
+        let places = StubPlaceNameResolver(name: "London", isSlow: true)
+        let (viewModel, clock) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 15),
+            placeNames: places
+        )
+
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+
+        clock.tick(after: 60)
+        while viewModel.countdown != 29 * 60 {
+            await Task.yield()
+        }
+
+        // Still in flight, and the card has been counting down the whole time.
+        #expect(viewModel.placeName == nil)
+
+        task.cancel()
+        await task.value
+    }
+
+    /// Offline, the card does not go looking. A request that can only fail is worse than no
+    /// request: it is a system log, a delay, and the same empty answer.
+    @Test(.timeLimit(.minutes(1)))
+    func offlineTheCardNeverAsksForAName() async {
+        let places = StubPlaceNameResolver(name: "London")
+        let (viewModel, clock) = makeViewModel(
+            at: PrayerTimeFixtures.instant(today, hour: 13),
+            placeNames: places,
+            reachability: StubReachability(isOnline: false)
+        )
+
+        // The heartbeat starts *after* the name would have been resolved, so waiting for it is
+        // how this test knows the resolver has been passed by rather than merely not reached yet.
+        let task = Task { await viewModel.start() }
+        while !clock.isTicking {
+            await Task.yield()
+        }
+        task.cancel()
+        await task.value
+
+        #expect(places.askCount == 0)
+        #expect(viewModel.placeName == nil)
     }
 }

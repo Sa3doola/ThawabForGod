@@ -197,7 +197,7 @@ struct SettingsViewModelTests {
             hijriDates: StubHijriDateService(),
             calculation: context.calculation,
             tips: SpyHomeTipReporter(),
-            now: { PrayerTimeFixtures.instant(day, hour: 13) }
+            clock: TestClock(PrayerTimeFixtures.instant(day, hour: 13))
         )
 
         context.viewModel.method = .singapore

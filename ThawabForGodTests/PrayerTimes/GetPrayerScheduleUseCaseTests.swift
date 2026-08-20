@@ -27,6 +27,10 @@ struct GetPrayerScheduleUseCaseTests {
         try makeUseCase(days: days).upcomingPrayer(for: coordinates, at: now, config: .default)
     }
 
+    private func previous(at now: Date, days: [Date]) throws -> PassedPrayer {
+        try makeUseCase(days: days).previousPrayer(for: coordinates, at: now, config: .default)
+    }
+
     // MARK: Next prayer
 
     @Test func beforeFajrTheNextPrayerIsTodaysFajr() throws {
@@ -98,6 +102,54 @@ struct GetPrayerScheduleUseCaseTests {
         #expect(throws: PrayerTimeError.self) {
             try useCase.upcomingPrayer(for: coordinates, at: today, config: .default)
         }
+    }
+
+    // MARK: Previous prayer
+
+    /// The mirror of the next-prayer cases, and it exists for the progress bar: it needs both
+    /// ends of the window it is filling.
+    @Test func betweenTwoPrayersThePreviousIsTheEarlierOfThePair() throws {
+        let result = try previous(at: PrayerTimeFixtures.instant(today, hour: 13), days: [today])
+
+        #expect(result.prayer == .dhuhr)
+        #expect(result.isYesterday == false)
+        #expect(result.date == PrayerTimeFixtures.instant(today, hour: 12))
+    }
+
+    /// Exactly on a prayer time, that prayer has begun — so it is the near end, not the far one.
+    @Test func atAPrayerTimeThatPrayerIsAlreadyThePrevious() throws {
+        let result = try previous(at: PrayerTimeFixtures.instant(today, hour: 12), days: [today])
+
+        #expect(result.prayer == .dhuhr)
+    }
+
+    /// The awkward hours, from the other side: before Fajr the last marker to pass belongs to the
+    /// day before, and a bar anchored on *today's* Isha would be drawn from a time that has not
+    /// happened yet.
+    @Test func beforeFajrThePreviousIsYesterdaysIsha() throws {
+        let yesterday = PrayerTimeFixtures.day(2026, 6, 14)
+        let result = try previous(
+            at: PrayerTimeFixtures.instant(today, hour: 3),
+            days: [yesterday, today]
+        )
+
+        #expect(result.prayer == .isha)
+        #expect(result.isYesterday)
+        #expect(result.date == PrayerTimeFixtures.instant(yesterday, hour: 19, minute: 30))
+    }
+
+    /// After Isha the pair is Isha and *tomorrow's* Fajr — both ends from different days, which
+    /// is the window the card spends every evening drawing.
+    @Test func afterIshaTheWindowRunsFromIshaToTomorrowsFajr() throws {
+        let days = [today, tomorrow]
+        let start = try previous(at: PrayerTimeFixtures.instant(today, hour: 22), days: days)
+        let end = try upcoming(at: PrayerTimeFixtures.instant(today, hour: 22), days: days)
+
+        #expect(start.prayer == .isha)
+        #expect(start.isYesterday == false)
+        #expect(end.prayer == .fajr)
+        #expect(end.isTomorrow)
+        #expect(end.date.timeIntervalSince(start.date) == 9.5 * 3600)
     }
 
     // MARK: Schedule passthrough

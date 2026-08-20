@@ -545,6 +545,23 @@
         }
       }
     },
+    "countdown_accessibility": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ حتى %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ until %2$@"
+          }
+        }
+      }
+    },
     "current_prayer_label": {
       "extractionState": "manual",
       "localizations": {
@@ -3584,6 +3601,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "The tasbih list could not be loaded."
+          }
+        }
+      }
+    },
+    "time_remaining_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوقت المتبقي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time remaining"
           }
         }
       }

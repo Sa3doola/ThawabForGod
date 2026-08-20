@@ -17,6 +17,7 @@ struct HomeView: View {
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ScrollView {
@@ -37,6 +38,13 @@ struct HomeView: View {
         // it. The ticking loop would not notice — it only recomputes when a prayer arrives —
         // so the change is watched here and the times are recomputed on the spot.
         .onChange(of: viewModel.config) { viewModel.refresh() }
+        // A phone that was locked overnight comes back to a card built before midnight. The
+        // heartbeat notices that too — see `tick()` — but only on its next beat, and returning
+        // to a stale screen for a second is exactly the moment somebody looks at it.
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            viewModel.refresh()
+        }
     }
 
     @ViewBuilder
@@ -45,15 +53,12 @@ struct HomeView: View {
         case .loading:
             StatusNotice(message: l10n.string(.prayerTimesLoading), showsProgress: true)
 
-        case .ready(let day):
-            VStack(alignment: .leading, spacing: 24) {
-                NextPrayerCard(viewModel: viewModel, day: day)
-                    // Anchored to the card because the card is what the tip is about. A
-                    // popover mirrors for Arabic without any help: it is positioned relative
-                    // to its anchor view, which the layout direction has already moved.
-                    .popoverTip(tomorrowsPrayerTip)
-                PrayerTimesList(day: day)
-            }
+        case .ready(let state):
+            NextPrayerCard(viewModel: viewModel, state: state)
+                // Anchored to the card because the card is what the tip is about. A popover
+                // mirrors for Arabic without any help: it is positioned relative to its anchor
+                // view, which the layout direction has already moved.
+                .popoverTip(tomorrowsPrayerTip)
 
         case .unavailable:
             StatusNotice(message: l10n.string(.prayerTimesUnavailable), showsProgress: false)

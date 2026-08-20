@@ -32,7 +32,15 @@ nonisolated struct PrayerSchedule: Equatable, Sendable {
     /// The marker whose window `now` falls in, or `nil` before the day's Fajr — at that hour
     /// the current prayer is yesterday's Isha, which this day's times cannot speak to.
     func currentPrayer(at now: Date) -> Prayer? {
-        times.last { $0.date <= now }?.prayer
+        previousPrayer(at: now)?.prayer
+    }
+
+    /// The last marker at or before `now`, or `nil` before the day's Fajr.
+    ///
+    /// The mirror of `nextPrayer(at:)`, and the pair is what a progress bar between two prayers
+    /// is drawn from. `currentPrayer(at:)` is the same question asked without the time.
+    func previousPrayer(at now: Date) -> PrayerTime? {
+        times.last { $0.date <= now }
     }
 
     /// The first marker after `now`, or `nil` once Isha has passed.

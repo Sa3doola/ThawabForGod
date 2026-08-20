@@ -24,6 +24,22 @@ nonisolated enum Prayer: String, CaseIterable, Identifiable, Sendable {
 
     var isObligatory: Bool { self != .sunrise }
 
+    /// The SF Symbol that stands for this marker on the day's timeline.
+    ///
+    /// A symbol name is a plain string, so naming it here costs Domain no import — the same
+    /// trade `AppTab` makes. Symbols rather than bundled art because they carry Dynamic Type and
+    /// the platform's own rendering modes without a second copy of each icon.
+    var symbol: String {
+        switch self {
+        case .fajr: "sunrise"
+        case .sunrise: "sun.horizon"
+        case .dhuhr: "sun.max"
+        case .asr: "sun.haze"
+        case .maghrib: "sunset"
+        case .isha: "moon.stars"
+        }
+    }
+
     var labelKey: L10nKey {
         switch self {
         case .fajr: .prayerFajr

@@ -20,28 +20,10 @@ final class HomeViewModel {
     /// flags, so the view can `switch` over it and no impossible combination is representable.
     enum Phase: Equatable {
         case loading
-        case ready(Day)
+        case ready(NextPrayerState)
         /// The times could not be computed — the polar case. Not an error the user can fix,
         /// so it is a state rather than an alert.
         case unavailable
-    }
-
-    struct Day: Equatable {
-        let schedule: PrayerSchedule
-        let currentPrayer: Prayer?
-        let upcoming: UpcomingPrayer
-
-        func isCurrent(_ prayer: Prayer) -> Bool {
-            currentPrayer == prayer
-        }
-
-        /// Whether this row is the one being counted down to.
-        ///
-        /// The `isTomorrow` guard is the whole point: after Isha the countdown targets the
-        /// *next* day's Fajr, and marking today's Fajr row as "next" would be a lie.
-        func isUpcoming(_ prayer: Prayer) -> Bool {
-            !upcoming.isTomorrow && upcoming.prayer == prayer
-        }
     }
 
     private(set) var phase: Phase = .loading
@@ -49,9 +31,16 @@ final class HomeViewModel {
     /// Seconds remaining until the upcoming prayer.
     ///
     /// Kept apart from `phase` deliberately. Observation tracks reads per property, so a
-    /// value that changes every second only invalidates the one label that reads it — the
-    /// six-row list is left alone.
+    /// value that changes every second only invalidates the two labels that read it — the
+    /// countdown and the progress bar — and the six prayer entries beside them are left alone.
     private(set) var countdown: TimeInterval = 0
+
+    /// The city the times are being computed for, once anything has answered.
+    ///
+    /// `nil` is the normal state offline, and the card is built to be complete without it. The
+    /// coordinates themselves come from GPS and need no network; only the *name* does, which is
+    /// why this is the one value on the screen that is allowed to simply not arrive.
+    private(set) var placeName: String?
 
     /// Today's Hijri date, and anything the Islamic calendar marks on it.
     ///
@@ -72,10 +61,13 @@ final class HomeViewModel {
     @ObservationIgnored private let useCase: GetPrayerScheduleUseCase
     @ObservationIgnored private var coordinates: Coordinates
     @ObservationIgnored private let locationService: (any LocationService)?
+    @ObservationIgnored private let placeNames: (any PlaceNameResolving)?
+    @ObservationIgnored private let reachability: (any NetworkReachability)?
     @ObservationIgnored private let calculation: CalculationSettings
     @ObservationIgnored private let hijriDates: any HijriDateServicing
     @ObservationIgnored private let tips: any HomeTipReporting
-    @ObservationIgnored private let now: @Sendable () -> Date
+    @ObservationIgnored private let clock: any ClockService
+    @ObservationIgnored private let calendar: Calendar
 
     /// - Parameters:
     ///   - coordinates: the starting point — onboarding's seeded position, or Makkah if it was
@@ -87,33 +79,49 @@ final class HomeViewModel {
     ///     `coordinates` is enough. Never prompts for permission itself — onboarding already
     ///     did, so a fix here means "already authorized", not "ask while the user is reading
     ///     prayer times."
+    ///   - placeNames: where the city label comes from. `nil` leaves the card without one, which
+    ///     is a state it is built for rather than a degraded mode.
+    ///   - reachability: consulted before asking for a name, so a device with the radio off does
+    ///     not make a request that can only fail. Behind a protocol so a test can be offline
+    ///     without unplugging the machine it runs on.
     ///   - calculation: the shared calculation choices. Not a plain `CalculationConfig`, because
     ///     Settings can change it while this screen is alive.
     ///   - hijriDates: the Hijri conversion and the events table.
     ///   - tips: where TipKit's rule inputs are reported. Behind a protocol so this type never
     ///     imports TipKit and its tests never open a datastore.
-    ///   - now: the clock, injected so tests can place themselves at any moment of the day.
+    ///   - clock: the time, and the heartbeat. Injected so tests can place themselves at any
+    ///     moment of the day *and* step the countdown without sleeping — see `ClockService`.
+    ///   - calendar: used only to notice that midnight has passed. Gregorian in the device's own
+    ///     time zone, for the reason `PrayerTimeEngine` documents: `Calendar.current` on a device
+    ///     set to the Islamic calendar answers in Hijri components, and the day boundary this
+    ///     compares against is a civil one.
     init(
         useCase: GetPrayerScheduleUseCase,
         coordinates: Coordinates,
         locationService: (any LocationService)? = nil,
+        placeNames: (any PlaceNameResolving)? = nil,
+        reachability: (any NetworkReachability)? = nil,
         hijriDates: any HijriDateServicing,
         calculation: CalculationSettings,
         tips: any HomeTipReporting = HomeTipReporter(),
-        now: @escaping @Sendable () -> Date = Date.init
+        clock: any ClockService = SystemClockService(),
+        calendar: Calendar = .gregorianLocal
     ) {
         self.useCase = useCase
         self.coordinates = coordinates
         self.locationService = locationService
+        self.placeNames = placeNames
+        self.reachability = reachability
         self.calculation = calculation
         self.hijriDates = hijriDates
         self.tips = tips
-        self.now = now
+        self.clock = clock
+        self.calendar = calendar
 
         // Resolved here rather than left optional: unlike the schedule, the Hijri date needs
         // no computation that can fail, so the screen has one from its first frame and the
         // header never flickers in behind the loading state.
-        let instant = now()
+        let instant = clock.now
         self.hijriDate = hijriDates.hijriComponents(for: instant)
         self.todaysEvents = hijriDates.islamicEvents(on: instant)
     }
@@ -121,8 +129,8 @@ final class HomeViewModel {
     /// Loads the day, then ticks until cancelled.
     ///
     /// Structured on purpose: driven from the view's `.task`, SwiftUI cancels it when the
-    /// screen goes away, so there is no stored `Task` to own, no `[weak self]` dance, and no
-    /// timer left running behind a screen nobody is looking at.
+    /// screen goes away, which ends the stream below. There is no stored `Task` to own, no
+    /// `[weak self]` dance, and no timer left running behind a screen nobody is looking at.
     func start() async {
         refresh()
 
@@ -135,14 +143,17 @@ final class HomeViewModel {
         // fix that might never come.
         await resolveLiveLocation()
 
-        while !Task.isCancelled {
-            do {
-                try await Task.sleep(for: .seconds(1))
-            } catch {
-                return // cancelled — the screen is gone
-            }
+        // Beside the heartbeat rather than before it. Reverse geocoding waits on a server, and a
+        // slow answer — or one that never comes — must not be able to hold up a countdown. The
+        // `async let` is awaited below so the child is still structured: cancelling the screen's
+        // task cancels this too.
+        async let name: Void = resolvePlaceName()
+
+        for await _ in clock.ticks(every: .seconds(1)) {
             tick()
         }
+
+        await name
     }
 
     /// Reads a live fix, if the app has a location service and is already authorized.
@@ -163,9 +174,20 @@ final class HomeViewModel {
         refresh()
     }
 
+    /// Puts a city on the card, if there is a network and anything answers.
+    ///
+    /// Runs after the live fix so it names where the user actually is rather than where they
+    /// were seeded. Nothing waits on it and nothing retries: a name that misses arrives on the
+    /// next appearance of the screen, and until then the card is drawn without one.
+    private func resolvePlaceName() async {
+        guard let placeNames, reachability?.isOnline ?? true else { return }
+
+        placeName = await placeNames.placeName(for: coordinates)
+    }
+
     /// Recomputes everything from the current instant.
     func refresh() {
-        let instant = now()
+        let instant = clock.now
 
         // Ahead of the schedule, and outside the `do`: the date is what the day is, whether or
         // not the times worked out. It also lets the roll into a new day — which `tick()`
@@ -178,10 +200,16 @@ final class HomeViewModel {
             let upcoming = try useCase.upcomingPrayer(for: coordinates, at: instant, config: config)
 
             phase = .ready(
-                Day(
+                NextPrayerState(
                     schedule: schedule,
                     currentPrayer: schedule.currentPrayer(at: instant),
-                    upcoming: upcoming
+                    upcoming: upcoming,
+                    // `try?`, and deliberately so: the near end of the progress bar is the only
+                    // thing here that can need a *second* day's times, and a bar that cannot be
+                    // anchored is a bar drawn empty — not a card that fails to appear.
+                    previous: try? useCase.previousPrayer(
+                        for: coordinates, at: instant, config: config
+                    )
                 )
             )
             countdown = max(0, upcoming.date.timeIntervalSince(instant))
@@ -199,16 +227,22 @@ final class HomeViewModel {
     ///
     /// Internal rather than private so tests can step time deliberately instead of sleeping.
     func tick() {
-        guard case .ready(let day) = phase else { return }
+        guard case .ready(let state) = phase else { return }
 
-        let remaining = day.upcoming.date.timeIntervalSince(now())
+        let instant = clock.now
+        let remaining = state.upcoming.date.timeIntervalSince(instant)
 
-        if remaining > 0 {
-            countdown = remaining
-        } else {
-            // The prayer has arrived. A full refresh moves the highlight and retargets the
-            // countdown — including the roll into tomorrow's Fajr once Isha passes.
+        // Two ways the screen goes stale, and both want the same answer: recompute, never
+        // decrement. The prayer has arrived — move the highlight and retarget the countdown,
+        // including the roll into tomorrow's Fajr once Isha passes. Or midnight has passed while
+        // the countdown was still running, which is the case a decrementing timer cannot see:
+        // between Isha and Fajr the countdown is perfectly healthy and the six entries beneath it
+        // belong to a day that ended hours ago.
+        guard remaining > 0, calendar.isDate(instant, inSameDayAs: state.schedule.day) else {
             refresh()
+            return
         }
+
+        countdown = remaining
     }
 }

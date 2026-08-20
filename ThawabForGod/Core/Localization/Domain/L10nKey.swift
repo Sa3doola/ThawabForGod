@@ -107,6 +107,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case nextPrayerLabel = "next_prayer_label"
     case currentPrayerLabel = "current_prayer_label"
     case tomorrowLabel = "tomorrow_label"
+    case timeRemainingLabel = "time_remaining_label"
+    /// Spoken, never drawn: `%1$@` is a worded duration, `%2$@` a prayer name.
+    case countdownAccessibility = "countdown_accessibility"
     case prayerTimesUnavailable = "prayer_times_unavailable"
     case prayerTimesLoading = "prayer_times_loading"
 

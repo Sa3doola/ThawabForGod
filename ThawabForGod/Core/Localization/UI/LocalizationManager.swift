@@ -92,6 +92,20 @@ final class LocalizationManager {
         String(localized: String.LocalizationValue(key.rawValue), bundle: bundle, locale: locale)
     }
 
+    /// A string with values substituted into it — `%1$@`, `%2$@` — resolved in the app's
+    /// language.
+    ///
+    /// Positional placeholders rather than bare `%@` in the catalog, because Arabic and English
+    /// do not always want the parts in the same order, and a positional form lets the
+    /// translation move them without the call site changing.
+    ///
+    /// Arguments arrive already formatted. Anything numeric must have been through `string(_:)`
+    /// or `timeString(_:)` first — passing an `Int` here would print it in whatever digits
+    /// `String(format:)` felt like, which is the one thing this app does not leave to chance.
+    func string(_ key: L10nKey, _ arguments: any CVarArg...) -> String {
+        String(format: string(key), locale: locale, arguments: arguments)
+    }
+
     /// - Parameter grouped: pass `false` for a number that names rather than counts — a year,
     ///   a page, an ayah — where a thousands separator would be wrong in every locale.
     func string(_ value: Int, grouped: Bool = true) -> String {

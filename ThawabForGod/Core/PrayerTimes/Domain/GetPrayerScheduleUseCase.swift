@@ -58,4 +58,35 @@ nonisolated struct GetPrayerScheduleUseCase: Sendable {
 
         return UpcomingPrayer(time: PrayerTime(prayer: .fajr, date: fajr), isTomorrow: true)
     }
+
+    /// The last marker at or before `now`, reaching back into the previous day's Isha in the
+    /// hours before Fajr.
+    ///
+    /// The mirror of `upcomingPrayer(for:at:config:)`, and it exists for one caller: the progress
+    /// bar on the next-prayer card, which needs both ends of the window it is filling. Between
+    /// Isha and Fajr the near end is a *different day's* Isha, and a bar anchored on today's
+    /// would be drawn from a time that has not happened yet.
+    func previousPrayer(
+        for coordinates: Coordinates,
+        at now: Date,
+        config: CalculationConfig
+    ) throws -> PassedPrayer {
+        let today = try schedule(for: coordinates, date: now, config: config)
+
+        if let previous = today.previousPrayer(at: now) {
+            return PassedPrayer(time: previous, isYesterday: false)
+        }
+
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: now) else {
+            throw PrayerTimeError.invalidDate(now)
+        }
+
+        let yesterdaysTimes = try schedule(for: coordinates, date: yesterday, config: config)
+
+        guard let isha = yesterdaysTimes.time(for: .isha) else {
+            throw PrayerTimeError.notComputable(yesterday)
+        }
+
+        return PassedPrayer(time: PrayerTime(prayer: .isha, date: isha), isYesterday: true)
+    }
 }

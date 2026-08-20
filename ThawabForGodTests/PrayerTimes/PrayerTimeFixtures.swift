@@ -129,30 +129,62 @@ nonisolated final class RecordingPrayerTimeRepository: PrayerTimeRepositoring, @
 
 /// A clock the test moves by hand.
 ///
-/// Safety invariant for `@unchecked Sendable`: it is only ever touched from the test's main
-/// actor — the suites are `@MainActor`, and the view model reads the clock from there too.
-/// The `@Sendable` closure is required by `HomeViewModel`'s initializer, not by any real
-/// concurrency here.
-nonisolated final class TestClock: @unchecked Sendable {
+/// It is a `ClockService`, so the view model under test cannot tell it from the real one — but
+/// nothing here ever sleeps. `advance(by:)` moves the time; `tick(after:)` moves it *and*
+/// delivers a beat to whatever is iterating `ticks(every:)`, which is how a countdown is stepped
+/// a second at a time in a test that finishes in microseconds.
+///
+/// Safety invariant for `@unchecked Sendable`: every stored property is touched only under
+/// `lock`. The lock is real rather than ceremonial — `AsyncStream`'s termination handler runs on
+/// whatever context tore the stream down, not on the test's actor.
+nonisolated final class TestClock: ClockService, @unchecked Sendable {
+    private let lock = NSLock()
     private var value: Date
+    private var continuations: [UUID: AsyncStream<Date>.Continuation] = [:]
 
     init(_ value: Date) {
         self.value = value
     }
 
-    var now: Date { value }
+    var now: Date { lock.withLock { value } }
 
-    /// Captures the clock strongly on purpose: tests that only need the view model discard
-    /// their reference to it, and the clock has to outlive that.
-    var provider: @Sendable () -> Date {
-        { self.value }
+    /// Whether anything is currently iterating `ticks(every:)`.
+    ///
+    /// A test that beats the clock before the view model has started listening would yield into
+    /// nothing and then wait forever for a change that already happened — so tests spin on this
+    /// first. It is the price of a stream that only exists once somebody asks for it.
+    var isTicking: Bool { lock.withLock { !continuations.isEmpty } }
+
+    /// The interval is ignored: a hand-driven clock beats when the test says so, and honouring
+    /// it would be the one thing this type exists to avoid.
+    func ticks(every interval: Duration) -> AsyncStream<Date> {
+        AsyncStream { continuation in
+            let id = UUID()
+            lock.withLock { continuations[id] = continuation }
+            continuation.onTermination = { [weak self] _ in
+                guard let self else { return }
+                self.lock.withLock { _ = self.continuations.removeValue(forKey: id) }
+            }
+        }
     }
 
     func advance(by interval: TimeInterval) {
-        value += interval
+        lock.withLock { value += interval }
     }
 
     func move(to date: Date) {
-        value = date
+        lock.withLock { value = date }
+    }
+
+    /// Moves the clock and beats once, which is what a real second does.
+    func tick(after interval: TimeInterval) {
+        let instant: Date = lock.withLock {
+            value += interval
+            return value
+        }
+
+        for continuation in lock.withLock({ Array(continuations.values) }) {
+            continuation.yield(instant)
+        }
     }
 }
