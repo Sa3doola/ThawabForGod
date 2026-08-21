@@ -33,4 +33,15 @@ nonisolated protocol QuranRepositoring: Sendable {
     /// Every verse of a part, in order — across chapter boundaries, which is the whole point
     /// of reading by juz.
     func verses(inJuz juz: Int) async throws -> [Verse]
+
+    /// The chapters and verses a query matches, most relevant first.
+    ///
+    /// Takes a `QuranSearchQuery` rather than a `String` so that the folding — which has to
+    /// agree with how the corpus was built, character for character — happens in one place that
+    /// both the caller and the test suite can see, rather than inside whichever implementation
+    /// happens to be behind this protocol.
+    ///
+    /// - Parameter limit: how many verses to return at most. The count of *all* matches comes
+    ///   back regardless, so a capped list can say what it is a cap on.
+    func search(_ query: QuranSearchQuery, limit: Int) async throws -> QuranSearchResults
 }

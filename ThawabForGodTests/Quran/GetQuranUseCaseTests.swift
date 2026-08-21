@@ -166,4 +166,28 @@ struct VerseReferenceTests {
     @Test func itDescribesItselfAsAReference() {
         #expect(VerseReference(surah: 2, verse: 255).description == "2:255")
     }
+
+    // MARK: Search
+
+    @Test func aSearchIsPassedToTheRepositoryAsAFoldedQuery() async throws {
+        let repository = StubQuranRepository(search: .success(.none))
+        let useCase = GetQuranUseCase(repository: repository)
+
+        _ = try await useCase.search(QuranSearchQuery("الرحمن"))
+
+        #expect(repository.requests == [.search(QuranSearchQuery("الرحمن"))])
+    }
+
+    /// An empty query never reaches the corpus. It is not an optimisation: FTS5 has no expression
+    /// for "no words", so asking would be a syntax error rather than an empty answer.
+    @Test func anEmptyQueryNeverReachesTheRepository() async throws {
+        let repository = StubQuranRepository()
+        let useCase = GetQuranUseCase(repository: repository)
+
+        let results = try await useCase.search(QuranSearchQuery("  ؟ "))
+
+        #expect(results == .none)
+        #expect(repository.requests.isEmpty)
+    }
+
 }

@@ -180,8 +180,30 @@ whoever does the real pass rather than decided here:
 
 ### The Quran
 
-**Source:** the [Tanzil Project](https://tanzil.net) — the Uthmani text, version
-1.1, and `quran-data.xml` for the chapter metadata and the divisions.
+**Source:** the [Tanzil Project](https://tanzil.net) — *two* of their texts,
+both version 1.1, plus `quran-data.xml` for the chapter metadata and the
+divisions.
+
+| Text | What it is for |
+| --- | --- |
+| **Uthmani** | Every verse the reader ever sees. Stored verbatim in `verse.text`. |
+| **Simple Clean** | Never displayed. Folded into `verse.text_normalized`, which is the only thing search matches against. |
+
+**Why a second text rather than a folding of the first.** Uthmani orthography
+writes a large class of words without the alef that modern spelling has, marking
+it with a superscript instead: the mushaf spells ٱلسَّمَٰوَٰتِ, ٱلصَّٰلِحَٰتِ, ٱلْكَٰفِرِينَ.
+Strip the diacritics and those become `السموت`, `الصلحت`, `الكفرين` — which is
+what the index used to hold, and what nobody will ever type. The corpus shipped
+that way at first, and the failure was silent: the screen said "no results" for
+words that occur in the Quran hundreds of times. Tanzil's Simple Clean text is
+the same verses in modern imla'i spelling, so folding *it* produces the tokens a
+reader actually types. `QuranRepositoryTests` pins the six worst of those words
+so the regression cannot come back quietly.
+
+The second text is pinned by its own SHA-256 and carries its own copyright
+block, which is stored beside the first in the `source` table — two rows,
+`tanzil-uthmani` and `tanzil-simple-clean`, because the terms below ask for the
+notice per text.
 
 **Licence: Creative Commons Attribution 3.0**, with terms that shape how this is
 built. Their copyright block states them in full and is reproduced *inside*
@@ -207,6 +229,12 @@ columns instead of one, and the reader sees them in the order the mushaf has
 them. (The Tazkiya Tech Quran SDK, working from the same upstream, makes the same
 cut for the same reason.) Al-Fatiha is left alone, its basmala being verse 1, and
 At-Tawba has none. `QuranRepositoryTests` pins all of that.
+
+**A second transformation, on the search text only.** The basmala is cut off
+verse 1 of the same 112 chapters there too. Without it, searching "بسم الله
+الرحمن الرحيم" would return every chapter's first verse and then draw each of
+them with text that does not contain those words. It is a verse exactly twice —
+1:1, and 27:30, where Sulayman's letter opens with it — and the test says so.
 
 **What is not verified:** nothing about the *text* is in doubt. The divisions —
 juz, hizb, rub el hizb, page numbers, sajda markers — come from Tanzil's metadata

@@ -26,12 +26,14 @@ nonisolated final class StubQuranRepository: QuranRepositoring, @unchecked Senda
         case versesInSurah(Int)
         case juzList
         case versesInJuz(Int)
+        case search(QuranSearchQuery)
     }
 
     private let lock = NSLock()
     private let surahResult: Result<[Surah], QuranStubError>
     private let verseResult: Result<[Verse], QuranStubError>
     private let juzResult: Result<[Juz], QuranStubError>
+    private let searchResult: Result<QuranSearchResults, QuranStubError>
     private var _requests: [Request] = []
 
     var requests: [Request] { lock.withLock { _requests } }
@@ -39,11 +41,13 @@ nonisolated final class StubQuranRepository: QuranRepositoring, @unchecked Senda
     init(
         surahs: Result<[Surah], QuranStubError> = .success([.stub()]),
         verses: Result<[Verse], QuranStubError> = .success([.stub()]),
-        juz: Result<[Juz], QuranStubError> = .success([.stub()])
+        juz: Result<[Juz], QuranStubError> = .success([.stub()]),
+        search: Result<QuranSearchResults, QuranStubError> = .success(.none)
     ) {
         surahResult = surahs
         verseResult = verses
         juzResult = juz
+        searchResult = search
     }
 
     private func record(_ request: Request) {
@@ -73,6 +77,11 @@ nonisolated final class StubQuranRepository: QuranRepositoring, @unchecked Senda
     func verses(inJuz juz: Int) async throws -> [Verse] {
         record(.versesInJuz(juz))
         return try verseResult.get()
+    }
+
+    func search(_ query: QuranSearchQuery, limit: Int) async throws -> QuranSearchResults {
+        record(.search(query))
+        return try searchResult.get()
     }
 }
 

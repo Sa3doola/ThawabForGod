@@ -24,9 +24,13 @@ struct QuranListView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                continueReading
-                sectionPicker
-                content
+                if viewModel.isSearching {
+                    searchResults
+                } else {
+                    continueReading
+                    sectionPicker
+                    content
+                }
             }
             .padding(20)
             .frame(maxWidth: 560)
@@ -34,6 +38,14 @@ struct QuranListView: View {
         }
         .background(theme.background)
         .navigationTitle(l10n.string(.quranTitle))
+        .searchable(
+            text: $viewModel.searchText,
+            prompt: Text(l10n.string(.quranSearchPrompt))
+        )
+        // The debounce and the cancellation both live here. `.task(id:)` cancels the previous
+        // run the moment the text changes, which is what turns the `Task.sleep` inside
+        // `search()` into a debounce — no stored `Task`, and no search for a word half-typed.
+        .task(id: viewModel.searchText) { await viewModel.search() }
         .task { await viewModel.loadList() }
         // Its own task, and re-run on every appearance rather than once: the reader leaves this
         // screen to read and comes back with a new position and possibly new bookmarks, and
@@ -112,6 +124,101 @@ struct QuranListView: View {
                 }
             }
         }
+    }
+
+    /// What the search turned up, or what is happening instead.
+    @ViewBuilder
+    private var searchResults: some View {
+        switch viewModel.searchPhase {
+        case .idle, .searching:
+            // The hint rather than a spinner. A search of a bundled database comes back in a
+            // frame or two, so a spinner would be a flash of grey and nothing else; what a
+            // reader who has typed one letter actually needs is to be told what can be searched.
+            InlineNotice(message: l10n.string(.quranSearchHint))
+
+        case .results(let results):
+            matches(results)
+
+        case .empty:
+            InlineNotice(message: l10n.string(.quranSearchEmpty))
+
+        case .unavailable:
+            InlineNotice(message: l10n.string(.quranUnavailable))
+        }
+    }
+
+    /// The chapters first, then the verses.
+    ///
+    /// In that order because a chapter is the coarser answer: a reader who typed a name wants the
+    /// chapter, and the handful of rows it takes to offer it sit above hundreds of verses rather
+    /// than below them where nobody would scroll to find them.
+    ///
+    /// A `LazyVStack` rather than the plain one the lists above use — those are 114 rows of two
+    /// short names, this is up to a hundred rows of Arabic paragraphs, and building them all
+    /// before the first frame is exactly what the reading screen was fixed for.
+    private func matches(_ results: QuranSearchResults) -> some View {
+        LazyVStack(alignment: .leading, spacing: 12) {
+            if !results.surahs.isEmpty {
+                sectionHeading(l10n.string(.quranSearchChapters), count: nil)
+
+                ForEach(results.surahs) { surah in
+                    SurahRow(surah: surah) { open(.surah(surah.id)) }
+                }
+            }
+
+            if !results.verses.isEmpty {
+                sectionHeading(
+                    l10n.string(.quranSearchVerses),
+                    count: results.totalVerseMatches
+                )
+
+                ForEach(results.verses) { verse in
+                    SearchResultRow(verse: verse, surah: viewModel.surah(verse.surahNumber)) {
+                        open(verse.id)
+                    }
+                }
+            }
+        }
+    }
+
+    /// A heading over one group of results, with how many there are in total.
+    ///
+    /// The count is the *total*, not the number of rows below it, which is the point of showing
+    /// it: the list is capped, and a reader looking at a hundred verses should be told when there
+    /// are two hundred rather than left to assume they have seen them all.
+    private func sectionHeading(_ title: String, count: Int?) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+
+            if let count {
+                Text(verbatim: "·")
+                Text(l10n.string(count))
+            }
+
+            Spacer(minLength: 0)
+        }
+        .appFont(.footnote, weight: .semibold)
+        .foregroundStyle(theme.textSecondary)
+        .padding(.top, 4)
+    }
+
+    /// Opens a chapter from a result, and puts the search away behind it. See `clearSearch()`.
+    ///
+    /// The push comes *first*, and the order is not cosmetic. Clearing the field flips
+    /// `isSearching`, which swaps this whole branch of the body back to the lists — destroying the
+    /// row that is still handling the tap. Doing that before the coordinator has been told what to
+    /// open leaves SwiftUI resolving a push out of a view that no longer exists, and the tab bar
+    /// underneath quietly reverted to Home. Told first, the coordinator's change lands while the
+    /// row is still on screen and the search is put away behind the push.
+    private func open(_ reading: QuranReading) {
+        coordinator.open(reading)
+        viewModel.clearSearch()
+    }
+
+    /// Opens a verse from a result, at that verse. Same ordering, same reason.
+    private func open(_ reference: VerseReference) {
+        coordinator.open(reference)
+        viewModel.clearSearch()
     }
 
     /// Shown only once there is somewhere to continue to — see `ContinueReadingCard`.

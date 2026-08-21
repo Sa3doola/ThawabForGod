@@ -47,7 +47,13 @@ The line between a tab and a push: a **tab** is a place the user returns to and 
 
   Two things this slice learned on device rather than on paper. **A `LazyVStack` is only lazy in its direct children** — the reader used to nest a whole chapter in one child, so all 286 verses of Al-Baqara were built before the first frame, every `onAppear` fired at once, and scrolling fired none. That is why `Reading.items` flattens the span into headings, basmalas and verses as siblings. And **the position write races the list reload**: popping the reader fires its `onDisappear` while `QuranListView` re-runs `loadProgress()`, so the write is parked on a `Task` that `loadProgress()` awaits, or "continue reading" goes on naming the verse the reader opened at.
 
-  Next, in order: translations, search over the FTS5 indexes already built, then tafsir. Translations are **blocked on licensing, not on code** — Tanzil, which the Arabic text comes from, licenses its translations non-commercial only, and `quranenc.com` does not publish its terms on the page. Nothing gets bundled until that is settled; see `Resources/Corpus/README.md` for the standard this project holds source data to. A bespoke Uthmani face is deliberately *not* in that list yet — `AppFontProviding.readingFont(size:)` is the seam it would arrive through, but it needs a licensed font file bundled and registered, which is its own slice.
+  **Search** is the fourth slice, and most of its work was in the corpus rather than in Swift. The FTS5 indexes had been built over a folding of the *Uthmani* text — and Uthmani orthography omits the alef that modern spelling writes, marking it with a superscript, so `ٱلسَّمَٰوَٰتِ` was indexed as `السموت` and a reader typing `السماوات` got nothing. Six of the commonest words in the Quran were unfindable, silently. `text_normalized` is now folded from Tanzil's **Simple Clean** text — the same verses in imla'i spelling — which the build downloads and pins alongside the Uthmani one. Nothing displayed changed: `verse.text` is byte-identical, and the tests assert it.
+
+  Above that the slice is ordinary: `QuranSearchQuery` folds a typed query the same way the build script folds the corpus (**the two must be changed together** — the rule is stated once per side, and `QuranRepositoryTests` checks it against the shipped database), the repository turns the tokens into an FTS5 expression, and the list screen grows a `.searchable`. Three details worth keeping. The query is read as a **phrase first and keywords only if that found nothing** — a reader typing a fragment they half-remember means the fragment, but `موسى فرعون` means both words. Tokens are letters and digits and **nothing else**, which is what makes it impossible for anything typed to be read as FTS5 syntax. And the debounce is `Task.sleep` under `.task(id: searchText)`, so SwiftUI's own cancellation is the whole mechanism — no stored `Task`.
+
+  Nothing is highlighted in a result, and that is deliberate: the index is over the folded text, so a match's offsets do not correspond to positions in the vowelled text drawn on screen.
+
+  Next, in order: translations, then tafsir. Translations are **blocked on licensing, not on code** — Tanzil, which the Arabic text comes from, licenses its translations non-commercial only, and `quranenc.com` does not publish its terms on the page. Nothing gets bundled until that is settled; see `Resources/Corpus/README.md` for the standard this project holds source data to. A bespoke Uthmani face is deliberately *not* in that list yet — `AppFontProviding.readingFont(size:)` is the seam it would arrive through, but it needs a licensed font file bundled and registered, which is its own slice.
 
 `DeveloperGallery`, `DesignSystemGallery` and `LocalizationGallery` are all gone — Settings exercises accent, appearance, language and digits on a real screen, which is what the galleries stood in for.
 
@@ -174,7 +180,9 @@ List available simulators — note that `name=iPhone 16` fails here because the 
 xcrun simctl list devices available
 ```
 
-**Always build after a change; fix warnings and errors before finishing.** Warnings count as failures — the build is currently clean on all four commands above.
+**Always build after a change; fix warnings and errors before finishing.** Warnings count as failures — the build is clean on the simulator build, the macOS build and the test run.
+
+**The `SWIFT_VERSION=6.0` check currently crashes the compiler**, and has done since before this branch — `swift-frontend` aborts in IRGen (`SmallVectorBase::grow_pod` under `SyncCallEmission::setArgs`) rather than reporting a diagnostic. Verified by running it against a clean worktree at `c9b2313`, where it fails identically, so it is a toolchain bug rather than anything in the source. Until the toolchain moves, that command tells you nothing; do not read its failure as a concurrency problem, and do not spend a session hunting for one.
 
 ## Tests
 

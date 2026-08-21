@@ -226,6 +226,11 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranBookmarkAdd = "quran_bookmark_add"
     case quranBookmarkRemove = "quran_bookmark_remove"
     case quranContinueReading = "quran_continue_reading"
+    case quranSearchPrompt = "quran_search_prompt"
+    case quranSearchChapters = "quran_search_chapters"
+    case quranSearchVerses = "quran_search_verses"
+    case quranSearchEmpty = "quran_search_empty"
+    case quranSearchHint = "quran_search_hint"
 
     // MARK: The reading panel
 

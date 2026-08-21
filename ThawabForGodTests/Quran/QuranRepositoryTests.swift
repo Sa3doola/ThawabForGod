@@ -163,4 +163,97 @@ struct QuranRepositoryTests {
     @Test func anUnknownChapterHasNoVersesRatherThanFailing() async throws {
         #expect(try await repository.verses(inSurah: 115).isEmpty)
     }
+
+    // MARK: Search
+
+    private func search(_ text: String, limit: Int = 100) async throws -> QuranSearchResults {
+        try await repository.search(QuranSearchQuery(text), limit: limit)
+    }
+
+    /// The test this whole slice exists for.
+    ///
+    /// Every one of these words is spelled in the mushaf without the alef a reader types —
+    /// ٱلسَّمَٰوَٰتِ, ٱلصَّٰلِحَٰتِ, ٱلْكَٰفِرِينَ — so folding the *Uthmani* text would index `السموت`,
+    /// `الصلحت`, `الكفرين` and find none of them. That is exactly what the corpus did until the
+    /// search column was rebuilt from Tanzil's Simple Clean text, and it failed silently: the
+    /// screen showed "no results" for words that are in the Quran hundreds of times.
+    @Test(arguments: ["السماوات", "الصالحات", "الكافرين", "القيامة", "إبراهيم", "الملائكة"])
+    func aWordSpelledWithAnAlefFindsTheVerseThatOmitsIt(word: String) async throws {
+        #expect(try await search(word).verses.isEmpty == false)
+    }
+
+    @Test func aFragmentOfAVerseFindsThatVerseFirst() async throws {
+        let results = try await search("قل هو الله أحد")
+
+        #expect(results.verses.first?.id == VerseReference(surah: 112, verse: 1))
+    }
+
+    /// The prefix on the last word, which is what makes results arrive mid-word rather than only
+    /// once a word is finished.
+    @Test func aHalfTypedWordStillMatches() async throws {
+        let results = try await search("إياك نعب")
+
+        #expect(results.verses.map(\.id).contains(VerseReference(surah: 1, verse: 5)))
+    }
+
+    /// The fallback. These two words never sit together in a verse, so the phrase reading finds
+    /// nothing and the keyword reading takes over — which is the difference between "no results"
+    /// and the twelve verses that name them both.
+    @Test func twoWordsThatNeverAdjoinAreStillFoundTogether() async throws {
+        let results = try await search("موسى فرعون")
+
+        #expect(results.verses.isEmpty == false)
+        #expect(results.totalVerseMatches > 1)
+    }
+
+    /// The basmala is a *verse* exactly twice: 1:1, and 27:30, where Sulayman's letter opens with
+    /// it. Everywhere else the mushaf prints it as an unnumbered heading, which the build lifts
+    /// off verse 1 into `surah.bismillah` — and lifts off the search text the same way. Without
+    /// that second cut this would be 114 hits: every chapter's first verse, each of them then
+    /// drawn with text that does not contain the words that were searched for.
+    @Test func theBasmalaIsAVerseTwiceAndAHeadingEverywhereElse() async throws {
+        let results = try await search("بسم الله الرحمن الرحيم")
+
+        #expect(results.totalVerseMatches == 2)
+        #expect(
+            results.verses.map(\.id) == [
+                VerseReference(surah: 1, verse: 1),
+                VerseReference(surah: 27, verse: 30),
+            ]
+        )
+    }
+
+    // MARK: Search — chapters
+
+    @Test(arguments: [("البقرة", 2), ("Al-Baqara", 2), ("The Opening", 1), ("baqara", 2)])
+    func aChapterIsFoundByAnyOfItsThreeNames(typed: String, number: Int) async throws {
+        #expect(try await search(typed).surahs.map(\.id).contains(number))
+    }
+
+    /// The folding at work on a name: a reader typing the wrong final letter still finds it.
+    @Test func aChapterNameFoundWithTaMarbutaWrittenAsHa() async throws {
+        #expect(try await search("الفاتحه").surahs.map(\.id).contains(1))
+    }
+
+    // MARK: Search — shape of the answer
+
+    @Test func theCapLimitsTheVersesButNotTheCount() async throws {
+        let results = try await search("الله", limit: 10)
+
+        #expect(results.verses.count == 10)
+        #expect(results.totalVerseMatches > 10)
+    }
+
+    @Test func anEmptyQueryIsNotASearch() async throws {
+        let results = try await search("   ")
+
+        #expect(results == .none)
+    }
+
+    /// Nothing a reader can type is FTS5 syntax — see `QuranSearchQuery`. A bare quote used to be
+    /// a syntax error inside the database rather than an empty result.
+    @Test(arguments: ["\"", "*", "NEAR(", "زقزقة"])
+    func aQueryThatMatchesNothingComesBackEmptyRatherThanThrowing(typed: String) async throws {
+        #expect(try await search(typed).verses.isEmpty)
+    }
 }

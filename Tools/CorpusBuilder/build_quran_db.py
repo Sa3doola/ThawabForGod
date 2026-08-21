@@ -15,6 +15,15 @@ Two FTS5 indexes come with it — `verse_fts` over the normalized text and
 `surah_fts` over the three name spellings — built here rather than on device,
 because an index over a read-only corpus is as static as the corpus is.
 
+**Two Tanzil texts go in, and they do different jobs.** The Uthmani text is what
+the app *draws* — it is the mushaf, and it is stored verbatim. It is the wrong
+thing to *search*, because Uthmani orthography writes a whole class of words
+without the alef a reader types: the mushaf spells ٱلسَّمَٰوَٰتِ, and stripping its
+diacritics leaves `السموت`, which nobody will ever type. So `text_normalized` is
+built from Tanzil's Simple Clean text — the same verses in modern imla’i
+spelling — folded by `normalize`. Searching "السماوات" then finds the verse whose
+displayed text is ٱلسَّمَٰوَٰتِ, which is the whole point.
+
 Its own file rather than more tables in `corpus.sqlite`, which
 `Resources/Corpus/README.md` anticipated: the text is an order of magnitude
 larger than everything else in there put together, it has a different upstream
@@ -30,7 +39,8 @@ scratch, which is what makes a correction reviewable.
 
 Usage:
     python3 Tools/CorpusBuilder/build_quran_db.py            # downloads upstream
-    python3 Tools/CorpusBuilder/build_quran_db.py --text path/to/quran-uthmani.txt
+    python3 Tools/CorpusBuilder/build_quran_db.py --text path/to/quran-uthmani.txt \
+                                                 --search-text path/to/quran-simple-clean.txt
 """
 
 from __future__ import annotations
@@ -49,6 +59,12 @@ TEXT_URL = (
     "https://tanzil.net/pub/download/index.php"
     "?quranType=uthmani&outType=txt-2&agree=true"
 )
+# The same verses in modern spelling, which is what search matches against. See
+# the note in the module docstring for why the Uthmani text cannot do that job.
+SEARCH_TEXT_URL = (
+    "https://tanzil.net/pub/download/index.php"
+    "?quranType=simple-clean&outType=txt-2&agree=true"
+)
 METADATA_URL = "https://tanzil.net/res/text/metadata/quran-data.xml"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -58,7 +74,10 @@ DEFAULT_OUTPUT = REPO_ROOT / "ThawabForGod" / "Resources" / "Corpus" / "quran.sq
 # 1: surah + verse, Arabic only.
 # 2: verse gains its divisions, the mushaf page, the sajdas and a normalized
 #    column; juz/hizb/rub_el_hizb tables and the two FTS5 indexes arrive with it.
-SCHEMA_VERSION = 2
+# 3: `text_normalized` is folded from Tanzil's Simple Clean text rather than from
+#    the Uthmani text beside it. The displayed text is unchanged, byte for byte;
+#    what changes is that a search for a word spelled with an alef can find it.
+SCHEMA_VERSION = 3
 
 SURAH_COUNT = 114
 VERSE_COUNT = 6236
@@ -77,6 +96,9 @@ SAJDA_COUNT = 15
 # loud build failure to be looked at and re-pinned deliberately, rather than a
 # silent change to the mushaf the app ships.
 TEXT_DIGEST = "36da55e256f54f4838b6fa1c78781734346c8d9ffde52daf5a3cbfa32626a08c"
+# The search text is pinned the same way and for the same reason. It is never
+# shown to a reader, but a change in it silently changes what the app can find.
+SEARCH_TEXT_DIGEST = "7c74ab21103b99d8d0bacd94e7c11f5f5855b22d3f0d32e1f09fb6cd73764b58"
 
 # Al-Fatiha opens *with* the basmala as its first verse — numbered, part of the
 # chapter — and At-Tawba is the one chapter that does not begin with it at all.
@@ -123,10 +145,13 @@ CREATE TABLE verse (
     surah_id        INTEGER NOT NULL REFERENCES surah(id),
     number          INTEGER NOT NULL CHECK (number > 0),
     text            TEXT    NOT NULL,
-    -- The same verse with every diacritic dropped and the ambiguous letters
-    -- folded together. Written here rather than computed on device: it is what
-    -- search matches against, and normalizing 6,236 verses to answer one query
-    -- would be the whole corpus walked per keystroke.
+    -- What search matches against: the *same verse* in Tanzil's Simple Clean
+    -- text, with every diacritic dropped and the ambiguous letters folded
+    -- together. Not a folding of `text`, and deliberately so — Uthmani spelling
+    -- omits the alef in a whole class of words, so folding it would index
+    -- `السموت` for a verse every reader searches for as `السماوات`. Written here
+    -- rather than computed on device for the obvious reason: normalizing 6,236
+    -- verses to answer one query would be the whole corpus walked per keystroke.
     text_normalized TEXT    NOT NULL,
     juz             INTEGER NOT NULL CHECK (juz BETWEEN 1 AND {JUZ_COUNT}),
     hizb            INTEGER NOT NULL CHECK (hizb BETWEEN 1 AND {HIZB_COUNT}),
@@ -258,6 +283,10 @@ def fetch(url: str) -> str:
 
 def read_text(path: Path | None) -> str:
     return path.read_text(encoding="utf-8") if path else fetch(TEXT_URL)
+
+
+def read_search_text(path: Path | None) -> str:
+    return path.read_text(encoding="utf-8") if path else fetch(SEARCH_TEXT_URL)
 
 
 def read_metadata(path: Path | None) -> str:
@@ -529,12 +558,44 @@ def check(verses: list[tuple[int, int, str]], surahs: list[tuple]) -> None:
             raise SystemExit(f"surah {index}: verse numbers are not 1..{expected}")
 
 
+def check_search_text(
+    verses: list[tuple[int, int, str]],
+    search_verses: list[tuple[int, int, str]],
+) -> None:
+    """That the second text is the same Quran, verse for verse, as the first.
+
+    The two downloads are independent files in different orthographies, and the
+    search column is only meaningful because row *n* of one is row *n* of the
+    other. A mismatch would not look like a failure at runtime — it would look
+    like a reader searching for one verse and being handed a different one — so
+    it is caught here, where it is still a build error.
+    """
+    if [(s, n) for s, n, _ in search_verses] != [(s, n) for s, n, _ in verses]:
+        raise SystemExit(
+            "the Uthmani and Simple Clean texts do not cover the same verses in "
+            "the same order — one of them is not what it used to be upstream."
+        )
+
+    digest = hashlib.sha256(
+        "\n".join(f"{s}|{n}|{t}" for s, n, t in search_verses).encode("utf-8")
+    ).hexdigest()
+    if digest != SEARCH_TEXT_DIGEST:
+        raise SystemExit(
+            "Tanzil's Simple Clean text has changed upstream.\n"
+            f"  expected {SEARCH_TEXT_DIGEST}\n"
+            f"  got      {digest}\n"
+            "Nothing a reader sees comes from this text, but what they can find "
+            "does. Read tanzil.net/updates before re-pinning."
+        )
+
+
 def build(
     verses: list[tuple[int, int, str]],
     surahs: list[tuple],
     headings: dict[int, str],
     divisions: Divisions,
-    notice: str,
+    normalized: dict[tuple[int, int], str],
+    sources: list[tuple[str, str, str, str, str]],
     output: Path,
 ) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -567,7 +628,7 @@ def build(
                     surah,
                     number,
                     text,
-                    normalize(text),
+                    normalized[(surah, number)],
                     divisions.juz[(surah, number)],
                     divisions.hizb[(surah, number)],
                     divisions.rub_el_hizb[(surah, number)],
@@ -605,15 +666,13 @@ def build(
             ],
         )
 
-        connection.execute(
+        # One row per text, not one per project. Both notices are shipped because
+        # Tanzil's terms ask for the notice to be reproduced in derived files and
+        # each text carries its own — the Simple Clean one is never shown to a
+        # reader, but it is in here all the same, folded into the search column.
+        connection.executemany(
             "INSERT INTO source (id, name, url, licence, notice) VALUES (?, ?, ?, ?, ?)",
-            (
-                "tanzil",
-                "Tanzil Project",
-                "https://tanzil.net",
-                "Creative Commons Attribution 3.0",
-                notice,
-            ),
+            sources,
         )
 
         # Filled by hand because both indexes are external-content and read-only:
@@ -663,7 +722,7 @@ def report(connection: sqlite3.Connection, output: Path) -> None:
     print(f"wrote {shown} ({output.stat().st_size} bytes)")
     print(f"  schema version {SCHEMA_VERSION}")
     print(f"  {surahs} surahs ({meccan} Meccan, {surahs - meccan} Medinan)")
-    print(f"  {verses} verses, {indexed} indexed for search")
+    print(f"  {verses} verses, {indexed} indexed for search (Simple Clean text)")
     print(
         f"  {counts['juz']} juz, {counts['hizb']} hizb, "
         f"{counts['rub_el_hizb']} rub el hizb, {pages} pages"
@@ -674,6 +733,11 @@ def report(connection: sqlite3.Connection, output: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--text", type=Path, help="a local copy of the Uthmani text")
+    parser.add_argument(
+        "--search-text",
+        type=Path,
+        help="a local copy of the Simple Clean text, which search is built from",
+    )
     parser.add_argument("--metadata", type=Path, help="a local copy of quran-data.xml")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     arguments = parser.parse_args()
@@ -681,16 +745,50 @@ def main() -> int:
     text = read_text(arguments.text)
     verses = parse_verses(text)
     notice = parse_notice(text)
+    search_text = read_search_text(arguments.search_text)
+    search_verses = parse_verses(search_text)
+    search_notice = parse_notice(search_text)
     metadata = read_metadata(arguments.metadata)
     surahs = parse_surahs(metadata)
     # Checked against the file exactly as it was downloaded, before the basmala is
     # moved — so the pinned digest tracks upstream rather than this script.
     check(verses, surahs)
+    check_search_text(verses, search_verses)
     # Divided before the basmala is lifted off verse 1, for the same reason: the
     # boundaries are Tanzil's, and they are stated against Tanzil's numbering.
     divisions = divide(verses, metadata)
     split, headings = split_basmala(verses)
-    build(split, surahs, headings, divisions, notice, arguments.output)
+    # The same cut on the search text, so that a verse's two forms stay the same
+    # verse: without it, searching "بسم الله" would return every chapter's verse 1
+    # and then show text that does not contain those words. The headings it comes
+    # back with are dropped — the ones the reader sees are the Uthmani ones above.
+    search_split, _ = split_basmala(search_verses)
+    normalized = {(s, n): normalize(t) for s, n, t in search_split}
+
+    build(
+        split,
+        surahs,
+        headings,
+        divisions,
+        normalized,
+        [
+            (
+                "tanzil-uthmani",
+                "Tanzil Project — Uthmani text",
+                "https://tanzil.net",
+                "Creative Commons Attribution 3.0",
+                notice,
+            ),
+            (
+                "tanzil-simple-clean",
+                "Tanzil Project — Simple Clean text",
+                "https://tanzil.net",
+                "Creative Commons Attribution 3.0",
+                search_notice,
+            ),
+        ],
+        arguments.output,
+    )
     return 0
 
 

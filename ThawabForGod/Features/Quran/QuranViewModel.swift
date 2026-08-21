@@ -36,6 +36,21 @@ final class QuranViewModel {
         case unavailable
     }
 
+    /// What the search field has turned up.
+    ///
+    /// `.idle` is not "nothing found" — it is the state before there is anything to find, when
+    /// the field is empty or holds only punctuation. The two have to be told apart or an empty
+    /// field would sit under "no results".
+    enum SearchPhase: Equatable {
+        case idle
+        case searching
+        case results(QuranSearchResults)
+        case empty
+        /// The corpus could not be read. Its own case rather than `.empty`, because "there is no
+        /// such verse" and "the search did not run" are different things to tell a reader.
+        case unavailable
+    }
+
     /// What the reading screen has to show.
     enum ReadingPhase: Equatable {
         case loading
@@ -140,6 +155,20 @@ final class QuranViewModel {
 
     /// Where the reader left off, or `nil` before they have read anything.
     private(set) var lastRead: ReadingPosition?
+
+    /// What is in the search field. Settable from the view, like `section`, because
+    /// `.searchable` needs a binding.
+    var searchText: String = ""
+
+    private(set) var searchPhase: SearchPhase = .idle
+
+    /// Whether the screen is showing results rather than its lists.
+    ///
+    /// Derived from the text rather than from `\.isSearching`: that environment value is only
+    /// readable *inside* the searchable view's own subtree, and this is read by the view that
+    /// applies the modifier. It also has to agree with `searchPhase`, which is driven by the
+    /// same text.
+    var isSearching: Bool { !QuranSearchQuery(searchText).isEmpty }
 
     @ObservationIgnored private let useCase: GetQuranUseCase
     @ObservationIgnored private let progress: QuranProgressUseCase
@@ -253,6 +282,62 @@ final class QuranViewModel {
             guard !Task.isCancelled else { return }
             readingPhase = .unavailable
         }
+    }
+
+    // MARK: Search
+
+    /// How long the field has to stand still before the corpus is asked.
+    ///
+    /// Short enough that a reader who has stopped typing does not notice it, long enough that
+    /// typing a word is one search rather than seven. It is a constant rather than a setting
+    /// because it is a property of how fast people type, not of what anyone prefers.
+    private static let debounce = Duration.milliseconds(200)
+
+    /// Searches for whatever is in `searchText`.
+    ///
+    /// Driven from the view's `.task(id: viewModel.searchText)`, which is the whole cancellation
+    /// story: SwiftUI cancels the previous run the moment the text changes, so the `Task.sleep`
+    /// below throws and that keystroke's search never reaches the corpus. There is no stored
+    /// `Task` here and nothing to cancel by hand — the debounce *is* the sleep, and the id is
+    /// what makes it one.
+    func search() async {
+        let query = QuranSearchQuery(searchText)
+
+        guard !query.isEmpty else {
+            searchPhase = .idle
+            return
+        }
+
+        do {
+            try await Task.sleep(for: Self.debounce)
+        } catch {
+            // Cancelled: a newer query is already on its way, and this one must not touch the
+            // phase on the way out or it would overwrite results that are still arriving.
+            return
+        }
+
+        // Only now, so that a reader typing a word watches the previous results sit still rather
+        // than watching a spinner replace them on every letter.
+        searchPhase = .searching
+
+        do {
+            let results = try await useCase.search(query)
+            guard !Task.isCancelled else { return }
+            searchPhase = results.isEmpty ? .empty : .results(results)
+        } catch {
+            guard !Task.isCancelled else { return }
+            searchPhase = .unavailable
+        }
+    }
+
+    /// Empties the field, which puts the lists back.
+    ///
+    /// Called when a result is opened: coming back from a verse to the search that found it is
+    /// rarely what is wanted, and a field left full would hide the chapter list behind results
+    /// the reader is done with.
+    func clearSearch() {
+        searchText = ""
+        searchPhase = .idle
     }
 
     // MARK: The reader's own marks

@@ -219,6 +219,103 @@ struct QuranViewModelTests {
 
         #expect(model.lastRead?.reference == kursi)
     }
+
+    // MARK: Search
+
+    @Test func anEmptyFieldIsNotASearch() async {
+        let model = viewModel(StubQuranRepository())
+        model.searchText = "   "
+
+        await model.search()
+
+        #expect(model.searchPhase == .idle)
+        #expect(!model.isSearching)
+    }
+
+    /// Punctuation alone folds to no tokens, so it is the same as an empty field rather than a
+    /// search that finds nothing. The screen must not offer "no results" for a typed comma.
+    @Test func punctuationAloneIsNotASearchEither() async {
+        let model = viewModel(StubQuranRepository())
+        model.searchText = "؟؟"
+
+        await model.search()
+
+        #expect(model.searchPhase == .idle)
+    }
+
+    @Test func aQueryWithResultsShowsThem() async {
+        let results = QuranSearchResults(
+            surahs: [.stub(id: 2)],
+            verses: [.stub(surah: 2, number: 255)],
+            totalVerseMatches: 1
+        )
+        let model = viewModel(StubQuranRepository(search: .success(results)))
+        model.searchText = "الله"
+
+        await model.search()
+
+        #expect(model.searchPhase == .results(results))
+        #expect(model.isSearching)
+    }
+
+    /// Found nothing is its own phase, and not the same as the corpus failing to answer — the
+    /// reader is told "no such verse" rather than "the Quran could not be loaded".
+    @Test func aQueryWithNoResultsIsEmptyRatherThanUnavailable() async {
+        let model = viewModel(StubQuranRepository(search: .success(.none)))
+        model.searchText = "زقزقة"
+
+        await model.search()
+
+        #expect(model.searchPhase == .empty)
+    }
+
+    @Test func aFailedSearchSaysSoRatherThanShowingNothingFound() async {
+        let model = viewModel(StubQuranRepository(search: .failure(QuranStubError())))
+        model.searchText = "الله"
+
+        await model.search()
+
+        #expect(model.searchPhase == .unavailable)
+    }
+
+    /// The folding happens once, in the view model, so the repository is handed a query rather
+    /// than raw text — which is what lets the corpus be asked the same question every time
+    /// regardless of how the reader spelled it.
+    @Test func theRepositoryIsAskedForAFoldedQuery() async {
+        let repository = StubQuranRepository(search: .success(.none))
+        let model = viewModel(repository)
+        model.searchText = "ٱلرَّحْمَٰنِ"
+
+        await model.search()
+
+        #expect(repository.requests.contains(.search(QuranSearchQuery("الرحمن"))))
+    }
+
+    /// Cancellation is the debounce: `.task(id:)` cancels the previous run on the next keystroke,
+    /// and a cancelled run must leave the phase alone rather than overwrite results that are
+    /// still on screen. Here the task is cancelled before the sleep can finish.
+    @Test func aCancelledSearchLeavesThePhaseUntouched() async {
+        let model = viewModel(StubQuranRepository(search: .success(.none)))
+        model.searchText = "الله"
+
+        let task = Task { await model.search() }
+        task.cancel()
+        await task.value
+
+        #expect(model.searchPhase == .idle)
+    }
+
+    @Test func openingAResultPutsTheSearchAway() async {
+        let model = viewModel(StubQuranRepository(search: .success(.none)))
+        model.searchText = "الله"
+        await model.search()
+
+        model.clearSearch()
+
+        #expect(model.searchText.isEmpty)
+        #expect(model.searchPhase == .idle)
+        #expect(!model.isSearching)
+    }
 }
 
 /// The helpers the reading screen draws its headings from.
