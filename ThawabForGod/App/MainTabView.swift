@@ -80,7 +80,8 @@ struct MainTabView: View {
             QuranListView(
                 viewModel: container.quranViewModel(),
                 coordinator: container.quranCoordinator,
-                settings: container.readerSettings
+                settings: container.readerSettings,
+                tafsir: container.tafsirViewModel()
             )
         }
     }

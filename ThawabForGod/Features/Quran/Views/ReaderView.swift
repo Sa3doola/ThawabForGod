@@ -16,13 +16,16 @@ import SwiftUI
 /// that edits the value is presented from the top, so the environment is what lets the value reach
 /// the leaf without every view in between naming it.
 ///
-/// Still no translation and no bookmark: those are the slices after this one, and they land in
-/// this shape.
+/// Still no translation: that slice is blocked on licensing rather than on code — see
+/// `Resources/Corpus/README.md` — and it lands in this shape when it is not.
 struct ReaderView: View {
     let viewModel: QuranViewModel
     let coordinator: QuranCoordinator
     let settings: ReaderSettings
     let reading: QuranReading
+    /// Drives the tafsir sheet. Held here rather than built per row: one sheet is presented from
+    /// this screen, so one view model answers for whichever verse it is showing.
+    let tafsir: TafsirViewModel
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
@@ -65,6 +68,15 @@ struct ReaderView: View {
         }
         .sheet(isPresented: isCustomizing) {
             ReaderSettingsSheet(settings: settings, coordinator: coordinator)
+        }
+        // `item:` rather than `isPresented:` with a stored verse, so the sheet cannot be up with
+        // nothing to show — see `QuranCoordinator.openTafsir`.
+        .sheet(item: openTafsir) { reference in
+            TafsirSheet(
+                viewModel: tafsir,
+                reference: reference,
+                surah: viewModel.surah(reference.surah)
+            )
         }
         .task { await viewModel.load(reading) }
         // On the way out rather than as they scroll — one save per sitting instead of one per
@@ -114,6 +126,14 @@ struct ReaderView: View {
         Binding(
             get: { coordinator.isCustomizing },
             set: { if !$0 { coordinator.finishCustomizing() } }
+        )
+    }
+
+    /// Two-way for the same reason: a swipe down and a Done button are one value changing.
+    private var openTafsir: Binding<VerseReference?> {
+        Binding(
+            get: { coordinator.openTafsir },
+            set: { if $0 == nil { coordinator.closeTafsir() } }
         )
     }
 
@@ -167,7 +187,8 @@ struct ReaderView: View {
                 isBookmarked: viewModel.isBookmarked(verse.id),
                 onSetBookmark: { isBookmarked in
                     Task { await viewModel.setBookmark(isBookmarked, for: verse.id) }
-                }
+                },
+                onShowTafsir: { coordinator.showTafsir(for: verse.id) }
             )
             // The scroll target, which is why it is the `VerseReference` and not the row's
             // position: a bookmark names a verse, not an index into a span.
@@ -220,7 +241,8 @@ struct ReaderView: View {
             viewModel: previewQuranViewModel(),
             coordinator: QuranCoordinator(),
             settings: ReaderSettings(settingsStore: settingsStore),
-            reading: .surah(1)
+            reading: .surah(1),
+            tafsir: previewTafsirViewModel()
         )
     }
     .themed(ThemeManager(settingsStore: settingsStore))

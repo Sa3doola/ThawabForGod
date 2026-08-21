@@ -67,6 +67,27 @@ final class QuranCoordinator {
     func finishCustomizing() {
         isCustomizing = false
     }
+
+    // MARK: The tafsir
+
+    /// The verse whose commentary is open, or `nil` when none is.
+    ///
+    /// A `VerseReference` rather than a `Bool` beside a stored verse, so that presentation and
+    /// subject are one value: `sheet(item:)` cannot then be up with nothing to show, and tapping
+    /// a second verse while the first is open moves the sheet rather than needing it closed.
+    ///
+    /// Here rather than as `@State` on `VerseRow` for the reason `isCustomizing` is here: the row
+    /// is a leaf built and thrown away by a `LazyVStack` as the reader scrolls, and a sheet owned
+    /// by one would be dismissed by scrolling past it.
+    private(set) var openTafsir: VerseReference?
+
+    func showTafsir(for reference: VerseReference) {
+        openTafsir = reference
+    }
+
+    func closeTafsir() {
+        openTafsir = nil
+    }
 }
 
 /// The two ways into the text, which are the two lists the tab offers.

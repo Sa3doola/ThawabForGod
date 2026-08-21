@@ -17,6 +17,9 @@ struct QuranListView: View {
     /// Passed straight through to `ReaderView`. This screen has no look of its own to configure —
     /// it holds it only because it is the view that builds the destination.
     let settings: ReaderSettings
+    /// Passed through for the same reason: the tafsir sheet is presented from the reader, and
+    /// this is the view that builds it.
+    let tafsir: TafsirViewModel
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
@@ -58,7 +61,8 @@ struct QuranListView: View {
                 viewModel: viewModel,
                 coordinator: coordinator,
                 settings: settings,
-                reading: reading
+                reading: reading,
+                tafsir: tafsir
             )
         }
     }
@@ -113,7 +117,7 @@ struct QuranListView: View {
     @ViewBuilder
     private var bookmarks: some View {
         if viewModel.bookmarks.isEmpty {
-            InlineNotice(message: l10n.string(.quranBookmarksEmpty))
+            InlineNotice(message: l10n.string(.quranBookmarksEmpty), tone: .informational)
         } else {
             ForEach(viewModel.bookmarks) { bookmark in
                 BookmarkRow(
@@ -134,13 +138,13 @@ struct QuranListView: View {
             // The hint rather than a spinner. A search of a bundled database comes back in a
             // frame or two, so a spinner would be a flash of grey and nothing else; what a
             // reader who has typed one letter actually needs is to be told what can be searched.
-            InlineNotice(message: l10n.string(.quranSearchHint))
+            InlineNotice(message: l10n.string(.quranSearchHint), tone: .informational)
 
         case .results(let results):
             matches(results)
 
         case .empty:
-            InlineNotice(message: l10n.string(.quranSearchEmpty))
+            InlineNotice(message: l10n.string(.quranSearchEmpty), tone: .informational)
 
         case .unavailable:
             InlineNotice(message: l10n.string(.quranUnavailable))
@@ -262,6 +266,19 @@ func previewQuranViewModel() -> QuranViewModel {
     )
 }
 
+/// The tafsir sheet's view model, over the real bundled commentary.
+///
+/// Beside `previewQuranViewModel()` and used by both this file's preview and `ReaderView`'s, so
+/// the construction is written once rather than in every preview that has to pass one down.
+@MainActor
+func previewTafsirViewModel() -> TafsirViewModel {
+    TafsirViewModel(
+        useCase: GetTafsirUseCase(
+            repository: TafsirRepository(database: CorpusDatabase(name: "tafsir"))
+        )
+    )
+}
+
 #Preview {
     let settingsStore = InMemorySettingsStore()
 
@@ -269,7 +286,8 @@ func previewQuranViewModel() -> QuranViewModel {
         QuranListView(
             viewModel: previewQuranViewModel(),
             coordinator: QuranCoordinator(),
-            settings: ReaderSettings(settingsStore: settingsStore)
+            settings: ReaderSettings(settingsStore: settingsStore),
+            tafsir: previewTafsirViewModel()
         )
     }
     .themed(ThemeManager(settingsStore: settingsStore))

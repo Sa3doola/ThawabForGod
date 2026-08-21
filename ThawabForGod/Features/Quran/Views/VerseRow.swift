@@ -15,6 +15,10 @@ struct VerseRow: View {
     let verse: Verse
     let isBookmarked: Bool
     let onSetBookmark: (Bool) -> Void
+    /// Opens the commentary on this verse. Optional so the row still draws everywhere it is
+    /// reused without a tafsir to reach for — a preview, or a screen that has no sheet to put it
+    /// in.
+    var onShowTafsir: (() -> Void)?
 
     @Environment(LocalizationManager.self) private var l10n
     /// The reader's paper and type metrics, resolved once by `ReaderView`. `fallback` outside it —
@@ -28,6 +32,10 @@ struct VerseRow: View {
 
             HStack(spacing: 12) {
                 bookmarkButton
+
+                if onShowTafsir != nil {
+                    tafsirButton
+                }
 
                 if let sajda = verse.sajda {
                     sajdaMarker(sajda)
@@ -85,6 +93,25 @@ struct VerseRow: View {
         .buttonStyle(.plain)
         .accessibilityLabel(l10n.string(isBookmarked ? .quranBookmarkRemove : .quranBookmarkAdd))
         .accessibilityAddTraits(isBookmarked ? [.isButton, .isSelected] : .isButton)
+    }
+
+    /// Opens what the commentary says about this verse.
+    ///
+    /// Beside the bookmark and drawn the same way — quiet, symbol-only, no label — for the same
+    /// reason: it sits under every one of Al-Baqara's 286 verses and must not compete with them.
+    @ViewBuilder
+    private var tafsirButton: some View {
+        if let onShowTafsir {
+            Button(action: onShowTafsir) {
+                Image(systemName: "text.book.closed")
+                    .appFont(.footnote, weight: .medium)
+                    .foregroundStyle(style.palette.textSecondary)
+                    .frame(width: 22, height: 22)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(l10n.string(.tafsirOpen))
+        }
     }
 
     /// The place-of-prostration mark, and the word for it.

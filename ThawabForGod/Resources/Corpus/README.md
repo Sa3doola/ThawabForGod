@@ -15,6 +15,10 @@ is inside it, which is what makes a second one free:
   first, for the reason this section anticipated: the text is an order of
   magnitude larger than everything in `corpus.sqlite` put together, and it has a
   different upstream, a different licence and its own rebuild step.
+- **`tafsir.sqlite`** holds the commentaries, for the third time the same
+  argument holds: another upstream, another licence — public domain by age
+  rather than by anyone's permission — and a size that grows with every edition
+  added rather than staying put.
 
 ---
 
@@ -243,6 +247,61 @@ in tests, a full page-by-page check against a printed Madina mushaf has not been
 done. The page numbers in particular are unused today; a paged reading mode would
 be the point at which they need one.
 
+### The tafsir
+
+**Source:** Tafsir al-Jalalayn, begun by Jalal al-Din al-Mahalli (d. 864 AH /
+1459 CE) and completed by his pupil Jalal al-Din al-Suyuti (d. 911 AH / 1505 CE).
+
+**Licence: public domain by age.** That is the whole reason it is this tafsir and
+not a better-known modern one, and the reasoning is worth keeping because the
+next person will ask.
+
+**Every distributor in this space publishes the same thing about licensing:
+nothing.** Checked in August 2026:
+
+| Source | What it says |
+| --- | --- |
+| Tanzil (translations) | "for non-commercial purposes only… you need to obtain necessary permission from the translator or the publisher" |
+| Itani / ClearQuran | CC BY-**NC-ND** — non-commercial, and no derivatives |
+| quranenc.com | links to "Terms and Policies"; no terms on the page |
+| qul.tarteel.ai | JSON and SQLite downloads, no licence field anywhere |
+| Quran Foundation API | content permitted only "as integral to the end-user experience of the Application"; anything else needs a separate written agreement |
+| alquran.cloud | translations are "from their rights-holders or sourced from public-domain editions" — without saying which is which |
+
+So the only texts whose status can be established *independently of whoever is
+hosting them* are the ones old enough to be public domain everywhere, and that
+is the standard this file already holds the rest of the corpus to. Al-Jalalayn is
+also the tafsir actually built for a per-verse screen: a terse gloss meant to be
+read *beside* the verse, quoting the words it explains between ﴿ ﴾ ornaments.
+
+**Arabic only, deliberately.** The classical Arabic is free; every English
+translation of it belongs to its modern translator — Feras Hamza's is © 2007 the
+Royal Aal al-Bayt Institute, Aisha Bewley's is her own. Nothing English gets
+bundled until that is settled, which is the same rule this file records for the
+Quran's translations. An English-reading user therefore gets nothing from this
+slice yet, and that is a known gap rather than a bug.
+
+**The text is taken from a mirror**, `spa5k/tafsir_api`, which copies what
+quran.com and altafsir.com carry. That indirection is acceptable *here and only
+here*: the underlying work is five centuries old, so there is no licence to
+inherit from the host — only a transcription to check. It is pinned by SHA-256 in
+the build script so the transcription cannot change under the app silently.
+
+**226 verses have no note, and that is the commentary rather than a gap.** The
+two Jalals pass over the plain formulas — "those who believe and do righteous
+deeds", and the like — that need no gloss. This was checked rather than assumed:
+the independently-sourced *English* edition of the same tafsir carries, for
+exactly those verses, the verse restated with nothing added. Those verses get no
+row, and the app says the commentary has no note here — it does not show a blank,
+and it does not borrow the note from the verse above, which would print a gloss
+of one verse under another. `TafsirRepositoryTests` pins the count.
+
+**What is not verified:** nobody on this project has read the commentary against
+a printed edition. It is not in the same position as the adhkar — this is a
+famous text with a fixed wording, transcribed by several independent projects
+that agree — but the transcription has had no line-by-line check here, and this
+note should not be deleted until it has.
+
 ### Tasbih presets
 
 Written out in the build script rather than sourced from anywhere. They are five
@@ -255,6 +314,15 @@ to one hundred; the hundreds on *la ilaha illallah* and *astaghfirullah* are the
 counts most commonly given for them as a daily practice. Other forms are reported
 for all five. If the counter ever lets a user set their own target, that stops
 being a caveat and becomes a setting — which is the better answer.
+
+## Rebuilding `tafsir.sqlite`
+
+```bash
+python3 Tools/CorpusBuilder/build_tafsir_db.py
+```
+
+Build `quran.sqlite` first — the tafsir is checked against the verses it comments
+on, and the script refuses to run without it.
 
 ## Rebuilding `corpus.sqlite`
 

@@ -232,6 +232,16 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranSearchEmpty = "quran_search_empty"
     case quranSearchHint = "quran_search_hint"
 
+    // MARK: Tafsir
+
+    case tafsirTitle = "tafsir_title"
+    case tafsirOpen = "tafsir_open"
+    case tafsirSilent = "tafsir_silent"
+    case tafsirUnavailable = "tafsir_unavailable"
+    /// Precedes a number — "On verse 255" — rather than carrying one, so the digits go through
+    /// `LocalizationManager` instead of a format string.
+    case tafsirVerseLabel = "tafsir_verse_label"
+
     // MARK: The reading panel
 
     case readerOptionsTitle = "reader_options_title"

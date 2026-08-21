@@ -4306,6 +4306,91 @@
         }
       }
     },
+    "tafsir_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض تفسير هذه الآية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the commentary on this verse"
+          }
+        }
+      }
+    },
+    "tafsir_silent": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يرد في هذا التفسير تعليق على هذه الآية."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This commentary has no note on this verse."
+          }
+        }
+      }
+    },
+    "tafsir_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التفسير"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tafsir"
+          }
+        }
+      }
+    },
+    "tafsir_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تحميل التفسير."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The commentary could not be loaded."
+          }
+        }
+      }
+    },
+    "tafsir_verse_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفسير آية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On verse"
+          }
+        }
+      }
+    },
     "tasbih_count_hint": {
       "extractionState": "manual",
       "localizations": {

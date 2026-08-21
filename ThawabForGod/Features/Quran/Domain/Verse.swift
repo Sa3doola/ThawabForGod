@@ -48,9 +48,14 @@ nonisolated struct Verse: Identifiable, Hashable, Sendable {
 /// Its own type rather than a pair of `Int`s, because every navigation path in the feature —
 /// a search result, a bookmark, "continue reading" — carries one, and two bare integers in a
 /// row are exactly the kind of thing that gets passed in the wrong order.
-nonisolated struct VerseReference: Hashable, Sendable, Comparable, CustomStringConvertible {
+nonisolated struct VerseReference: Hashable, Sendable, Comparable, Identifiable, CustomStringConvertible {
     let surah: Int
     let verse: Int
+
+    /// Itself, the way `QuranReading` is its own id: a verse's address *is* its identity, so a
+    /// separate one would be a second thing to keep in step. It is what `sheet(item:)` presents
+    /// the tafsir on.
+    var id: Self { self }
 
     init(surah: Int, verse: Int) {
         self.surah = surah

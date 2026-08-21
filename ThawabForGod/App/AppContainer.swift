@@ -103,10 +103,18 @@ final class AppContainer {
     /// nothing about what is inside it, which is what makes a second one free.
     let quranCorpus: any CorpusDatabaseProviding
 
+    /// The commentaries, which are a third file for the third time the same argument holds: a
+    /// different upstream, a different licence — public domain by age rather than by permission —
+    /// and a size that grows with every edition added rather than staying put.
+    let tafsirCorpus: any CorpusDatabaseProviding
+
     // MARK: Quran
 
     let quranRepository: any QuranRepositoring
     let getQuran: GetQuranUseCase
+
+    let tafsirRepository: any TafsirRepositoring
+    let getTafsir: GetTafsirUseCase
 
     /// The reader's own marks — bookmarks and where they left off. The other half of the Quran's
     /// storage split: `quranCorpus` above is read-only and bundled, this writes to the same
@@ -174,6 +182,7 @@ final class AppContainer {
         hijriDates: any HijriDateServicing = HijriDateService(),
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
         quranCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "quran"),
+        tafsirCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "tafsir"),
         fallbackCoordinates: Coordinates = .makkah,
         // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
         // elsewhere) is a real call into the system's background-task service — unlike
@@ -280,6 +289,12 @@ final class AppContainer {
         self.quranRepository = quranRepository
         self.getQuran = GetQuranUseCase(repository: quranRepository)
         self.readerSettings = ReaderSettings(settingsStore: settingsStore)
+
+        // And a third time, over the commentaries.
+        let tafsirRepository = TafsirRepository(database: tafsirCorpus)
+        self.tafsirCorpus = tafsirCorpus
+        self.tafsirRepository = tafsirRepository
+        self.getTafsir = GetTafsirUseCase(repository: tafsirRepository)
 
         let quranProgressRepository = QuranProgressRepository(
             modelContainer: persistence.container
@@ -537,6 +552,23 @@ final class AppContainer {
             activity: activityRecorder
         )
         cachedQuranViewModel = viewModel
+        return viewModel
+    }
+
+    private var cachedTafsirViewModel: TafsirViewModel?
+
+    /// The tafsir sheet's view model, built on first use and kept.
+    ///
+    /// One for the app rather than one per verse: the sheet shows a single verse at a time, and
+    /// `TafsirSheet`'s `.task(id:)` reloads it when the reader taps another. Rebuilding it per
+    /// row would put a view model inside a `LazyVStack` child, which the scroll throws away.
+    func tafsirViewModel() -> TafsirViewModel {
+        if let cachedTafsirViewModel {
+            return cachedTafsirViewModel
+        }
+
+        let viewModel = TafsirViewModel(useCase: getTafsir)
+        cachedTafsirViewModel = viewModel
         return viewModel
     }
 
