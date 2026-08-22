@@ -8,8 +8,9 @@ import SwiftUI
 /// The app's first branch: onboarding, or the main interface.
 ///
 /// A `switch` over the router's destination — no `AnyView`, and no conditional modifier that
-/// would leave both branches half-alive. The main interface is a tab bar; what goes in it is
-/// `MainTabView`'s business, and this view stays about the branch.
+/// would leave both branches half-alive. What the main interface *looks* like — a tab bar or a
+/// sidebar, depending on how wide the window is — is `MainInterfaceView`'s business, and this
+/// view stays about the branch.
 ///
 /// It is also where the reminder window is kept filled, because the composition root is the only
 /// layer entitled to know that a preference change and a notification schedule have anything to
@@ -34,7 +35,7 @@ struct RootView: View {
             )
 
         case .home:
-            MainTabView(container: container)
+            MainInterfaceView(container: container)
             // Runs once when this branch appears — which covers both launching into Home and
             // arriving from the last step of onboarding — and again whenever anything the
             // pending reminders were built from changes.

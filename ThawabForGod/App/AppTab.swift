@@ -42,3 +42,38 @@ nonisolated enum AppTab: String, Hashable, CaseIterable, Sendable {
         }
     }
 }
+
+extension AppTab {
+    /// The sections this platform actually shows, in the order the sidebar and the tab bar
+    /// both present them.
+    ///
+    /// One list rather than two, because a tab bar and a sidebar are two renderings of the same
+    /// set — a section added to only one of them is a section the iPad can reach and the iPhone
+    /// cannot. `MainTabView` and `MainSplitView` both build from here.
+    ///
+    /// The Mac is missing `settings` for the reason the toolbar gear was: that build reaches the
+    /// same screen through the `Settings` scene and ⌘,, and a sidebar row would be a second door
+    /// to the same room — with a worse problem than duplication, since both doors would bind the
+    /// one `SettingsCoordinator.path` to a stack of their own.
+    static var visible: [AppTab] {
+        #if os(macOS)
+        [.home, .quran, .hadith, .adhkar]
+        #else
+        [.home, .quran, .hadith, .adhkar, .settings]
+        #endif
+    }
+
+    /// What the tab bar and the sidebar call this section.
+    ///
+    /// A key rather than a string: the label has to resolve through `LocalizationManager`, and
+    /// naming it here keeps the two presentations from drifting apart.
+    var titleKey: L10nKey {
+        switch self {
+        case .home: .homeTabLabel
+        case .quran: .quranTitle
+        case .hadith: .hadithTitle
+        case .adhkar: .adhkarTitle
+        case .settings: .settingsTitle
+        }
+    }
+}

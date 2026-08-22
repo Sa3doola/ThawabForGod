@@ -13,8 +13,16 @@ import SwiftUI
 /// accessibility size six entries cannot share a phone's width without truncating a name or a
 /// time, and truncating either is worse than scrolling — so the row becomes scrollable instead.
 /// `ViewThatFits` could pick between them, but only by measuring an ideal width that an evenly
-/// divided stack does not really have; the type size is the thing that actually decides, so it
+/// divided grid does not really have; the type size is the thing that actually decides, so it
 /// is what the code asks about.
+///
+/// **A grid rather than an `HStack`, because only one of them actually divides evenly.** This
+/// row was an `HStack` of entries each carrying `.frame(maxWidth: .infinity)`, which reads like
+/// six equal columns and is not: a stack gives every child its ideal width first and shares out
+/// only what is *left over*. "Dhuhr" over "12:25 PM" has a wider ideal than "Asr" over "3:47 PM",
+/// so it kept that head start and the columns came out uneven — with the marker capsule a
+/// different width depending on which prayer was next. `GridItem(.flexible())` divides the whole
+/// width instead, so the columns are equal whatever the times happen to read.
 struct DayPrayerRow: View {
     let state: NextPrayerState
 
@@ -26,13 +34,28 @@ struct DayPrayerRow: View {
                 HStack(alignment: .top, spacing: 12) { entries(distributed: false) }
             }
         } else {
-            HStack(alignment: .top, spacing: 2) { entries(distributed: true) }
+            LazyVGrid(columns: columns, alignment: .center, spacing: 0) {
+                entries(distributed: true)
+            }
         }
     }
 
-    /// - Parameter distributed: whether each entry should claim an equal share of the width. The
-    ///   frame goes on the entries rather than on the `ForEach`, which a stack would otherwise
-    ///   treat as a single child and stretch as one block.
+    /// One equal column per marker.
+    ///
+    /// `minimum: 0` so the division stays equal at every width rather than falling back on
+    /// `GridItem`'s default floor — the entries shrink their own text, which is the behaviour
+    /// this row wants when space runs short.
+    private var columns: [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(minimum: 0), spacing: 2),
+            count: max(state.times.count, 1)
+        )
+    }
+
+    /// - Parameter distributed: whether each entry should fill its column. It is the entry that
+    ///   carries the frame, not the `ForEach` — and filling matters for more than the text: the
+    ///   capsule behind the next prayer is drawn on this frame, so without it the highlight
+    ///   would hug the label instead of matching the column beside it.
     @ViewBuilder
     private func entries(distributed: Bool) -> some View {
         ForEach(state.times) { time in

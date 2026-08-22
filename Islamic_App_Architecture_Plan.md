@@ -238,8 +238,8 @@ QUL provides Mushaf‑layout data so you can render pages like the printed Musha
 ---
 
 ## 9. Multiplatform notes
-- Adaptive SwiftUI layouts: `NavigationSplitView` for iPad/macOS, `NavigationStack`/tabs for iPhone.
-- macOS: window sizing, menu commands, keyboard support; CoreLocation prompts differ.
+- Adaptive SwiftUI layouts: `NavigationSplitView` for iPad/macOS, `NavigationStack`/tabs for iPhone. **Done.** `MainInterfaceView` branches on `horizontalSizeClass`; `AppTab.visible` is the one list both arrangements read, and `AppSectionView` is the content both show. Two columns, not three — see `CLAUDE.md` for why.
+- macOS: window sizing, menu commands, keyboard support; CoreLocation prompts differ. **Mostly done** — `defaultSize`/`windowResizability` on the `WindowGroup`, ⌘1…⌘4 for the sections. iPad hardware-keyboard shortcuts are not wired yet.
 - Later: watchOS "next prayer" complication; visionOS build. Adhan already supports both platforms.
 - RTL: build every screen to mirror cleanly for Arabic from day one.
 
@@ -247,7 +247,7 @@ QUL provides Mushaf‑layout data so you can render pages like the printed Musha
 
 ## 10. Open‑source & repo strategy
 - **License:** MIT or Apache‑2.0 (maximizes reuse and learning). Match the license of any bundled data.
-- **Repo hygiene:** clear README (architecture diagram, setup, data‑attribution), `CONTRIBUTING.md`, `LICENSE`, `ARCHITECTURE.md`, tests, CI (GitHub Actions running XCTest + build for each platform).
+- **Repo hygiene:** clear README (architecture diagram, setup, data‑attribution), `CONTRIBUTING.md`, `LICENSE`, `ARCHITECTURE.md`, tests, CI. **CI is Xcode Cloud, not GitHub Actions** — the repo side is done (shared scheme, pinned `Package.resolved`) and the workflow itself has to be created once in App Store Connect by a Developer Program member. Reasoning and the exact workflow to create are in `CI.md`.
 - **Learning framing:** annotate the code and docs so the architecture is legible to newcomers — this is part of the product's purpose and strengthens your portfolio.
 - **Attribution page** in‑app crediting every data source.
 
@@ -271,11 +271,13 @@ QUL provides Mushaf‑layout data so you can render pages like the printed Musha
 7. Qibla (reuse the engine).
 8. Adhkar (bundled SQLite) → then Tasbih → 99 Names.
 9. Settings (theme, digits, language/RTL, day‑night, 12/24h, reset tips).
-10. Polish, tests, CI → **publish V1**.
+10. Polish, tests, CI → **publish V1**. *In progress. The adaptive layout is done and the CI prerequisites are committed; the one remaining hard blocker is the corpus verification pass required by §11 — the adhkar text and the English meanings of the 99 Names are still unverified, and `Resources/Corpus/README.md` holds the standing warnings.*
 11. Phase 2: Quran + tafsir module.
 12. Phase 3: Hadith + Memorization.
 
-**Next step:** build the **Onboarding vertical slice** (step 3) — full feature module through all layers, with launch routing gated on the persisted completion flag. TipKit (step 4) follows once Home and Onboarding are proven.
+**Built beyond this plan:** two slices that were not in the original scope and belong in it now — `Core/PrayerTracker` (marking the day's prayers off, with a streak) and `Core/Activity` (recent items), plus a Home screen the reader arranges themselves. Steps 2–9 are otherwise complete, and Phases 2 and 3 both landed ahead of step 10.
+
+**Next step:** the corpus verification pass (§11), which is the last thing standing between this and a publishable V1 — and which is a reviewing job rather than a coding one. After that: the `Memorize` mode spanning adhkar, the 99 Names and short surahs (§7.2), which `Core/Memorization` was already factored for; the hadith deck is the only one built so far.
 
 ---
 

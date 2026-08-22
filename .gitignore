@@ -35,7 +35,9 @@ playground.xcworkspace
 .build/
 .swiftpm/
 Packages/
-Package.resolved
+# Package.resolved is deliberately NOT ignored. It pins Adhan and GRDB to exact
+# revisions, and a CI runner that resolves them freshly would otherwise build a
+# different app from the one tested here.
 
 # CocoaPods
 Pods/

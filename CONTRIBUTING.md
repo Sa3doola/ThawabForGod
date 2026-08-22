@@ -54,6 +54,12 @@ xcodebuild build -scheme ThawabForGod -project ThawabForGod.xcodeproj \
 **All four must be clean — warnings count as failures.** Run them before
 opening a PR; CI runs the same commands and will fail the same way.
 
+One caveat on the fourth: the `SWIFT_VERSION=6.0` check currently crashes the
+compiler in IRGen rather than reporting a diagnostic, and does so on a clean
+checkout of older commits too — a toolchain bug, not a problem in this source.
+Until the toolchain moves, its failure tells you nothing. It is the one command
+CI does not run; see [CI.md](CI.md).
+
 ## Code conventions, briefly
 
 The full list is in `CLAUDE.md`; the ones that come up most often:

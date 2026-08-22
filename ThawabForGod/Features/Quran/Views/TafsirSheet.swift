@@ -12,6 +12,11 @@ import SwiftUI
 /// lose their place in it. A sheet leaves the verse where it is and can be dismissed with the
 /// thumb that opened it.
 ///
+/// **The thumb is an iOS answer, and the Mac needed its own.** A Mac sheet has no swipe-down and
+/// does not close on Escape, so this panel came up with no way out of it at all — the window was
+/// stuck until the app was quit. Hence the Done button below, `#if os(macOS)`: the iPhone and the
+/// iPad keep the chrome-free sheet this was designed as, because there the swipe is real.
+///
 /// It carries **no edition picker**, and that is a scope decision rather than an oversight: there
 /// is one edition in the bundle today, and a picker over a single row is a control that cannot be
 /// used. The repository, the schema and `GetTafsirUseCase` are all written for many — see
@@ -23,6 +28,9 @@ struct TafsirSheet: View {
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+    #if os(macOS)
+    @Environment(\.dismiss) private var dismiss
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -39,6 +47,14 @@ struct TafsirSheet: View {
             .navigationTitle(l10n.string(.tafsirTitle))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #else
+            // Writes `nil` back through `ReaderView.openTafsir`, which is what calls
+            // `QuranCoordinator.closeTafsir()` — the same path the swipe takes on iOS.
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(l10n.string(.doneAction)) { dismiss() }
+                }
+            }
             #endif
         }
         // Re-run when the reader taps a different verse without closing the sheet, which is what

@@ -51,11 +51,11 @@ struct HomeCoordinatorView: View {
             )
 //                .toolbar { toolbar }
                 .navigationDestination(for: HomeCoordinator.Destination.self, destination: destination)
+                // How the panel is sized is `PrayerTimesSheet`'s own business — it is the only
+                // view that knows how tall its content wants to be, and the answer differs by
+                // platform. See the detents and the macOS frame down there.
                 .sheet(isPresented: $coordinator.isShowingPrayerTimes) {
                     PrayerTimesSheet(viewModel: prayerTimesViewModel)
-                        // Two heights: the glance — the date and the six times — and the read,
-                        // which reaches the night section below them.
-                        .presentationDetents([.medium, .large])
                 }
         }
     }

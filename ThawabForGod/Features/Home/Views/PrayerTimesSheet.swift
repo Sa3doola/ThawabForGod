@@ -9,14 +9,33 @@ import SwiftUI
 /// against them, and where the night divides.
 ///
 /// A sheet rather than a push, because it is a *look* rather than a place — the user comes to
-/// check a time and goes straight back to what they were doing. `.presentationDetents` gives it
-/// two heights so the same screen serves the glance and the read.
+/// check a time and goes straight back to what they were doing.
+///
+/// **It opens full**, and the panel sizes itself. Both of those are the sheet's own business
+/// rather than the presenting view's, which is why the modifiers are down here next to the
+/// content they measure — the same place `ReaderSettingsSheet` keeps its own.
+///
+/// The two platforms need opposite things and neither one's answer is a no-op on the other:
+///
+/// - **iOS** gets detents, opening at `.large` because the day is six markers, a night section
+///   and a tracker header — more than half a phone screen holds. `.medium` stays *offered*, so
+///   the reader can still drag it down to glance at the times over whatever was behind it, but
+///   it is no longer where the sheet starts.
+/// - **macOS** gets an explicit frame, because it has to. A Mac sheet is sized by its content's
+///   ideal size, and a `List` has no ideal height to report — so without this the panel came up
+///   as a title bar and a Done button with nothing between them, which is exactly what it did.
+///   `.presentationDetents` does not fill that gap: it compiles on macOS and does nothing.
 struct PrayerTimesSheet: View {
     let viewModel: PrayerTimesSheetViewModel
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
+
+    /// Where the sheet opens, and where the reader has since dragged it to. Bound rather than
+    /// fixed, because `.presentationDetents([.large])` alone would take the glance away instead
+    /// of just starting past it.
+    @State private var detent: PresentationDetent = .large
 
     var body: some View {
         NavigationStack {
@@ -45,6 +64,14 @@ struct PrayerTimesSheet: View {
                 message: { l10n.string($0.explanationKey) }
             )
         }
+        #if os(macOS)
+        // The ideal is what a comfortable window gets; the minimum has to stay under the
+        // window's own minimum content height (480, set in `ThawabForGodApp`) or a sheet on a
+        // shrunken window would be clipped rather than scrolled.
+        .frame(minWidth: 420, idealWidth: 520, minHeight: 400, idealHeight: 640)
+        #else
+        .presentationDetents([.medium, .large], selection: $detent)
+        #endif
     }
 
     @ViewBuilder
