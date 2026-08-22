@@ -186,6 +186,10 @@ final class AppContainer {
     let namesCoordinator = NamesCoordinator()
     let settingsCoordinator = SettingsCoordinator()
 
+    /// Where a link from outside the app waits until `RootView` can act on it — a quick action,
+    /// a Dock menu item, a widget tap. See `DeepLinkInbox` for why the wait is necessary.
+    let deepLinks = DeepLinkInbox()
+
     /// Where prayer times are computed for when onboarding captured nothing — a user who
     /// skipped the location screen entirely. Also the seed `HomeViewModel` shows for its first
     /// frame, before `locationService` has produced a live fix.
@@ -400,6 +404,11 @@ final class AppContainer {
         // Networking is optional, but knowing whether it is available is cheap and lets the
         // UI gate online-only actions from launch.
         reachability.start()
+
+        // The scene delegate and the Dock menu are constructed by UIKit and AppKit with no
+        // argument list to inject anything through, so the composition root publishes the inbox
+        // for them rather than being reached into. It is still the container that owns it.
+        DeepLinkInbox.makeCurrent(deepLinks)
     }
 
     // MARK: Prayer calculation

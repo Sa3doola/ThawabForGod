@@ -245,6 +245,40 @@ QUL provides Mushaf‑layout data so you can render pages like the printed Musha
 
 ---
 
+## 9a. Beyond the app window — quick actions, widgets, menu bar
+
+Everything above assumes the reader opens the app. These three do not: a long press on the icon, a glance at the Home Screen or the Lock Screen, a countdown in the Mac's menu bar. They are one piece of work rather than three because they share a prerequisite — a way in from outside the process — and, on Apple's platforms, that is a URL.
+
+> **Why now.** `CLAUDE.md` has claimed since the tab bar landed that navigation state lives outside the view tree so that "a deep link (a tapped reminder, a widget) can move between sections without reaching into the view hierarchy". Nothing had ever tested that claim. These slices do.
+
+### 9a.1 Deep links and quick actions — **Done.**
+
+`DeepLink` is the app's external vocabulary: nine destinations, one `noor://` scheme, a total round trip between the two. Deliberately **not** `AppRoute` — `AppRoute` carries feature-Domain payloads a second process cannot see, and more importantly the two have different lifetimes. A route is internal wiring and may be reshaped freely; a link is a *promise*, because iOS caches shortcut items and widget URLs across builds. `AppContainer.open(_ link:)` is the single place the promise is reconciled with whatever the app's internals happen to look like today.
+
+`AppQuickAction` is the list on the icon, shaped exactly like `HomeShortcut`: declaration order is display order, `isAvailable` is the one switch that removes an entry, and `visible` caps at the four iOS will show rather than letting the system drop the tail silently. macOS reads the same list into its Dock menu.
+
+Delivery is asymmetric, and that is why there is an `AppDelegate` at all. A widget tap is a URL and SwiftUI hands it to `.onOpenURL`. A quick action is a `UIApplicationShortcutItem` delivered to a `UIWindowSceneDelegate`, which a SwiftUI app does not have unless it asks — and on a cold launch it arrives before `RootView` has a body. Hence `DeepLinkInbox`: the delegate posts, the view consumes when it is ready.
+
+### 9a.2 The shared target
+
+A widget runs in its own process and can share nothing with the app by default. Three things have to change: a folder of source compiled into both targets, an **App Group** so `UserDefaults` is visible from both, and the localized strings and colour assets in both bundles.
+
+The folder is `Shared/` — prayer times, settings, localization, theming, the clock — chosen by one rule: *a subsystem belongs there when a second process needs it and it costs no heavy dependency to take.* Everything with SwiftData, GRDB or a corpus file behind it stays in `Core/`, which keeps the widget inside WidgetKit's memory budget and its link line down to Adhan.
+
+### 9a.3 Widgets
+
+Next prayer and countdown, small and medium on the Home Screen, the accessory families on the Lock Screen, and the same extension on the Mac desktop. The compute path needs no new code: `GetPrayerScheduleUseCase` is already `nonisolated`, synchronous and Foundation-plus-Adhan only.
+
+Two decisions worth recording. The timeline holds **one entry per prayer transition**, not one per minute — the countdown is a system-rendered timer text that animates without waking the extension. And a widget with **no stored coordinates says so** rather than falling back to Makkah: that is §4.5's reminder rule ("no coordinates, no reminders"), and it binds harder here, because a wrong time on the Home Screen is wrong all day with nobody looking at it.
+
+### 9a.4 The Mac menu bar
+
+An `NSStatusItem` carrying the next prayer and a live countdown, and an `NSPopover` with the day's schedule on click — the Mac idiom for exactly what the Home Screen widget does, and the reason it is AppKit rather than `MenuBarExtra` is that the *label* has to redraw on a ticker.
+
+Launch at login is `SMAppService.mainApp`, behind a protocol so Domain never imports ServiceManagement. The state that matters is `requiresApproval`: macOS has recorded the request and the user must confirm it in System Settings → General → Login Items. A toggle that silently snaps back is the failure that state exists to prevent, so the row says so and offers the button that opens the page.
+
+---
+
 ## 10. Open‑source & repo strategy
 - **License:** MIT or Apache‑2.0 (maximizes reuse and learning). Match the license of any bundled data.
 - **Repo hygiene:** clear README (architecture diagram, setup, data‑attribution), `CONTRIBUTING.md`, `LICENSE`, `ARCHITECTURE.md`, tests, CI. **CI is Xcode Cloud, not GitHub Actions** — the repo side is done (shared scheme, pinned `Package.resolved`) and the workflow itself has to be created once in App Store Connect by a Developer Program member. Reasoning and the exact workflow to create are in `CI.md`.
@@ -274,10 +308,11 @@ QUL provides Mushaf‑layout data so you can render pages like the printed Musha
 10. Polish, tests, CI → **publish V1**. *In progress. The adaptive layout is done and the CI prerequisites are committed; the one remaining hard blocker is the corpus verification pass required by §11 — the adhkar text and the English meanings of the 99 Names are still unverified, and `Resources/Corpus/README.md` holds the standing warnings.*
 11. Phase 2: Quran + tafsir module.
 12. Phase 3: Hadith + Memorization.
+13. Beyond the app window (§9a): deep links + quick actions, widgets, the Mac menu bar. *In progress. Deep links and quick actions are done; the widget and the menu bar are next, and both wait on the `Shared/` folder and the App Group described in §9a.2.*
 
 **Built beyond this plan:** two slices that were not in the original scope and belong in it now — `Core/PrayerTracker` (marking the day's prayers off, with a streak) and `Core/Activity` (recent items), plus a Home screen the reader arranges themselves. Steps 2–9 are otherwise complete, and Phases 2 and 3 both landed ahead of step 10.
 
-**Next step:** the corpus verification pass (§11), which is the last thing standing between this and a publishable V1 — and which is a reviewing job rather than a coding one. After that: the `Memorize` mode spanning adhkar, the 99 Names and short surahs (§7.2), which `Core/Memorization` was already factored for; the hadith deck is the only one built so far.
+**Next step:** the corpus verification pass (§11) remains the last hard blocker on a publishable V1, and it is a reviewing job rather than a coding one. Running alongside it: §9a, which is the first work in this project to put anything outside the app's own window. After both: the `Memorize` mode spanning adhkar, the 99 Names and short surahs (§7.2), which `Core/Memorization` was already factored for; the hadith deck is the only one built so far.
 
 ---
 

@@ -17,5 +17,30 @@
 	<array>
 		<string>com.Sa3dola.ThawabForGod.refreshReminders</string>
 	</array>
+
+	<!--
+	 The one URL scheme, and the reason it exists: a widget tap, a Home Screen quick
+	 action and a Dock menu item all have to name a destination from outside the
+	 process, and a URL is the only vocabulary all three can carry. See DeepLink.swift,
+	 which is the single place these hosts are written down on the Swift side.
+
+	 Here for the same reason the key above is: CFBundleURLTypes is an array of
+	 dictionaries, which INFOPLIST_KEY_* synthesis cannot express.
+
+	 Both platforms. macOS registers the scheme through LaunchServices from the same key.
+	-->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.Sa3dola.ThawabForGod</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>noor</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

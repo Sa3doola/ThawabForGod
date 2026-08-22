@@ -21,6 +21,11 @@ import SwiftUI
 /// On iOS, every foreground refill also books the next background top-up through
 /// `BackgroundRefreshScheduler`, so a phone that is never reopened still gets refilled — see
 /// that type's documentation for the one manual Xcode step it depends on.
+///
+/// It is also where links from outside the app land, for the same reason: a `noor://` URL, a
+/// quick action and a Dock menu item all name a section, and the composition root is the only
+/// layer entitled to move between them. Both arrive on the `.home` branch only — a link during
+/// onboarding is dropped rather than queued, because there is no interface yet for it to open.
 struct RootView: View {
     let container: AppContainer
 
@@ -46,6 +51,29 @@ struct RootView: View {
                 guard phase == .active else { return }
                 Task { await refillReminders() }
             }
+            // Widget taps and `noor://` URLs. SwiftUI delivers these straight to the view tree
+            // on both platforms, so no delegate is involved — a URL that names nothing this
+            // build understands decodes to `nil` and is ignored.
+            .onOpenURL { url in
+                guard let link = DeepLink(url: url) else { return }
+                container.open(link)
+            }
+            // Quick actions, which do not come through `onOpenURL`. `initial: true` is what
+            // covers the cold-launch case: the scene delegate posts the link before this view
+            // has a body, so there is no *change* to observe — only a value already waiting.
+            .onChange(of: container.deepLinks.pending, initial: true) { _, _ in
+                guard let link = container.deepLinks.consume() else { return }
+                container.open(link)
+            }
+            #if os(iOS)
+            // Registered on the way in and again on the way out. The system stores the finished
+            // titles, so this has to run at least once per launch to be right in the language
+            // the process is actually running in.
+            .onChange(of: scenePhase, initial: true) { _, phase in
+                guard phase == .active || phase == .background else { return }
+                QuickActionsService(localization: container.localizationManager).register()
+            }
+            #endif
         }
     }
 

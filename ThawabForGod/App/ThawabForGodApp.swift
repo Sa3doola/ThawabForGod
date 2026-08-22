@@ -12,6 +12,18 @@ import SwiftUI
 struct ThawabForGodApp: App {
     @State private var container = AppContainer()
 
+    // Both platforms want an application delegate, and for related but not identical reasons.
+    // iOS needs one so it can supply a scene configuration: a Home Screen quick action arrives
+    // as a `UIApplicationShortcutItem` on a `UIWindowSceneDelegate`, and a SwiftUI app has no
+    // scene delegate unless it asks for one. macOS needs one because `applicationDockMenu(_:)`
+    // is the only way to put anything in the Dock menu. Neither delegate routes anything — see
+    // `DeepLinkInbox`.
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #elseif os(macOS)
+    @NSApplicationDelegateAdaptor(MacAppDelegate.self) private var appDelegate
+    #endif
+
     var body: some Scene {
         WindowGroup {
             RootView(container: container)
