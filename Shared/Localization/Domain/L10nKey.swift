@@ -400,6 +400,13 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case tipNamesTapTitle = "tip_names_tap_title"
     case tipNamesTapMessage = "tip_names_tap_message"
 
+    // MARK: Widgets
+
+    case widgetNextPrayerName = "widget_next_prayer_name"
+    case widgetNextPrayerDescription = "widget_next_prayer_description"
+    case widgetNoLocation = "widget_no_location"
+    case widgetTimesUnavailable = "widget_times_unavailable"
+
     // MARK: Hijri calendar
 
     case hijriMonthMuharram = "hijri_month_muharram"

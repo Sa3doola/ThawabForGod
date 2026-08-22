@@ -56,6 +56,9 @@ final class AppContainer {
     let hijriDates: any HijriDateServicing
     let reachability = ReachabilityMonitor()
 
+    /// Told when anything the widgets are drawn from has changed. See `WidgetRefreshing`.
+    let widgets: any WidgetRefreshing
+
     // MARK: Prayer times
 
     let prayerTimeEngine: any PrayerTimeCalculating
@@ -196,7 +199,7 @@ final class AppContainer {
     private let fallbackCoordinates: Coordinates
 
     init(
-        settingsStore: any SettingsStore = UserDefaultsSettingsStore(),
+        settingsStore: any SettingsStore = UserDefaultsSettingsStore(defaults: SharedDefaults.store),
         numberFormatting: any NumberFormattingService = LocaleNumberFormattingService(),
         timeFormatting: any TimeFormattingService = LocaleTimeFormattingService(),
         persistence: PersistenceController = .makeDefault(),
@@ -207,6 +210,7 @@ final class AppContainer {
         clock: any ClockService = SystemClockService(),
         notificationService: (any NotificationService)? = nil,
         tipsService: any TipsServicing = TipsService(),
+        widgets: any WidgetRefreshing = WidgetCenterRefresher(),
         hijriDates: any HijriDateServicing = HijriDateService(),
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
         quranCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "quran"),
@@ -236,7 +240,8 @@ final class AppContainer {
         // Built here rather than defaulted in the signature: constructing a
         // `CLLocationManager` has real side effects, and a default argument would run it even
         // for a caller supplying its own.
-        self.locationService = locationService ?? CoreLocationService()
+        self.widgets = widgets
+        self.locationService = locationService ?? CoreLocationService(settingsStore: settingsStore)
         self.headingProvider = headingProvider ?? CoreLocationHeadingProvider()
         // Same reason as the two above: constructing a `CLGeocoder` in a default argument would
         // run it even for a caller supplying its own.
@@ -409,6 +414,13 @@ final class AppContainer {
         // argument list to inject anything through, so the composition root publishes the inbox
         // for them rather than being reached into. It is still the container that owns it.
         DeepLinkInbox.makeCurrent(deepLinks)
+
+        // An install that predates the App Group has its preferences in the process's own
+        // defaults, where no extension can see them. Once, on the first launch of a build that
+        // has the group, they are copied across — see `SettingsGroupMigration` for why it copies
+        // only what is already there. A no-op on every launch after, and a no-op in tests, whose
+        // `settingsStore` is injected and never touches `UserDefaults` at all.
+        SettingsGroupMigration.run()
     }
 
     // MARK: Prayer calculation

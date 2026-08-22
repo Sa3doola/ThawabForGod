@@ -77,13 +77,20 @@ struct RootView: View {
         }
     }
 
-    /// Refills the pending window, then — on iOS — books the next background top-up so the
-    /// window keeps refilling even if the app is never reopened.
+    /// Refills the pending window, books the next background top-up on iOS, and tells the
+    /// widgets to redraw — the three things that go stale together.
     private func refillReminders() async {
         await container.notificationService.refreshSchedule()
         #if os(iOS)
         container.backgroundRefreshScheduler.scheduleNextRefresh()
         #endif
+
+        // The widgets are drawn from the same three things the pending reminders are — the
+        // position, the calculation choices, the clock — so whatever made this run made their
+        // rendered timelines stale too. Reloading here rather than from a trigger of its own is
+        // the point: a second trigger would be a second thing to keep in step, and the failure
+        // when the two drifted would be a Home Screen quietly showing yesterday's answer.
+        container.widgets.reloadAll()
     }
 
     /// Everything a pending reminder was built from. When any part of it changes, the window on

@@ -22,6 +22,13 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case latitude
     case longitude
 
+    // Where the app last actually was, as opposed to where onboarding was told it would be.
+    // A *cache*, not a preference — the only two keys here that the user never chose — which is
+    // why they are separate from the pair above rather than overwriting it. See
+    // `SettingsStore+PrayerTimes` for the rule, and `CoreLocationService` for the one writer.
+    case lastKnownLatitude
+    case lastKnownLongitude
+
     // How Home is arranged: which sections, in what order, and which shortcut circles. One key
     // holding the whole value as JSON — see `HomeLayoutRepository` for why it is not nine.
     case homeLayout

@@ -16,15 +16,23 @@ import Foundation
 /// Accuracy is deliberately coarse. Prayer times and the Qibla shift by seconds and fractions
 /// of a degree over a kilometre, so asking for a precise fix would spend battery and privacy
 /// on precision nobody sees.
+/// It is also the app's single **writer** of the last-known position, and that is deliberate
+/// rather than incidental. Every live fix in the app comes through `currentCoordinates()`, so
+/// recording here means no call site anywhere has to remember to — and there is exactly one
+/// place to look when the cached position is wrong. What reads it back is a widget or a
+/// reminder, neither of which may ask CoreLocation for itself; see
+/// `SettingsStore.bestKnownCoordinates`.
 @MainActor
 final class CoreLocationService: NSObject, LocationService {
     private let manager: CLLocationManager
+    private let settingsStore: any SettingsStore
 
     private var authorizationRequest: CheckedContinuation<LocationAuthorization, Never>?
     private var coordinatesRequest: CheckedContinuation<Coordinates, Error>?
 
-    override init() {
+    init(settingsStore: any SettingsStore) {
         manager = CLLocationManager()
+        self.settingsStore = settingsStore
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyKilometer
@@ -73,6 +81,13 @@ final class CoreLocationService: NSObject, LocationService {
     }
 
     private func resumeCoordinatesRequest(with result: Result<Coordinates, Error>) {
+        // Recorded whether or not anybody is still waiting for it. A request superseded by a
+        // newer one still produced a real reading, and the cache is about where the device is
+        // rather than about who asked.
+        if case .success(let coordinates) = result {
+            settingsStore.recordLastKnown(coordinates)
+        }
+
         guard let request = coordinatesRequest else { return }
         coordinatesRequest = nil
         request.resume(with: result)

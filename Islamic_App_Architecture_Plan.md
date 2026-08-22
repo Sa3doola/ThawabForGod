@@ -259,13 +259,13 @@ Everything above assumes the reader opens the app. These three do not: a long pr
 
 Delivery is asymmetric, and that is why there is an `AppDelegate` at all. A widget tap is a URL and SwiftUI hands it to `.onOpenURL`. A quick action is a `UIApplicationShortcutItem` delivered to a `UIWindowSceneDelegate`, which a SwiftUI app does not have unless it asks — and on a cold launch it arrives before `RootView` has a body. Hence `DeepLinkInbox`: the delegate posts, the view consumes when it is ready.
 
-### 9a.2 The shared target
+### 9a.2 The shared target — **Done.**
 
 A widget runs in its own process and can share nothing with the app by default. Three things have to change: a folder of source compiled into both targets, an **App Group** so `UserDefaults` is visible from both, and the localized strings and colour assets in both bundles.
 
 The folder is `Shared/` — prayer times, settings, localization, theming, the clock — chosen by one rule: *a subsystem belongs there when a second process needs it and it costs no heavy dependency to take.* Everything with SwiftData, GRDB or a corpus file behind it stays in `Core/`, which keeps the widget inside WidgetKit's memory budget and its link line down to Adhan.
 
-### 9a.3 Widgets
+### 9a.3 Widgets — **Done.**
 
 Next prayer and countdown, small and medium on the Home Screen, the accessory families on the Lock Screen, and the same extension on the Mac desktop. The compute path needs no new code: `GetPrayerScheduleUseCase` is already `nonisolated`, synchronous and Foundation-plus-Adhan only.
 
@@ -308,7 +308,7 @@ Launch at login is `SMAppService.mainApp`, behind a protocol so Domain never imp
 10. Polish, tests, CI → **publish V1**. *In progress. The adaptive layout is done and the CI prerequisites are committed; the one remaining hard blocker is the corpus verification pass required by §11 — the adhkar text and the English meanings of the 99 Names are still unverified, and `Resources/Corpus/README.md` holds the standing warnings.*
 11. Phase 2: Quran + tafsir module.
 12. Phase 3: Hadith + Memorization.
-13. Beyond the app window (§9a): deep links + quick actions, widgets, the Mac menu bar. *In progress. Deep links and quick actions are done; the widget and the menu bar are next, and both wait on the `Shared/` folder and the App Group described in §9a.2.*
+13. Beyond the app window (§9a): deep links + quick actions, widgets, the Mac menu bar. *In progress. Deep links, quick actions, the `Shared/` target and the next-prayer widget are done; the Mac menu bar and launch-at-login are what remain.*
 
 **Built beyond this plan:** two slices that were not in the original scope and belong in it now — `Core/PrayerTracker` (marking the day's prayers off, with a streak) and `Core/Activity` (recent items), plus a Home screen the reader arranges themselves. Steps 2–9 are otherwise complete, and Phases 2 and 3 both landed ahead of step 10.
 

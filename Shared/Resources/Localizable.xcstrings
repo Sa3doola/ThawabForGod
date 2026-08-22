@@ -5343,6 +5343,74 @@
         }
       }
     },
+    "widget_next_prayer_description": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصلاة القادمة والوقت المتبقي لها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next prayer and how long is left."
+          }
+        }
+      }
+    },
+    "widget_next_prayer_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصلاة القادمة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next prayer"
+          }
+        }
+      }
+    },
+    "widget_no_location": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح نور لتحديد موقعك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Noor to set your location"
+          }
+        }
+      }
+    },
+    "widget_times_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حساب مواقيت الصلاة هنا اليوم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prayer times can’t be calculated here today"
+          }
+        }
+      }
+    },
     "×%@": {}
   },
   "version": "1.1"

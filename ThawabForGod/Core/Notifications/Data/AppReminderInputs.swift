@@ -10,7 +10,8 @@ import Foundation
 /// The position is the interesting part. It prefers a live reading, because a user who has
 /// travelled since onboarding should be reminded for where they are now — but a fix costs a
 /// round trip to CoreLocation and can fail for reasons that have nothing to do with the user,
-/// so what onboarding captured stands behind it. If neither answers, `coordinates` is `nil` and
+/// so the last position the app resolved stands behind it, and what onboarding captured behind
+/// that. If none of the three answers, `coordinates` is `nil` and
 /// the refresh schedules nothing at all; see `ReminderInputs` for why that is better than
 /// falling back to Makkah the way Home does.
 ///
@@ -47,6 +48,9 @@ struct AppReminderInputs: ReminderInputsProviding {
             return live
         }
 
-        return settingsStore.storedCoordinates
+        // Not `storedCoordinates`: a user who has travelled since onboarding and whose fix has
+        // just failed is better served by where the app last saw them than by where they said
+        // they were months ago. `CoreLocationService` keeps that cache; nothing here writes it.
+        return settingsStore.bestKnownCoordinates
     }
 }

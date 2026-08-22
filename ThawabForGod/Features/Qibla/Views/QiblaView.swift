@@ -142,7 +142,7 @@ private struct QiblaHint: View {
         QiblaView(
             viewModel: QiblaViewModel(
                 getQiblaInfo: GreatCircleQiblaInfoUseCase(engine: PrayerTimeEngine()),
-                locationService: CoreLocationService(),
+                locationService: CoreLocationService(settingsStore: settingsStore),
                 headingProvider: CoreLocationHeadingProvider(),
                 coordinates: Coordinates(latitude: 51.5074, longitude: -0.1278)
             ),

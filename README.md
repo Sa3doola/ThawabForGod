@@ -48,8 +48,11 @@ Two goals, held at once:
   setting rather than an in-app switcher — see `CLAUDE.md` for why.
 - **Quick actions and deep links** — long-press the app icon (or use the Dock
   menu on macOS) to jump straight to prayer times, Qibla, the adhkar or the
-  Mushaf. Every destination is also a `noor://` URL, which is the same door a
-  widget will come through.
+  Mushaf. Every destination is also a `noor://` URL.
+- **Widgets** — the next prayer and a live countdown, on the iPhone and iPad
+  Home Screen, the Lock Screen, and the Mac desktop. Computed in the widget's
+  own process from the same engine the app uses, so it works with no network;
+  with no stored location it says so rather than guessing a city.
 
 **Phase 2 (planned):** the Quran, verse-by-verse, with selectable tafsirs and
 a customizable reading experience.

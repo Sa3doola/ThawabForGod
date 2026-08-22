@@ -51,27 +51,49 @@ Core/<Subsystem>/
   UI/       SwiftUI glue — @Observable @MainActor managers, @Entry environment values
 ```
 
-`Core/Location`, `Core/Notifications`, `Core/Theming`, `Core/Localization`,
-`Core/Settings`, `Core/PrayerTimes`, `Core/Persistence` all follow it. Knowing
-the pattern once means knowing where to look in any of them: the protocol is
-always in `Domain`, the framework import is always in `Data`.
+`Core/Location`, `Core/Notifications`, `Core/Persistence` and every subsystem
+under `Shared/` all follow it. Knowing the pattern once means knowing where to
+look in any of them: the protocol is always in `Domain`, the framework import
+is always in `Data`.
+
+## `Shared/` — the code two processes run
+
+There are two source roots, not one. `Shared/` is compiled into **both** the
+app and the widget extension; `ThawabForGod/` is the app alone.
+
+The line between them is one rule: *a subsystem belongs in `Shared/` when a
+second process needs it and it costs no heavy dependency to take.* Everything
+there imports Foundation, SwiftUI, Observation or Adhan and nothing else —
+which is what keeps the widget's link line short and its memory inside
+WidgetKit's budget. Anything with SwiftData, GRDB, CoreLocation,
+UserNotifications or a corpus file behind it stays in `Core/`.
+
+The subsystems themselves are unchanged: same `Domain/Data/UI` split, same
+files. What moved is where they are compiled, not how they are shaped.
 
 ## Folder map
 
 ```
-ThawabForGod/
+Shared/            Compiled into BOTH targets — see the rule above
+├── PrayerTimes/       Adhan-backed engine — also the Qibla bearing's source
+├── Settings/          The one key/value store every preference writes through,
+│                      plus the App Group both processes read it from
+├── Localization/      AR/EN strings, digit system, clock format
+├── Theming/           Accent + appearance, no view ever branches on colorScheme
+├── Clock/             The current instant, and a heartbeat
+├── DeepLink/          The app's external URL vocabulary — a widget's way back in
+└── Resources/         Localizable.xcstrings + the namespaced colour assets
+
+ThawabForGod/       The app target
 ├── App/            Composition root: AppContainer (manual DI), app entry, routing
 ├── Core/           Cross-cutting infra — one Domain/Data/UI split per subsystem
-│   ├── PrayerTimes/    Adhan-backed engine — also the Qibla bearing's source
 │   ├── Location/       CoreLocation behind a one-shot, permission-aware protocol
 │   ├── Notifications/  Rolling reminder window + BGTaskScheduler background refill
 │   ├── Persistence/    SwiftData (mutable) + Corpus/ (read-only GRDB over SQLite)
-│   ├── Theming/        Accent + appearance, no view ever branches on colorScheme
-│   ├── Localization/   AR/EN strings, digit system, clock format
-│   ├── Settings/       The one key/value store every preference writes through
 │   ├── Search/         Arabic query folding + FTS5 expressions, shared by two corpora
 │   ├── Memorization/   SM-2 spaced repetition, as a pure function of state and grade
 │   ├── Networking/     Optional by design — no core feature may require it
+│   ├── Widgets/        Telling the widgets their inputs changed
 │   └── Tips/           TipKit configuration
 ├── Features/       One folder per feature: Views + ViewModel + Coordinator
 │   ├── Home/           Prayer times + next-prayer countdown
@@ -83,7 +105,7 @@ ThawabForGod/
 │   ├── Tasbih/         Electronic counter — corpus phrases, SwiftData counts
 │   ├── NamesOfAllah/   The 99 names, read-only, in-memory search
 │   └── Settings/       Drives every preference above; stores none of its own
-└── Resources/      Assets, Localizable.xcstrings, four bundled read-only .sqlite corpora
+└── Resources/      App-only assets and four bundled read-only .sqlite corpora
 ```
 
 ## Data flow: a screen appearing

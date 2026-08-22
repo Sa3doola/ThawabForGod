@@ -84,6 +84,21 @@ The macOS **Build** action rather than a Test action is deliberate: the unit
 tests are platform-agnostic, and what the Mac build catches is the thing that
 actually breaks there — a `#if os(macOS)` branch that stopped compiling.
 
+## Signing, and the one thing CI needs that a checkout does not carry
+
+Both targets declare an **App Group** (`group.com.Sa3dola.ThawabForGod`) in their
+entitlements, which means both need a provisioning profile that includes it.
+Automatic signing usually creates the identifier on first local build, but a
+clean CI machine has never run that — so the group has to exist in the Developer
+portal, enabled on **both** App IDs (`com.Sa3dola.ThawabForGod` and
+`com.Sa3dola.ThawabForGod.NoorWidgets`), or the build fails at the signing step
+with an error that reads like a certificate problem and is not one.
+
+Nothing else about the widget needs a workflow change: `NoorWidgetsExtension` is
+embedded in the app, so all three actions build it already — including the macOS
+one, which is now the cheapest place a widget view using an iOS-only API gets
+caught.
+
 ## What is deliberately not in the workflow
 
 **The `SWIFT_VERSION=6.0` strict-concurrency check.** `CONTRIBUTING.md` lists it
