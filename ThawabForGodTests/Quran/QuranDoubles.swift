@@ -26,7 +26,7 @@ nonisolated final class StubQuranRepository: QuranRepositoring, @unchecked Senda
         case versesInSurah(Int)
         case juzList
         case versesInJuz(Int)
-        case search(QuranSearchQuery)
+        case search(ArabicSearchQuery)
     }
 
     private let lock = NSLock()
@@ -79,7 +79,7 @@ nonisolated final class StubQuranRepository: QuranRepositoring, @unchecked Senda
         return try verseResult.get()
     }
 
-    func search(_ query: QuranSearchQuery, limit: Int) async throws -> QuranSearchResults {
+    func search(_ query: ArabicSearchQuery, limit: Int) async throws -> QuranSearchResults {
         record(.search(query))
         return try searchResult.get()
     }

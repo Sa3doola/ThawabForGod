@@ -76,6 +76,18 @@ nonisolated extension AttributionSource {
             noteKey: .sourceNamesNote,
             url: URL(string: "https://github.com/KabDeveloper/99-Names-Of-Allah")!
         ),
+        // The Unlicense covers what the mirror's author could give away, which is not the
+        // narrations — those are public domain on their own account, having been compiled in the
+        // 9th century. The row names the mirror because that is where the text came from, and
+        // the note says what agreeing mirrors do and do not establish.
+        AttributionSource(
+            id: "hadith",
+            titleKey: .sourceHadithTitle,
+            attributionKey: .sourceHadithAttribution,
+            licenceKey: .licencePublicDomain,
+            noteKey: .sourceHadithNote,
+            url: URL(string: "https://github.com/fawazahmed0/hadith-api")!
+        ),
         AttributionSource(
             id: "tasbih",
             titleKey: .sourceTasbihTitle,

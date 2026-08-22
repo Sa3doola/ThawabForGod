@@ -69,18 +69,21 @@ ThawabForGod/
 │   ├── Theming/        Accent + appearance, no view ever branches on colorScheme
 │   ├── Localization/   AR/EN strings, digit system, clock format
 │   ├── Settings/       The one key/value store every preference writes through
+│   ├── Search/         Arabic query folding + FTS5 expressions, shared by two corpora
+│   ├── Memorization/   SM-2 spaced repetition, as a pure function of state and grade
 │   ├── Networking/     Optional by design — no core feature may require it
 │   └── Tips/           TipKit configuration
 ├── Features/       One folder per feature: Views + ViewModel + Coordinator
 │   ├── Home/           Prayer times + next-prayer countdown
 │   ├── Quran/          The mushaf: chapters, parts, and the reading screen
+│   ├── Hadith/         The two Sahihs: browse, search, bookmarks, memorization
 │   ├── Onboarding/     First-run: permissions, calculation method
 │   ├── Qibla/          Compass + distance, reusing the prayer-time engine
 │   ├── Adhkar/         Morning/evening remembrance, the first corpus reader
 │   ├── Tasbih/         Electronic counter — corpus phrases, SwiftData counts
 │   ├── NamesOfAllah/   The 99 names, read-only, in-memory search
 │   └── Settings/       Drives every preference above; stores none of its own
-└── Resources/      Assets, Localizable.xcstrings, bundled corpus.sqlite + quran.sqlite
+└── Resources/      Assets, Localizable.xcstrings, four bundled read-only .sqlite corpora
 ```
 
 ## Data flow: a screen appearing

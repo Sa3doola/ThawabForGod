@@ -288,7 +288,7 @@ struct QuranViewModelTests {
 
         await model.search()
 
-        #expect(repository.requests.contains(.search(QuranSearchQuery("الرحمن"))))
+        #expect(repository.requests.contains(.search(ArabicSearchQuery("الرحمن"))))
     }
 
     /// Cancellation is the debounce: `.task(id:)` cancels the previous run on the next keystroke,

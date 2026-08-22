@@ -108,6 +108,11 @@ final class AppContainer {
     /// and a size that grows with every edition added rather than staying put.
     let tafsirCorpus: any CorpusDatabaseProviding
 
+    /// The two Sahihs, and a fourth file for the fourth time the same argument holds. This one
+    /// also settles it: at twenty-four megabytes it is larger than the other three together, and
+    /// only a reader who opens that tab ever pays to page any of it in.
+    let hadithCorpus: any CorpusDatabaseProviding
+
     // MARK: Quran
 
     let quranRepository: any QuranRepositoring
@@ -126,6 +131,24 @@ final class AppContainer {
     /// models because it reads nothing onboarding seeds — the panel is the only thing that ever
     /// writes these three keys, and it cannot have run before launch.
     let readerSettings: ReaderSettings
+
+    // MARK: Hadith
+
+    let hadithRepository: any HadithRepositoring
+    let getHadith: GetHadithUseCase
+
+    /// The reader's own marks in the hadith. The other half of this feature's storage split:
+    /// `hadithCorpus` above is read-only and bundled, this writes to the same SwiftData container
+    /// the Quran's bookmarks and the tasbih counts do.
+    let hadithProgressRepository: any HadithProgressRepositoring
+    let hadithProgress: HadithProgressUseCase
+
+    /// The review schedule. A third store-facing piece in this feature, beside the corpus and the
+    /// bookmarks, because a schedule is a different kind of thing from a ribbon — and because the
+    /// `Memorize` mode the plan wants across the adhkar and the divine names will want this shape
+    /// rather than the bookmarks'.
+    let hadithMemorizationRepository: any HadithMemorizationRepositoring
+    let memorizeHadith: MemorizeHadithUseCase
 
     // MARK: Adhkar
 
@@ -157,6 +180,7 @@ final class AppContainer {
     let homeCoordinator = HomeCoordinator()
     let qiblaCoordinator = QiblaCoordinator()
     let quranCoordinator = QuranCoordinator()
+    let hadithCoordinator = HadithCoordinator()
     let adhkarCoordinator = AdhkarCoordinator()
     let tasbihCoordinator = TasbihCoordinator()
     let namesCoordinator = NamesCoordinator()
@@ -183,6 +207,7 @@ final class AppContainer {
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
         quranCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "quran"),
         tafsirCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "tafsir"),
+        hadithCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "hadith"),
         fallbackCoordinates: Coordinates = .makkah,
         // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
         // elsewhere) is a real call into the system's background-task service — unlike
@@ -295,6 +320,31 @@ final class AppContainer {
         self.tafsirCorpus = tafsirCorpus
         self.tafsirRepository = tafsirRepository
         self.getTafsir = GetTafsirUseCase(repository: tafsirRepository)
+
+        // A fourth, over the two Sahihs. Four files and one `CorpusDatabase`, which is the point
+        // of that type taking a resource name and knowing nothing else about what it opens.
+        let hadithRepository = HadithRepository(database: hadithCorpus)
+        self.hadithCorpus = hadithCorpus
+        self.hadithRepository = hadithRepository
+        self.getHadith = GetHadithUseCase(repository: hadithRepository)
+
+        let hadithProgressRepository = HadithProgressRepository(
+            modelContainer: persistence.container
+        )
+        self.hadithProgressRepository = hadithProgressRepository
+        self.hadithProgress = HadithProgressUseCase(
+            progress: hadithProgressRepository,
+            corpus: hadithRepository
+        )
+
+        let hadithMemorizationRepository = HadithMemorizationRepository(
+            modelContainer: persistence.container
+        )
+        self.hadithMemorizationRepository = hadithMemorizationRepository
+        self.memorizeHadith = MemorizeHadithUseCase(
+            memorization: hadithMemorizationRepository,
+            corpus: hadithRepository
+        )
 
         let quranProgressRepository = QuranProgressRepository(
             modelContainer: persistence.container
@@ -569,6 +619,48 @@ final class AppContainer {
 
         let viewModel = TafsirViewModel(useCase: getTafsir)
         cachedTafsirViewModel = viewModel
+        return viewModel
+    }
+
+    // MARK: Hadith
+
+    private var cachedHadithViewModel: HadithViewModel?
+
+    /// The hadith view model, built on first use and kept.
+    ///
+    /// Kept rather than rebuilt for the reason the Quran's is, and one more: it holds the
+    /// narrations of the open kitab, which for Muslim's Book of Faith is 439 of them. Rebuilding
+    /// on every push would re-read all of that off disk to show the reader what they were
+    /// already looking at.
+    func hadithViewModel() -> HadithViewModel {
+        if let cachedHadithViewModel {
+            return cachedHadithViewModel
+        }
+
+        let viewModel = HadithViewModel(
+            useCase: getHadith,
+            progress: hadithProgress,
+            memorize: memorizeHadith,
+            clock: clock
+        )
+        cachedHadithViewModel = viewModel
+        return viewModel
+    }
+
+    private var cachedHadithMemorizeViewModel: HadithMemorizeViewModel?
+
+    /// The review session's view model, built on first use and kept.
+    ///
+    /// Kept rather than rebuilt because a session is a *place in a queue*: a reader who answers
+    /// two cards, follows a thought into the reading screen and comes back should find the third
+    /// card, not the first one again.
+    func hadithMemorizeViewModel() -> HadithMemorizeViewModel {
+        if let cachedHadithMemorizeViewModel {
+            return cachedHadithMemorizeViewModel
+        }
+
+        let viewModel = HadithMemorizeViewModel(useCase: memorizeHadith, clock: clock)
+        cachedHadithMemorizeViewModel = viewModel
         return viewModel
     }
 

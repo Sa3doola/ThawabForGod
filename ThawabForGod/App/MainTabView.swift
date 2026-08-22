@@ -38,6 +38,10 @@ struct MainTabView: View {
                 .tabItem { Label(l10n.string(.quranTitle), systemImage: AppTab.quran.symbol) }
                 .tag(AppTab.quran)
 
+            hadithTab
+                .tabItem { Label(l10n.string(.hadithTitle), systemImage: AppTab.hadith.symbol) }
+                .tag(AppTab.hadith)
+
             adhkarTab
                 .tabItem { Label(l10n.string(.adhkarTitle), systemImage: AppTab.adhkar.symbol) }
                 .tag(AppTab.adhkar)
@@ -83,6 +87,45 @@ struct MainTabView: View {
                 settings: container.readerSettings,
                 tafsir: container.tafsirViewModel()
             )
+        }
+    }
+
+    /// The two Sahihs, each pushing into its divisions and then into the narrations.
+    ///
+    /// Two pushes deep rather than the Quran's one, which is what a collection of collections
+    /// costs — so this tab drives its stack from a path, like Settings, rather than from a chain
+    /// of `navigationDestination(item:)`. That is also what lets a search result land two levels
+    /// down in one move; see `HadithCoordinator`.
+    private var hadithTab: some View {
+        @Bindable var coordinator = container.hadithCoordinator
+
+        return NavigationStack(path: $coordinator.path) {
+            HadithCollectionListView(
+                viewModel: container.hadithViewModel(),
+                coordinator: container.hadithCoordinator
+            )
+            // Declared once, at the root, so every level of this tab is reachable from every
+            // other — which is the whole point of a path over nested destinations.
+            .navigationDestination(for: HadithRoute.self) { route in
+                switch route {
+                case .collection(let collection):
+                    HadithBookListView(
+                        viewModel: container.hadithViewModel(),
+                        coordinator: container.hadithCoordinator,
+                        collection: collection
+                    )
+
+                case .book(let reference):
+                    HadithReadingView(
+                        viewModel: container.hadithViewModel(),
+                        coordinator: container.hadithCoordinator,
+                        reference: reference
+                    )
+
+                case .memorize:
+                    HadithMemorizeView(viewModel: container.hadithMemorizeViewModel())
+                }
+            }
         }
     }
 

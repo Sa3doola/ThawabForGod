@@ -173,9 +173,9 @@ struct VerseReferenceTests {
         let repository = StubQuranRepository(search: .success(.none))
         let useCase = GetQuranUseCase(repository: repository)
 
-        _ = try await useCase.search(QuranSearchQuery("الرحمن"))
+        _ = try await useCase.search(ArabicSearchQuery("الرحمن"))
 
-        #expect(repository.requests == [.search(QuranSearchQuery("الرحمن"))])
+        #expect(repository.requests == [.search(ArabicSearchQuery("الرحمن"))])
     }
 
     /// An empty query never reaches the corpus. It is not an optimisation: FTS5 has no expression
@@ -184,7 +184,7 @@ struct VerseReferenceTests {
         let repository = StubQuranRepository()
         let useCase = GetQuranUseCase(repository: repository)
 
-        let results = try await useCase.search(QuranSearchQuery("  ؟ "))
+        let results = try await useCase.search(ArabicSearchQuery("  ؟ "))
 
         #expect(results == .none)
         #expect(repository.requests.isEmpty)

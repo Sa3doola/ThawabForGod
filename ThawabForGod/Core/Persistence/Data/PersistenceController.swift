@@ -21,7 +21,10 @@ nonisolated struct PersistenceController: Sendable {
         QuranBookmarkRecord.self,
         ReadingPositionRecord.self,
         RecentActivityRecord.self,
-        PrayerCompletionRecord.self
+        PrayerCompletionRecord.self,
+        HadithBookmarkRecord.self,
+        HadithReadingPositionRecord.self,
+        HadithMemorizationRecord.self
     ])
 
     init(inMemory: Bool = false) throws {

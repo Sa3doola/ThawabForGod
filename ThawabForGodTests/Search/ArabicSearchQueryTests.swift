@@ -1,5 +1,5 @@
 //
-//  QuranSearchQueryTests.swift
+//  ArabicSearchQueryTests.swift
 //  ThawabForGodTests
 //
 
@@ -9,20 +9,21 @@ import Testing
 
 /// The folding a query goes through before it meets the index.
 ///
-/// This suite is one half of a rule whose other half is in Python: `QuranSearchQuery` must fold a
-/// typed word into exactly what `build_quran_db.py` wrote into `verse.text_normalized`. The cases
-/// below are the rule stated in Swift; `QuranRepositoryTests.search` is the same rule checked
-/// against the corpus that actually shipped, which is what catches the two drifting apart.
-struct QuranSearchQueryTests {
+/// This suite is one half of a rule whose other half is in Python: `ArabicSearchQuery` must fold a
+/// typed word into exactly what `build_quran_db.py` and `build_hadith_db.py` fed their indexes.
+/// The cases below are the rule stated in Swift; the search tests in `QuranRepositoryTests` and
+/// `HadithRepositoryTests` are the same rule checked against the corpora that actually shipped,
+/// which is what catches the two sides drifting apart.
+struct ArabicSearchQueryTests {
 
     // MARK: The marks come off
 
     @Test func diacriticsAreDropped() {
-        #expect(QuranSearchQuery("ٱلرَّحْمَٰنِ").tokens == ["الرحمن"])
+        #expect(ArabicSearchQuery("ٱلرَّحْمَٰنِ").tokens == ["الرحمن"])
     }
 
     @Test func aVowelledWordFoldsToTheSameThingAsItsBareForm() {
-        #expect(QuranSearchQuery("مُحَمَّد").tokens == QuranSearchQuery("محمد").tokens)
+        #expect(ArabicSearchQuery("مُحَمَّد").tokens == ArabicSearchQuery("محمد").tokens)
     }
 
     // MARK: One spelling per letter
@@ -34,33 +35,33 @@ struct QuranSearchQueryTests {
         ("ٱلله", "الله"),
     ])
     func everyHamzaBearingAlefFoldsToAPlainOne(typed: String, folded: String) {
-        #expect(QuranSearchQuery(typed).tokens == [folded])
+        #expect(ArabicSearchQuery(typed).tokens == [folded])
     }
 
     @Test func taMarbutaFoldsToHa() {
-        #expect(QuranSearchQuery("القيامة").tokens == ["القيامه"])
+        #expect(ArabicSearchQuery("القيامة").tokens == ["القيامه"])
     }
 
     @Test func alefMaqsuraFoldsToYa() {
-        #expect(QuranSearchQuery("موسى").tokens == ["موسي"])
+        #expect(ArabicSearchQuery("موسى").tokens == ["موسي"])
     }
 
     @Test func tatweelIsRemovedRatherThanSplittingTheWord() {
-        #expect(QuranSearchQuery("الرحـــمن").tokens == ["الرحمن"])
+        #expect(ArabicSearchQuery("الرحـــمن").tokens == ["الرحمن"])
     }
 
     // MARK: Words
 
     @Test func wordsAreSeparateTokensInTheOrderTheyWereTyped() {
-        #expect(QuranSearchQuery("الحمد لله رب").tokens == ["الحمد", "لله", "رب"])
+        #expect(ArabicSearchQuery("الحمد لله رب").tokens == ["الحمد", "لله", "رب"])
     }
 
     @Test func repeatedAndSurroundingWhitespaceIsIgnored() {
-        #expect(QuranSearchQuery("  الحمد   لله \n").tokens == ["الحمد", "لله"])
+        #expect(ArabicSearchQuery("  الحمد   لله \n").tokens == ["الحمد", "لله"])
     }
 
     @Test func aTransliterationSplitsOnItsHyphenTheWayTheIndexDoes() {
-        #expect(QuranSearchQuery("Al-Baqara").tokens == ["Al", "Baqara"])
+        #expect(ArabicSearchQuery("Al-Baqara").tokens == ["Al", "Baqara"])
     }
 
     // MARK: Nothing typed can be read as FTS5 syntax
@@ -70,23 +71,23 @@ struct QuranSearchQueryTests {
     /// be an operator the reader did not ask for.
     @Test(arguments: ["\"", "*", "()", "^", ":", "-", "\"الحمد\""])
     func punctuationNeverSurvivesIntoAToken(typed: String) {
-        let tokens = QuranSearchQuery(typed).tokens
+        let tokens = ArabicSearchQuery(typed).tokens
         #expect(tokens.allSatisfy { $0.allSatisfy(\.isLetter) || $0.allSatisfy(\.isNumber) })
         #expect(!tokens.contains { $0.contains("\"") || $0.contains("*") })
     }
 
     @Test func quotesAroundAWordLeaveTheWord() {
-        #expect(QuranSearchQuery("\"الحمد\"").tokens == ["الحمد"])
+        #expect(ArabicSearchQuery("\"الحمد\"").tokens == ["الحمد"])
     }
 
     // MARK: Empty
 
     @Test(arguments: ["", "   ", "\n", "،", "!؟.", "***"])
     func aQueryWithNoLettersOrDigitsIsEmpty(typed: String) {
-        #expect(QuranSearchQuery(typed).isEmpty)
+        #expect(ArabicSearchQuery(typed).isEmpty)
     }
 
     @Test func aQueryWithAWordIsNotEmpty() {
-        #expect(!QuranSearchQuery("الله").isEmpty)
+        #expect(!ArabicSearchQuery("الله").isEmpty)
     }
 }

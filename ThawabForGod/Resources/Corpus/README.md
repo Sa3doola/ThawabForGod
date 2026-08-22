@@ -5,9 +5,9 @@ ever written to at runtime — the databases are opened read-only, and anything 
 *user* changes (bookmarks, counts, progress) belongs in `Core/Persistence`'s
 SwiftData store instead.
 
-Two files, both read through the same `CorpusDatabaseProviding` infrastructure —
+Four files, all read through the same `CorpusDatabaseProviding` infrastructure —
 `CorpusDatabase` is constructed with a resource name and knows nothing about what
-is inside it, which is what makes a second one free:
+is inside it, which is what makes each one after the first free:
 
 - **`corpus.sqlite`** holds one table set per feature — the adhkar, the tasbih
   presets and the 99 names.
@@ -19,6 +19,9 @@ is inside it, which is what makes a second one free:
   argument holds: another upstream, another licence — public domain by age
   rather than by anyone's permission — and a size that grows with every edition
   added rather than staying put.
+- **`hadith.sqlite`** holds the two Sahihs, and settles the argument: at
+  twenty-four megabytes it is larger than the other three together, and only a
+  reader who opens that tab ever pays to page any of it in.
 
 ---
 
@@ -302,6 +305,110 @@ famous text with a fixed wording, transcribed by several independent projects
 that agree — but the transcription has had no line-by-line check here, and this
 note should not be deleted until it has.
 
+### The hadith
+
+**Source:** the Arabic editions of
+[fawazahmed0/hadith-api](https://github.com/fawazahmed0/hadith-api), with
+[AhmedBaset/hadith-json](https://github.com/AhmedBaset/hadith-json) as the
+cross-check and the source of the Arabic kitab titles.
+
+**Two collections only — Sahih al-Bukhari and Sahih Muslim — and no gradings.**
+That is the whole shape of this slice, and it follows from one fact: **a hadith's
+grading is what tells a reader whether to act on it.** Sunan Abi Dawud, Jami'
+at-Tirmidhi, Sunan an-Nasa'i and Sunan Ibn Majah were compiled to *include* weak
+narrations, not to exclude them, so shipping one of those without a grading would
+put a text in front of a reader with the app's implicit assurance behind it and
+nothing to say how sound it is.
+
+The gradings would therefore have to ship too, and they cannot. Every grader in
+the freely-published data is modern — al-Albani (d. 1999), Shu'ayb al-Arna'ut
+(d. 2016), Zubair Ali Zai (d. 2013), Muhammad Muhyi al-Din Abd al-Hamid
+(d. 1972) — and their judgements are 20th-century scholarship, in copyright
+everywhere, which no mirror republishing them has the right to license on.
+
+The two Sahihs are the exception, and structurally so: their compilers graded the
+contents by deciding what went in. "Sahih" is the title of the book rather than a
+modern annotation on top of it, which is a fact about *which collection a
+narration is in* and needs nobody's permission to state.
+
+**Arabic only, deliberately** — the same wall the tafsir hit. The Arabic of both
+Sahihs has been in the public domain for eleven centuries; every English
+translation of them is modern and owned, whatever a mirror's own repository
+licence says about the code beside the data. An English-reading user gets the
+collection and kitab names and nothing else. That is a known gap, not a bug.
+
+#### Why two sources
+
+The text and the **reference numbers** come from fawazahmed0, which is released
+under the Unlicense. That dedication covers what its author can give away and
+nothing more — which is exactly why the underlying work has to be public domain
+by age for any of this to be shippable, the same reasoning the tafsir section
+sets out above.
+
+It was chosen over the more widely-mirrored AhmedBaset data set for one reason:
+**it carries the numbers a reader can cite.** Its last hadith of Bukhari is 7563,
+the standard total; AhmedBaset numbers the same narration 7277, because it
+indexes sequentially and merges what sunnah.com splits. A citation is the whole
+point of printing a reference number, so the edition that gets them right is the
+one the corpus is built from.
+
+AhmedBaset is still downloaded on every build, and does two jobs:
+
+| What | Result |
+| --- | --- |
+| **Cross-check on the text** | 7,266 of its 7,277 Bukhari narrations and 7,278 of its 7,459 from Muslim fold word-for-word onto this corpus. **Not one is a textual disagreement** — the shortfall is narrations fawazahmed0 files under a neighbouring number. Pinned as a floor; a drop fails the build. |
+| **The Arabic kitab titles** | fawazahmed0 publishes the divisions in English only. The two agree on all 97 of Bukhari's titles and all 57 of Muslim's, *exactly*, which is what makes joining the Arabic ones on the division number safe rather than hopeful. The build asserts it. |
+
+It also supplies **which kitab each narration belongs to**, because fawazahmed0
+publishes that wrongly. Each entry's own `reference` is `{book: 0, hadith: 0}` on
+hundreds of real narrations, and the per-section reference ranges are visibly
+broken for Sahih Muslim — kitab 15 is said to end at 3397 and kitab 16 to start
+at 388, which cannot both be true of a book read front to back. Placing
+narrations by those ranges would have hung the wrong kitab name over a fifth of
+Sahih Muslim. So the divisions are taken from the cross-check by matching folded
+text, and the 44 narrations that match nothing inherit the kitab of the one
+before them — which is sound only because both sources list the collection in the
+same order, and the build's non-decreasing check is what actually tests that.
+
+#### Three things about the numbering
+
+**Empty entries are continuation numbers, not missing text.** sunnah.com gives one
+narration several reference numbers where the printed editions group them —
+Bukhari 5709 carries 5709 through 5712 — and represents that as the text on the
+first number and empty entries on the rest. Nine of Bukhari's entries and 203 of
+Muslim's are empty for this reason. They are neither dropped nor shown blank:
+each extends the preceding narration's `number_last`, so the row says it covers
+5709–5712 and a reader who came looking for 5711 finds it where it actually is.
+Two entries — the opening paragraphs of Muslim's introduction, which sunnah.com
+numbers but carries no Arabic for — have nothing before them to extend and are
+dropped; the count is pinned so a change has to be looked at.
+
+**Twenty-six reference numbers carry two narrations.** Sahih al-Bukhari prints two
+hadith under one number in those places, and both are cited as that number. The
+`part` column orders them and does nothing else — no screen shows it.
+
+**Sahih al-Bukhari 4757 contains one Latin letter**, a stray `v` where the
+upstream transcription lost an opening `﴿` before a quoted verse. One character in
+14,940 narrations. It is left exactly as it arrived, because this project does not
+edit the text it ships, and pinned in the build so that a *second* one is loud —
+because a Latin letter appearing in a narration would otherwise mean a translated
+column had been read by mistake, which is the one packaging error here that would
+ship somebody's copyrighted work.
+
+#### One text, not two
+
+`quran.sqlite` downloads a second copy of the Quran because Uthmani orthography
+spells ٱلسَّمَٰوَٰتِ, whose letters alone are `السموت`. That does not apply here: the
+Sahihs are printed in ordinary vowelled Arabic, so stripping the marks from
+ٱلْأَنْصَارِيُّ leaves `الأنصاري`, which is what a reader types. The search index is
+folded from the displayed text itself, and the folded form is not *stored* — it
+goes into a contentless FTS5 index and nowhere else, which is nine megabytes this
+file does not carry.
+
+**What is not verified:** nobody on this project has read either collection
+against a printed edition. Two mirrors agreeing is evidence that neither
+transcription drifted, not that the transcription was right to begin with.
+
 ### Tasbih presets
 
 Written out in the build script rather than sourced from anywhere. They are five
@@ -314,6 +421,23 @@ to one hundred; the hundreds on *la ilaha illallah* and *astaghfirullah* are the
 counts most commonly given for them as a daily practice. Other forms are reported
 for all five. If the counter ever lets a user set their own target, that stops
 being a caveat and becomes a setting — which is the better answer.
+
+## Rebuilding `hadith.sqlite`
+
+```bash
+python3 Tools/CorpusBuilder/build_hadith_db.py
+```
+
+Downloads both upstreams — roughly forty megabytes of JSON — and writes the
+database in place. `--source path/to/json/` builds from a local directory instead,
+holding `ara-bukhari.json`, `ara-muslim.json`, `bukhari.json` and `muslim.json`.
+
+The build refuses to finish if any of its pinned counts has moved: the last
+reference number of each collection, the number of kitab, how many entries are
+continuations, how many narrations inherit their kitab, how many carry a Latin
+letter, and how much of the cross-check still folds onto the corpus. Every one of
+those is a fact about the published collections rather than about a mirror, so a
+mismatch means somebody should read the diff before the app ships it.
 
 ## Rebuilding `tafsir.sqlite`
 

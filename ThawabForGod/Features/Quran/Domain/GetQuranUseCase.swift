@@ -44,7 +44,7 @@ nonisolated struct GetQuranUseCase: Sendable {
     /// The cap is the use case's to choose rather than the screen's: it exists because a verse
     /// row is expensive to draw and a common word matches hundreds, not because of anything the
     /// list knows. A caller that wants a different one says so.
-    func search(_ query: QuranSearchQuery, limit: Int = 100) async throws -> QuranSearchResults {
+    func search(_ query: ArabicSearchQuery, limit: Int = 100) async throws -> QuranSearchResults {
         guard !query.isEmpty else { return .none }
         return try await repository.search(query, limit: limit)
     }

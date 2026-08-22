@@ -89,15 +89,14 @@ nonisolated struct QuranRepository: QuranRepositoring {
 
     // MARK: Search
 
-    func search(_ query: QuranSearchQuery, limit: Int) async throws -> QuranSearchResults {
+    func search(_ query: ArabicSearchQuery, limit: Int) async throws -> QuranSearchResults {
         guard !query.isEmpty else { return .none }
 
-        // Two readings of the same words, tried in that order — see `matched(_:_:_:)`.
-        let phrase = Self.phrase(query.tokens)
-        let keywords = Self.keywords(query.tokens)
+        // Two readings of the same words, tried in that order — see `FTS5Query`.
+        let expressions = FTS5Query(query)
 
         return try await database.reader().read { database in
-            let surahs = try Self.matched(phrase, keywords) { expression in
+            let surahs = try expressions.matched { expression in
                 try SurahRecord.fetchAll(
                     database,
                     sql: """
@@ -111,7 +110,7 @@ nonisolated struct QuranRepository: QuranRepositoring {
                 )
             }
 
-            let verseSearch = try Self.matching(phrase, keywords) { expression in
+            let verseSearch = try expressions.matching { expression in
                 try Int.fetchOne(
                     database,
                     sql: "SELECT count(*) FROM verse_fts WHERE verse_fts MATCH ?",
@@ -145,55 +144,4 @@ nonisolated struct QuranRepository: QuranRepositoring {
     /// handful has matched a fragment common to many names, which is a list nobody reads. The
     /// verses are what a search of the Quran is for, and they carry the caller's own limit.
     private static let surahLimit = 5
-
-    /// The tokens as one phrase, the last word open-ended — `"الحمد لل" *`.
-    ///
-    /// A phrase rather than a set of words because of what a reader is usually doing: typing a
-    /// fragment of a verse they half-remember, in order. `الحمد لله` should find the verse that
-    /// says it, not every verse that happens to contain both words somewhere.
-    ///
-    /// The trailing `*` is what makes the results arrive while the query is still being typed —
-    /// without it, `الرح` matches nothing until the word is finished.
-    private static func phrase(_ tokens: [String]) -> String {
-        "\"\(tokens.joined(separator: " "))\" *"
-    }
-
-    /// The same tokens as separate words, all of which must appear — `"موسي" "فرعون" *`.
-    ///
-    /// The fallback, for the reader who is not quoting the text but naming two things in it. FTS5
-    /// puts an implicit AND between phrases, so this is "contains both", anywhere in the verse.
-    private static func keywords(_ tokens: [String]) -> String {
-        let quoted = tokens.map { "\"\($0)\"" }
-        guard let last = quoted.last else { return "" }
-        return (quoted.dropLast() + ["\(last) *"]).joined(separator: " ")
-    }
-
-    /// Runs the phrase reading, and falls back to the keyword one only if it found nothing.
-    ///
-    /// In that order, and not merged: a verse containing the typed fragment is a better answer
-    /// than one merely containing its words, and ranking them together would let the second kind
-    /// outscore the first. Falling back only on an empty result means the loose reading costs
-    /// nothing when the strict one worked, which is most of the time.
-    private static func matched<T>(
-        _ phrase: String,
-        _ keywords: String,
-        _ fetch: (String) throws -> [T]
-    ) throws -> [T] {
-        let matches = try fetch(phrase)
-        return matches.isEmpty ? try fetch(keywords) : matches
-    }
-
-    /// The same fallback for the verses, but reporting *which* expression won.
-    ///
-    /// The count and the rows have to come from the same reading of the query, or the screen says
-    /// "180 verses" above a list drawn from a different search entirely.
-    private static func matching(
-        _ phrase: String,
-        _ keywords: String,
-        _ count: (String) throws -> Int
-    ) throws -> (expression: String, total: Int) {
-        let total = try count(phrase)
-        if total > 0 { return (phrase, total) }
-        return (keywords, try count(keywords))
-    }
 }

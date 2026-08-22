@@ -167,7 +167,7 @@ struct QuranRepositoryTests {
     // MARK: Search
 
     private func search(_ text: String, limit: Int = 100) async throws -> QuranSearchResults {
-        try await repository.search(QuranSearchQuery(text), limit: limit)
+        try await repository.search(ArabicSearchQuery(text), limit: limit)
     }
 
     /// The test this whole slice exists for.
@@ -250,7 +250,7 @@ struct QuranRepositoryTests {
         #expect(results == .none)
     }
 
-    /// Nothing a reader can type is FTS5 syntax — see `QuranSearchQuery`. A bare quote used to be
+    /// Nothing a reader can type is FTS5 syntax — see `ArabicSearchQuery`. A bare quote used to be
     /// a syntax error inside the database rather than an empty result.
     @Test(arguments: ["\"", "*", "NEAR(", "زقزقة"])
     func aQueryThatMatchesNothingComesBackEmptyRatherThanThrowing(typed: String) async throws {

@@ -36,12 +36,12 @@ nonisolated protocol QuranRepositoring: Sendable {
 
     /// The chapters and verses a query matches, most relevant first.
     ///
-    /// Takes a `QuranSearchQuery` rather than a `String` so that the folding — which has to
+    /// Takes an `ArabicSearchQuery` rather than a `String` so that the folding — which has to
     /// agree with how the corpus was built, character for character — happens in one place that
     /// both the caller and the test suite can see, rather than inside whichever implementation
     /// happens to be behind this protocol.
     ///
     /// - Parameter limit: how many verses to return at most. The count of *all* matches comes
     ///   back regardless, so a capped list can say what it is a cap on.
-    func search(_ query: QuranSearchQuery, limit: Int) async throws -> QuranSearchResults
+    func search(_ query: ArabicSearchQuery, limit: Int) async throws -> QuranSearchResults
 }

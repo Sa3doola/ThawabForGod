@@ -72,6 +72,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case sourceNamesTitle = "source_names_title"
     case sourceNamesAttribution = "source_names_attribution"
     case sourceNamesNote = "source_names_note"
+    case sourceHadithTitle = "source_hadith_title"
+    case sourceHadithAttribution = "source_hadith_attribution"
+    case sourceHadithNote = "source_hadith_note"
     case sourceTasbihTitle = "source_tasbih_title"
     case sourceTasbihAttribution = "source_tasbih_attribution"
     case sourceAdhanTitle = "source_adhan_title"
@@ -88,6 +91,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
 
     case licenceMIT = "licence_mit"
     case licenceCCBY = "licence_cc_by"
+    /// Not a licence granted by anybody — the fact that the work is old enough to need none.
+    case licencePublicDomain = "licence_public_domain"
     case licenceUnsettled = "licence_unsettled"
     case licenceNone = "licence_none"
 
@@ -254,6 +259,54 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case readerLineSpacing = "reader_line_spacing"
     case readerReset = "reader_reset"
     case readerDone = "reader_done"
+
+    // MARK: Hadith
+
+    case hadithTitle = "hadith_title"
+    case hadithLoading = "hadith_loading"
+    case hadithUnavailable = "hadith_unavailable"
+    /// Why the app carries two collections and not nine, and why they are Arabic only. On the
+    /// screen rather than in a settings page, for the reason `adhkarVerificationNotice` is.
+    case hadithScopeNotice = "hadith_scope_notice"
+    /// Followed by a number, like `quranVersesLabel` — written as a label with a colon rather
+    /// than "97 books", which Arabic cannot say with one noun form across every count.
+    case hadithBooksLabel = "hadith_books_label"
+    case hadithNarrationsLabel = "hadith_narrations_label"
+    /// Precedes the reference number a narration is cited by, or the first of its span.
+    case hadithNumberLabel = "hadith_number_label"
+    case hadithSearchPrompt = "hadith_search_prompt"
+    case hadithSearchHint = "hadith_search_hint"
+    case hadithSearchEmpty = "hadith_search_empty"
+    /// Precedes a count — "Narrations: 50 of 912" — rather than carrying one, so the digits go
+    /// through `LocalizationManager` instead of a format string.
+    case hadithSearchResults = "hadith_search_results"
+    /// The word between the shown count and the total, in that same line.
+    case hadithSearchOf = "hadith_search_of"
+    case hadithBookmarksSection = "hadith_bookmarks_section"
+    case hadithBookmarkAdd = "hadith_bookmark_add"
+    case hadithBookmarkRemove = "hadith_bookmark_remove"
+    case hadithContinueReading = "hadith_continue_reading"
+    /// Precedes a kitab's number, where its title is not to hand.
+    case hadithBookLabel = "hadith_book_label"
+
+    // MARK: Memorizing hadith
+
+    case hadithMemorizeTitle = "hadith_memorize_title"
+    case hadithMemorizeStart = "hadith_memorize_start"
+    case hadithMemorizeStop = "hadith_memorize_stop"
+    /// Follows a count — "3 due" — rather than carrying one, so the digits go through
+    /// `LocalizationManager` instead of a format string.
+    case hadithMemorizeDueLabel = "hadith_memorize_due_label"
+    case hadithMemorizeCaughtUp = "hadith_memorize_caught_up"
+    case hadithMemorizePrompt = "hadith_memorize_prompt"
+    case hadithMemorizeRecall = "hadith_memorize_recall"
+    case hadithMemorizeReveal = "hadith_memorize_reveal"
+    case hadithMemorizeDone = "hadith_memorize_done"
+    case hadithMemorizeEmpty = "hadith_memorize_empty"
+    case hadithGradeAgain = "hadith_grade_again"
+    case hadithGradeHard = "hadith_grade_hard"
+    case hadithGradeGood = "hadith_grade_good"
+    case hadithGradeEasy = "hadith_grade_easy"
 
     // MARK: Adhkar
 

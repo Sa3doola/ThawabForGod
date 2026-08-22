@@ -168,7 +168,7 @@ final class QuranViewModel {
     /// readable *inside* the searchable view's own subtree, and this is read by the view that
     /// applies the modifier. It also has to agree with `searchPhase`, which is driven by the
     /// same text.
-    var isSearching: Bool { !QuranSearchQuery(searchText).isEmpty }
+    var isSearching: Bool { !ArabicSearchQuery(searchText).isEmpty }
 
     @ObservationIgnored private let useCase: GetQuranUseCase
     @ObservationIgnored private let progress: QuranProgressUseCase
@@ -301,7 +301,7 @@ final class QuranViewModel {
     /// `Task` here and nothing to cancel by hand — the debounce *is* the sleep, and the id is
     /// what makes it one.
     func search() async {
-        let query = QuranSearchQuery(searchText)
+        let query = ArabicSearchQuery(searchText)
 
         guard !query.isEmpty else {
             searchPhase = .idle

@@ -338,14 +338,20 @@ struct SettingsScreensTests {
         }
     }
 
-    /// The two data sets the corpus README says must not ship as verified are the two that carry
-    /// a warning on screen. If one is ever verified, its note is removed and this test is the
-    /// reminder to update the list rather than the screen.
+    /// Every data set the corpus README says is short of a check carries a warning on screen, and
+    /// no others do. If one is ever verified, its note is removed and this test is the reminder to
+    /// update the list rather than the screen.
+    ///
+    /// They are not all short of the *same* check. The adhkar and the divine names are the two the
+    /// README says must not ship as verified in V1 at all; the hadith are in the tafsir's position
+    /// instead — a fixed classical text that independent transcriptions agree on, which nobody on
+    /// this project has read against a printed edition. Both are worth saying, and both are said in
+    /// the source's own note rather than sorted into tiers here.
     @Test func theUnverifiedContentIsMarkedAsSuch() {
         let context = makeContext()
         let noted = context.screens.about.sources.filter { $0.noteKey != nil }.map(\.id)
 
-        #expect(noted.sorted() == ["adhkar", "names"])
+        #expect(noted.sorted() == ["adhkar", "hadith", "names"])
     }
 
     // MARK: Restoring the calculation defaults
