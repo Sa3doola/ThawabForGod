@@ -63,6 +63,11 @@ struct SettingsView: View {
         case .tips:
             TipsSettingsView(viewModel: container.tips)
 
+        case .macIntegration:
+            #if os(macOS)
+            MacSettingsView(viewModel: container.macIntegration)
+            #endif
+
         case .about:
             AboutView(viewModel: container.about) { coordinator.show(.sources) }
 
@@ -87,4 +92,10 @@ protocol SettingsScreens {
     var reminders: RemindersSettingsViewModel { get }
     var tips: TipsSettingsViewModel { get }
     var about: AboutViewModel { get }
+
+    /// macOS only, because the screen behind it is — `SettingsRoute.macIntegration` is filtered
+    /// out of the root on iOS, so nothing there ever asks for this.
+    #if os(macOS)
+    var macIntegration: MacSettingsViewModel { get }
+    #endif
 }

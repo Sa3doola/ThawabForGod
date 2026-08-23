@@ -99,6 +99,20 @@ The line between a tab and a push: a **tab** is a place the user returns to and 
 
   Widget *views* are the one part of this slice no test reaches, so they carry `#Preview` blocks covering every state including Arabic — the canvas is the substitute for a test here, and a better one than adding the widget to a Home Screen each time.
 
+- **The Mac menu bar** — `Features/MenuBar` and `Core/MacIntegration`, the Mac's answer to the widget: an `NSStatusItem` carrying the next prayer and a live countdown, and an `NSPopover` with the day's schedule on click.
+
+  **AppKit rather than `MenuBarExtra`, and the reason is the label.** A `MenuBarExtra` label is rendered once and is unreliable about redrawing on a schedule; the countdown ticking in the menu bar is the whole point, so `NSStatusItem` — which gives direct control over when the title is rewritten — is what it has to be. The panel is still SwiftUI, hosted in the popover with `.themed(_:)` and `.localized(_:)` applied, so it is the same app inside.
+
+  **`MenuBarController` is owned by `AppContainer`, not by the app delegate.** AppKit constructs the delegate itself with no argument list to inject six collaborators through. `MacAppDelegate` keeps only what genuinely belongs to the application object: `applicationDockMenu(_:)` and `applicationShouldTerminateAfterLastWindowClosed(_:)` — which reads the *activation policy* rather than the preference, because the policy is what menu-bar-only mode actually is and consulting the preference would mean publishing a second static for AppKit to find.
+
+  The controller holds no logic. `MenuBarPanelViewModel` does, and it **reuses `NextPrayerTimeline`** — the widget's — so the menu bar and the Home Screen cannot disagree about which prayer is next or about there being no position. Two details worth keeping. A tick moves the clock and rebuilds the day only when the prayer actually arrives, because running the solar arithmetic once a second to get the same answer is not free. And `tickInterval` is **a second inside the last hour, thirty seconds outside it** — an idle Mac has no business being woken sixty times a minute to redraw `4h 12m`, but in the last hour the reader can see the difference, and that is the hour the status item exists for.
+
+  **Launch at login is `SMAppService.mainApp` behind a protocol**, so Domain never imports ServiceManagement. The state that matters is `requiresApproval`: macOS has recorded the request and is waiting for the user to confirm it in System Settings → General → Login Items. `LaunchAtLoginStatus` has four cases rather than being a `Bool` precisely so the row can say that — a switch that flips itself back with no explanation is the failure the state exists to prevent — and `requiresApproval` reads as *on*, because the user did ask. Note that **none of it works from a build folder**: `SMAppService` identifies the app by location and signature, so a debug run reports `unavailable`, which is correct rather than a bug. Testing it means a Release build in `/Applications`.
+
+  Two preferences, defaulting opposite ways on purpose: the status item is on unless turned off, because a glanceable countdown is most of what a Mac build is for, while hiding the Dock icon is off unless asked, because an app that vanished from the Dock would look like it had quit. `MenuBarPreferences` enforces the pairing — turning the status item off restores the Dock icon, since neither one leaves no way back to the app.
+
+  **`MenuBarPanelViewModel` and `MacSettingsViewModel` carry no `#if os(macOS)`, though everything around them does.** Neither imports AppKit, and the suite runs on the iOS simulator — gating them would compile them out of the only place they are tested. The iOS build carries two types it never constructs, which is the same trade `SettingsRoute.macIntegration` and `HomeShortcut`'s reserved cases already make.
+
 `DeveloperGallery`, `DesignSystemGallery` and `LocalizationGallery` are all gone — Settings exercises accent, appearance, language and digits on a real screen, which is what the galleries stood in for.
 
 ## Platforms & toolchain

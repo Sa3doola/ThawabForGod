@@ -20,6 +20,10 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
     case prayerCalculation
     case reminders
     case tips
+
+    /// The menu bar, the Dock icon and launch at login. macOS only — see `isAvailable`.
+    case macIntegration
+
     case about
 
     /// Reached from `about` rather than from the root — it is what the app is built from, which
@@ -27,7 +31,28 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
     case sources
 
     /// The rows the root shows. `sources` is not among them: it is one level further in.
-    static let root: [SettingsRoute] = allCases.filter { $0 != .sources }
+    static let root: [SettingsRoute] = allCases.filter { $0 != .sources && $0.isAvailable }
+
+    /// Whether this build has the screen at all.
+    ///
+    /// The same forward-and-sideways-compatibility contract `HomeSectionKind` and `HomeShortcut`
+    /// hold, applied to a platform rather than to a feature that has not shipped: the case exists
+    /// in both builds so nothing has to be `#if`-ed except the answer, and a route that is not
+    /// available is filtered out of the root and never pushed.
+    var isAvailable: Bool {
+        switch self {
+        case .macIntegration:
+            #if os(macOS)
+            true
+            #else
+            false
+            #endif
+
+        case .homeCustomization, .appearance, .languageAndFormat, .prayerCalculation,
+             .reminders, .tips, .about, .sources:
+            true
+        }
+    }
 
     var titleKey: L10nKey {
         switch self {
@@ -37,6 +62,7 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .prayerCalculation: .settingsCalculationSection
         case .reminders: .settingsRemindersSection
         case .tips: .settingsTipsSection
+        case .macIntegration: .settingsMacSection
         case .about: .settingsAboutSection
         case .sources: .settingsSourcesTitle
         }
@@ -51,6 +77,7 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .prayerCalculation: "sun.and.horizon"
         case .reminders: "bell"
         case .tips: "lightbulb"
+        case .macIntegration: "menubar.rectangle"
         case .about: "info.circle"
         case .sources: "book.closed"
         }

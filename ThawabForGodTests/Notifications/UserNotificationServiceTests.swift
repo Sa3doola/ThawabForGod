@@ -8,6 +8,31 @@ import Testing
 import UserNotifications
 @testable import ThawabForGod
 
+/// Every system status the app maps, and what it maps to.
+///
+/// At file scope rather than as a static on the suite: `@Test(arguments:)` cannot reference a
+/// member of the very type whose macro is being expanded — that is a circular reference the
+/// compiler reports as an unknown attribute.
+///
+/// `.ephemeral` is App Clips only and **does not exist on macOS**, so it is appended rather than
+/// listed inline. Without that the whole test target fails to compile for the Mac, which is how
+/// it went unnoticed: the documented test command targets the iOS simulator, and CI runs the Mac
+/// as a build only.
+private let authorizationCases: [(UNAuthorizationStatus, NotificationAuthorization)] = {
+    var cases: [(UNAuthorizationStatus, NotificationAuthorization)] = [
+        (.notDetermined, .notDetermined),
+        (.authorized, .authorized),
+        (.provisional, .authorized),
+        (.denied, .denied)
+    ]
+
+    #if os(iOS)
+    cases.append((.ephemeral, .authorized))
+    #endif
+
+    return cases
+}()
+
 /// The scheduler's own half: permission, the order of operations, and the translation into
 /// `UNNotificationRequest`. The window's arithmetic is `PrayerReminderPlannerTests`'.
 @MainActor
@@ -76,13 +101,12 @@ struct UserNotificationServiceTests {
     }
 
     /// Provisional authorization still delivers, quietly, which is enough for a reminder.
-    @Test(arguments: [
-        (UNAuthorizationStatus.notDetermined, NotificationAuthorization.notDetermined),
-        (.authorized, .authorized),
-        (.provisional, .authorized),
-        (.ephemeral, .authorized),
-        (.denied, .denied)
-    ])
+    ///
+    /// `.ephemeral` is App Clips only and does not exist on macOS, so the case is added rather
+    /// than listed inline — without that the whole test target fails to *compile* for macOS,
+    /// which is how this went unnoticed: the documented test command targets the iOS simulator
+    /// and CI runs the Mac as a build only.
+    @Test(arguments: authorizationCases)
     func systemStatusMapsOntoTheAppsThreeCases(
         _ status: UNAuthorizationStatus,
         _ expected: NotificationAuthorization

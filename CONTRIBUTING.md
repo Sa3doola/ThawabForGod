@@ -45,14 +45,26 @@ xcodebuild build -scheme ThawabForGod -project ThawabForGod.xcodeproj \
 xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj \
   -destination 'platform=iOS Simulator,name=iPhone 17' -quiet
 
+# The same suite on the Mac. Worth running when a change touches anything
+# under a #if os(macOS) — the menu bar, the login item — because the iOS
+# destination compiles none of it.
+xcodebuild test -scheme ThawabForGod -project ThawabForGod.xcodeproj \
+  -destination 'platform=macOS' -quiet
+
 # Swift 6 strict-concurrency check, without changing the project's language
 # mode — catches data-race problems the normal build won't
 xcodebuild build -scheme ThawabForGod -project ThawabForGod.xcodeproj \
   -destination 'platform=iOS Simulator,name=iPhone 17' SWIFT_VERSION=6.0 -quiet
 ```
 
-**All four must be clean — warnings count as failures.** Run them before
-opening a PR; CI runs the same commands and will fail the same way.
+**All five must be clean — warnings count as failures.** Run them before
+opening a PR; CI runs the first three and will fail the same way.
+
+A note on exit codes: `grep`ping the output for `error:` is not enough. A
+failure to *sign* an embedded extension reports as `Command CodeSign failed`
+with no such prefix, so check `$?` — a stale `.appex` from before the widget
+target supported macOS produces exactly that, and `xcodebuild clean` is the
+fix.
 
 One caveat on the fourth: the `SWIFT_VERSION=6.0` check currently crashes the
 compiler in IRGen rather than reporting a diagnostic, and does so on a clean

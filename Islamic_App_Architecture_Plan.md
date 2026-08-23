@@ -271,7 +271,7 @@ Next prayer and countdown, small and medium on the Home Screen, the accessory fa
 
 Two decisions worth recording. The timeline holds **one entry per prayer transition**, not one per minute — the countdown is a system-rendered timer text that animates without waking the extension. And a widget with **no stored coordinates says so** rather than falling back to Makkah: that is §4.5's reminder rule ("no coordinates, no reminders"), and it binds harder here, because a wrong time on the Home Screen is wrong all day with nobody looking at it.
 
-### 9a.4 The Mac menu bar
+### 9a.4 The Mac menu bar — **Done.**
 
 An `NSStatusItem` carrying the next prayer and a live countdown, and an `NSPopover` with the day's schedule on click — the Mac idiom for exactly what the Home Screen widget does, and the reason it is AppKit rather than `MenuBarExtra` is that the *label* has to redraw on a ticker.
 
@@ -308,11 +308,11 @@ Launch at login is `SMAppService.mainApp`, behind a protocol so Domain never imp
 10. Polish, tests, CI → **publish V1**. *In progress. The adaptive layout is done and the CI prerequisites are committed; the one remaining hard blocker is the corpus verification pass required by §11 — the adhkar text and the English meanings of the 99 Names are still unverified, and `Resources/Corpus/README.md` holds the standing warnings.*
 11. Phase 2: Quran + tafsir module.
 12. Phase 3: Hadith + Memorization.
-13. Beyond the app window (§9a): deep links + quick actions, widgets, the Mac menu bar. *In progress. Deep links, quick actions, the `Shared/` target and the next-prayer widget are done; the Mac menu bar and launch-at-login are what remain.*
+13. Beyond the app window (§9a): deep links + quick actions, widgets, the Mac menu bar. **Done.** All four parts landed: the deep-link vocabulary and quick actions, the `Shared/` target and its App Group, the next-prayer widget across iPhone, iPad, Lock Screen and Mac desktop, and the menu bar with launch-at-login.
 
 **Built beyond this plan:** two slices that were not in the original scope and belong in it now — `Core/PrayerTracker` (marking the day's prayers off, with a streak) and `Core/Activity` (recent items), plus a Home screen the reader arranges themselves. Steps 2–9 are otherwise complete, and Phases 2 and 3 both landed ahead of step 10.
 
-**Next step:** the corpus verification pass (§11) remains the last hard blocker on a publishable V1, and it is a reviewing job rather than a coding one. Running alongside it: §9a, which is the first work in this project to put anything outside the app's own window. After both: the `Memorize` mode spanning adhkar, the 99 Names and short surahs (§7.2), which `Core/Memorization` was already factored for; the hadith deck is the only one built so far.
+**Next step:** the corpus verification pass (§11) remains the last hard blocker on a publishable V1, and it is a reviewing job rather than a coding one. §9a is now done — the first work in this project to put anything outside the app's own window. After the verification pass: the `Memorize` mode spanning adhkar, the 99 Names and short surahs (§7.2), which `Core/Memorization` was already factored for; the hadith deck is the only one built so far.
 
 ---
 

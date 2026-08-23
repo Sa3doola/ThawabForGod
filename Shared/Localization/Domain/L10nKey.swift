@@ -400,6 +400,21 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case tipNamesTapTitle = "tip_names_tap_title"
     case tipNamesTapMessage = "tip_names_tap_message"
 
+    // MARK: macOS — menu bar and login item
+
+    case settingsMacSection = "settings_mac_section"
+    case settingsMenuBarSection = "settings_menu_bar_section"
+    case settingsMenuBarShow = "settings_menu_bar_show"
+    case settingsMenuBarOnly = "settings_menu_bar_only"
+    case settingsMenuBarFooter = "settings_menu_bar_footer"
+    case settingsLaunchAtLogin = "settings_launch_at_login"
+    case settingsLaunchAtLoginFooter = "settings_launch_at_login_footer"
+    case settingsLaunchAtLoginApprove = "settings_launch_at_login_approve"
+    case settingsLaunchAtLoginApprovalFooter = "settings_launch_at_login_approval_footer"
+    case settingsLaunchAtLoginUnavailable = "settings_launch_at_login_unavailable"
+    case settingsLaunchAtLoginFailed = "settings_launch_at_login_failed"
+    case menuBarQuit = "menu_bar_quit"
+
     // MARK: Widgets
 
     case widgetNextPrayerName = "widget_next_prayer_name"

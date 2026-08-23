@@ -53,6 +53,9 @@ Two goals, held at once:
   Home Screen, the Lock Screen, and the Mac desktop. Computed in the widget's
   own process from the same engine the app uses, so it works with no network;
   with no stored location it says so rather than guessing a city.
+- **Mac menu bar** — the next prayer and a live countdown in the status bar,
+  with the day's schedule a click away. Optionally hides the Dock icon, and
+  can start with your Mac.
 
 **Phase 2 (planned):** the Quran, verse-by-verse, with selectable tafsirs and
 a customizable reading experience.

@@ -18,6 +18,21 @@ import AppKit
 /// not have.
 final class MacAppDelegate: NSObject, NSApplicationDelegate {
 
+    /// Whether closing the last window quits the app.
+    ///
+    /// `true` — the Mac default — unless the user has asked for menu-bar-only mode, in which case
+    /// quitting on the last close would make that mode impossible to be in: there would be no
+    /// Dock icon and no window, and closing the one window would end the app the status item was
+    /// meant to keep running.
+    ///
+    /// Read off the activation policy rather than the preference, because the policy is what the
+    /// mode actually *is* and `MenuBarController` is the one thing that sets it. Reaching for
+    /// `MenuBarPreferences` would mean publishing a second static for AppKit to find, and it
+    /// could disagree with the policy in the moment between the two being changed.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        sender.activationPolicy() != .accessory
+    }
+
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
         let menu = NSMenu()
 

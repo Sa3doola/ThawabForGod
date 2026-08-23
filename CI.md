@@ -99,6 +99,20 @@ embedded in the app, so all three actions build it already — including the mac
 one, which is now the cheapest place a widget view using an iOS-only API gets
 caught.
 
+## The macOS action could now be a Test
+
+It is a Build above because, until the menu bar landed, the test target did not
+*compile* for macOS at all — one `UNAuthorizationStatus.ephemeral`, which is App
+Clips only and does not exist there. Nobody had noticed, because the documented
+test command targets the iOS simulator. That is fixed, and the whole suite now
+runs green on the Mac.
+
+The action is left as a Build anyway, deliberately. The two iOS destinations
+already exercise every test; what a third run would add is the handful of types
+behind `#if os(macOS)`, and those are deliberately written without AppKit so the
+iOS run covers them (see `MenuBarPanelViewModel`). Promote it if that stops
+being true.
+
 ## What is deliberately not in the workflow
 
 **The `SWIFT_VERSION=6.0` strict-concurrency check.** `CONTRIBUTING.md` lists it

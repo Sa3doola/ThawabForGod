@@ -59,6 +59,19 @@ final class AppContainer {
     /// Told when anything the widgets are drawn from has changed. See `WidgetRefreshing`.
     let widgets: any WidgetRefreshing
 
+    #if os(macOS)
+    /// Whether Noor sits in the menu bar, and whether it keeps its Dock icon.
+    let menuBarPreferences: MenuBarPreferences
+
+    /// Registering the app as a login item. macOS's state, not this app's.
+    let launchAtLogin: any LaunchAtLoginServicing
+
+    /// The status item and its panel. Owned here rather than by `MacAppDelegate`, which AppKit
+    /// constructs with no argument list to inject six collaborators through — see
+    /// `MenuBarController`. Built after the two-phase init below, hence the implicit unwrap.
+    private(set) var menuBar: MenuBarController!
+    #endif
+
     // MARK: Prayer times
 
     let prayerTimeEngine: any PrayerTimeCalculating
@@ -241,6 +254,10 @@ final class AppContainer {
         // `CLLocationManager` has real side effects, and a default argument would run it even
         // for a caller supplying its own.
         self.widgets = widgets
+        #if os(macOS)
+        self.menuBarPreferences = MenuBarPreferences(settingsStore: settingsStore)
+        self.launchAtLogin = SMAppServiceLaunchAtLogin()
+        #endif
         self.locationService = locationService ?? CoreLocationService(settingsStore: settingsStore)
         self.headingProvider = headingProvider ?? CoreLocationHeadingProvider()
         // Same reason as the two above: constructing a `CLGeocoder` in a default argument would
@@ -415,6 +432,25 @@ final class AppContainer {
         // for them rather than being reached into. It is still the container that owns it.
         DeepLinkInbox.makeCurrent(deepLinks)
 
+        #if os(macOS)
+        // After everything else, because it captures `self` to route a tap out of the panel —
+        // the same two-phase shape `onboardingCoordinator` uses, and for the same reason.
+        menuBar = MenuBarController(
+            viewModel: MenuBarPanelViewModel(
+                timeline: NextPrayerTimeline(
+                    schedule: getPrayerSchedule,
+                    settingsStore: settingsStore
+                ),
+                l10n: localizationManager
+            ),
+            preferences: menuBarPreferences,
+            themeManager: themeManager,
+            l10n: localizationManager,
+            open: { [weak self] link in self?.open(link) }
+        )
+        menuBar.apply()
+        #endif
+
         // An install that predates the App Group has its preferences in the process's own
         // defaults, where no extension can see them. Once, on the first launch of a build that
         // has the group, they are copied across — see `SettingsGroupMigration` for why it copies
@@ -463,20 +499,45 @@ final class AppContainer {
             return cachedSettingsScreens
         }
 
+        // Named first, because `#if` is not allowed inside an argument list and the alternative
+        // is two near-identical calls to the same initializer.
+        let homeCustomization = homeCustomizationViewModel()
+        let appearance = AppearanceSettingsViewModel(theme: themeManager)
+        let languageAndFormat = LanguageFormatSettingsViewModel(localization: localizationManager)
+        let prayerCalculation = PrayerCalculationSettingsViewModel(calculation: calculationSettings())
+        let reminders = RemindersSettingsViewModel(
+            reminders: reminderPreferences,
+            notifications: notificationService
+        )
+        let tips = TipsSettingsViewModel(resetTips: ResetTipsUseCase(tips: tipsService))
+
+        #if os(macOS)
         let screens = SettingsScreenModels(
-            homeCustomization: homeCustomizationViewModel(),
-            appearance: AppearanceSettingsViewModel(theme: themeManager),
-            languageAndFormat: LanguageFormatSettingsViewModel(localization: localizationManager),
-            prayerCalculation: PrayerCalculationSettingsViewModel(
-                calculation: calculationSettings()
-            ),
-            reminders: RemindersSettingsViewModel(
-                reminders: reminderPreferences,
-                notifications: notificationService
-            ),
-            tips: TipsSettingsViewModel(resetTips: ResetTipsUseCase(tips: tipsService)),
+            homeCustomization: homeCustomization,
+            appearance: appearance,
+            languageAndFormat: languageAndFormat,
+            prayerCalculation: prayerCalculation,
+            reminders: reminders,
+            tips: tips,
+            about: AboutViewModel(),
+            macIntegration: MacSettingsViewModel(
+                preferences: menuBarPreferences,
+                loginItem: launchAtLogin,
+                // The screen says a preference changed; the controller is what acts on it.
+                onMenuBarChanged: { [weak self] in self?.menuBar.apply() }
+            )
+        )
+        #else
+        let screens = SettingsScreenModels(
+            homeCustomization: homeCustomization,
+            appearance: appearance,
+            languageAndFormat: languageAndFormat,
+            prayerCalculation: prayerCalculation,
+            reminders: reminders,
+            tips: tips,
             about: AboutViewModel()
         )
+        #endif
         cachedSettingsScreens = screens
         return screens
     }

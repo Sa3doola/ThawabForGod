@@ -94,11 +94,13 @@ ThawabForGod/       The app target
 │   ├── Memorization/   SM-2 spaced repetition, as a pure function of state and grade
 │   ├── Networking/     Optional by design — no core feature may require it
 │   ├── Widgets/        Telling the widgets their inputs changed
+│   ├── MacIntegration/ Menu-bar preferences and the login item (macOS)
 │   └── Tips/           TipKit configuration
 ├── Features/       One folder per feature: Views + ViewModel + Coordinator
 │   ├── Home/           Prayer times + next-prayer countdown
 │   ├── Quran/          The mushaf: chapters, parts, and the reading screen
 │   ├── Hadith/         The two Sahihs: browse, search, bookmarks, memorization
+│   ├── MenuBar/        The Mac's status item and the panel it opens
 │   ├── Onboarding/     First-run: permissions, calculation method
 │   ├── Qibla/          Compass + distance, reusing the prayer-time engine
 │   ├── Adhkar/         Morning/evening remembrance, the first corpus reader

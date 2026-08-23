@@ -47,6 +47,13 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case reminderAsr
     case reminderMaghrib
     case reminderIsha
+
+    // The Mac's menu bar. Both unset by default, and asymmetrically so on purpose: the status
+    // item is on unless the user turns it off, because it is the whole reason a Mac build of a
+    // prayer-times app is worth having — while hiding the Dock icon is a choice nobody should
+    // arrive at by accident. macOS only; the iOS build never reads either.
+    case menuBarEnabled
+    case menuBarOnly
 }
 
 /// Small key/value store for user preferences.

@@ -52,31 +52,59 @@ struct SettingsScreensTests {
         let notifications = MockNotificationService(status: .authorized)
         let tips = SpyTipsService()
 
+        // Named first, because `#if` is not allowed inside an argument list and the field below
+        // exists on only one platform — the same shape `AppContainer.settingsScreens()` uses.
+        let homeCustomization = HomeCustomizationViewModel(
+            getLayout: GetHomeLayoutUseCase(
+                repository: HomeLayoutRepository(settingsStore: store)
+            ),
+            updateLayout: UpdateHomeLayoutUseCase(
+                repository: HomeLayoutRepository(settingsStore: store)
+            ),
+            resetLayout: ResetHomeLayoutUseCase(
+                repository: HomeLayoutRepository(settingsStore: store)
+            )
+        )
+        let appearance = AppearanceSettingsViewModel(theme: theme)
+        let languageAndFormat = LanguageFormatSettingsViewModel(
+            localization: localization,
+            now: { Self.fixedNow }
+        )
+        let prayerCalculation = PrayerCalculationSettingsViewModel(calculation: calculation)
+        let remindersScreen = RemindersSettingsViewModel(
+            reminders: reminders,
+            notifications: notifications
+        )
+        let tipsScreen = TipsSettingsViewModel(resetTips: ResetTipsUseCase(tips: tips))
+
+        #if os(macOS)
         let screens = SettingsScreenModels(
-            homeCustomization: HomeCustomizationViewModel(
-                getLayout: GetHomeLayoutUseCase(
-                    repository: HomeLayoutRepository(settingsStore: store)
-                ),
-                updateLayout: UpdateHomeLayoutUseCase(
-                    repository: HomeLayoutRepository(settingsStore: store)
-                ),
-                resetLayout: ResetHomeLayoutUseCase(
-                    repository: HomeLayoutRepository(settingsStore: store)
-                )
-            ),
-            appearance: AppearanceSettingsViewModel(theme: theme),
-            languageAndFormat: LanguageFormatSettingsViewModel(
-                localization: localization,
-                now: { Self.fixedNow }
-            ),
-            prayerCalculation: PrayerCalculationSettingsViewModel(calculation: calculation),
-            reminders: RemindersSettingsViewModel(
-                reminders: reminders,
-                notifications: notifications
-            ),
-            tips: TipsSettingsViewModel(resetTips: ResetTipsUseCase(tips: tips)),
+            homeCustomization: homeCustomization,
+            appearance: appearance,
+            languageAndFormat: languageAndFormat,
+            prayerCalculation: prayerCalculation,
+            reminders: remindersScreen,
+            tips: tipsScreen,
+            about: AboutViewModel(),
+            // Covered on its own in `MacSettingsViewModelTests`, which runs on both platforms
+            // because nothing in that view model imports AppKit.
+            macIntegration: MacSettingsViewModel(
+                preferences: MenuBarPreferences(settingsStore: store),
+                loginItem: FakeLaunchAtLogin(),
+                onMenuBarChanged: {}
+            )
+        )
+        #else
+        let screens = SettingsScreenModels(
+            homeCustomization: homeCustomization,
+            appearance: appearance,
+            languageAndFormat: languageAndFormat,
+            prayerCalculation: prayerCalculation,
+            reminders: remindersScreen,
+            tips: tipsScreen,
             about: AboutViewModel()
         )
+        #endif
 
         return Context(
             screens: screens,
@@ -398,12 +426,33 @@ struct SettingsScreensTests {
     }
 }
 
-/// The root list itself: seven rows, and one screen that is not among them.
+/// The root list itself, and the two things kept off it.
 struct SettingsRouteTests {
 
-    @Test func theRootListsEverythingExceptTheSourcesScreen() {
+    /// `sources` is one level further in — a fact *about* the app rather than a subject of its
+    /// own — so it is never a root row on either platform.
+    @Test func theRootDoesNotListTheSourcesScreen() {
         #expect(SettingsRoute.root.contains(.sources) == false)
-        #expect(SettingsRoute.root.count == SettingsRoute.allCases.count - 1)
+    }
+
+    /// The root is everything this *build* has, less `sources`. Both halves matter: a route
+    /// filtered out for the wrong platform would be a row opening an empty screen, and one
+    /// filtered out that should not be would be a screen with no way to reach it.
+    @Test func theRootListsEveryRouteThisBuildHas() {
+        let expected = SettingsRoute.allCases.filter { $0.isAvailable && $0 != .sources }
+
+        #expect(SettingsRoute.root == expected)
+    }
+
+    /// The Mac's own screen — menu bar, Dock icon, login item — exists in both builds and is
+    /// offered in only one. Declaring the case everywhere is what keeps `#if` out of the enum
+    /// and out of `SettingsView`'s switch.
+    @Test func theMacScreenIsOfferedOnlyOnTheMac() {
+        #if os(macOS)
+        #expect(SettingsRoute.root.contains(.macIntegration))
+        #else
+        #expect(SettingsRoute.root.contains(.macIntegration) == false)
+        #endif
     }
 
     @Test func homeCustomizationComesFirst() {

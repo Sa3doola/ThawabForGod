@@ -2181,6 +2181,23 @@
         }
       }
     },
+    "menu_bar_quit": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء نور"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Noor"
+          }
+        }
+      }
+    },
     "method_dubai": {
       "extractionState": "manual",
       "localizations": {
@@ -4370,6 +4387,193 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noor uses the language you choose for it in the Settings app. Picking a new one there reopens the app."
+          }
+        }
+      }
+    },
+    "settings_launch_at_login": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التشغيل عند تسجيل الدخول"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch at login"
+          }
+        }
+      }
+    },
+    "settings_launch_at_login_approval_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استلم macOS الطلب وينتظر السماح به من إعدادات النظام ← عام ← عناصر تسجيل الدخول."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS has the request and is waiting for you to allow it in System Settings → General → Login Items."
+          }
+        }
+      }
+    },
+    "settings_launch_at_login_approve": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح إعدادات عناصر تسجيل الدخول"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Login Items settings"
+          }
+        }
+      }
+    },
+    "settings_launch_at_login_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رفض macOS الطلب. غالبًا يجب أن يكون نور في مجلد التطبيقات."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS refused the request. Noor usually has to be in your Applications folder."
+          }
+        }
+      }
+    },
+    "settings_launch_at_login_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح نور تلقائيًا عند تسجيل الدخول إلى هذا الماك."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Noor automatically when you log in to this Mac."
+          }
+        }
+      }
+    },
+    "settings_launch_at_login_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متاح بعد نقل نور إلى مجلد التطبيقات."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available once Noor is in your Applications folder."
+          }
+        }
+      }
+    },
+    "settings_mac_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الماك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصلاة القادمة والوقت المتبقي، في شريط القائمة. إخفاء أيقونة الدوك يتطلب إبقاء عنصر شريط القائمة مفعّلًا، وإلا لن تبقى وسيلة للعودة إلى نور."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next prayer and a live countdown, in the menu bar. Hiding the Dock icon needs the menu bar item to stay on — otherwise there would be no way back to Noor."
+          }
+        }
+      }
+    },
+    "settings_menu_bar_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إخفاء أيقونة الدوك"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Dock icon"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شريط القائمة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu bar"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_show": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار في شريط القائمة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in menu bar"
           }
         }
       }
