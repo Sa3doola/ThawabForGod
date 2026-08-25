@@ -67,6 +67,23 @@ final class NamesViewModel {
         return names
     }
 
+    /// The name before and after a given one, in corpus order.
+    ///
+    /// **Over `allNames`, never over `matches`.** The detail screen is reached from a search as
+    /// often as from the grid, and paging through the *filtered* list would mean "next" landed on
+    /// a different name depending on what had been typed on the screen behind — and would run out
+    /// after two. The ninety-nine have one order and it is the corpus's.
+    func name(before name: DivineName) -> DivineName? {
+        guard let index = allNames.firstIndex(of: name), index > 0 else { return nil }
+        return allNames[index - 1]
+    }
+
+    func name(after name: DivineName) -> DivineName? {
+        let names = allNames
+        guard let index = names.firstIndex(of: name), index < names.count - 1 else { return nil }
+        return names[index + 1]
+    }
+
     // MARK: Loading
 
     /// Loads the names for a language.

@@ -36,9 +36,9 @@ struct HadithCard: View {
 
             text
         }
-        .padding(18)
+        .padding(AppSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.surface, in: .rect(cornerRadius: 16))
+        .appCard()
         // `.contain` rather than `.combine`, so the bookmark button stays a separate element
         // VoiceOver can reach. Combining would fold it into the narration and leave a reader
         // with a very long label and no way to act on it.

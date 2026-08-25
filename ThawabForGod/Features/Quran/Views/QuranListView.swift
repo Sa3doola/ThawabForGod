@@ -23,21 +23,27 @@ struct QuranListView: View {
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                if viewModel.isSearching {
-                    searchResults
-                } else {
-                    continueReading
-                    sectionPicker
-                    content
+        // The pane's width, which is what decides whether 114 chapters are a list or a board —
+        // not the size class, which says the same thing about a half-width iPad and a Mac window
+        // twice as wide. See `AppBreakpoint`.
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: AppSpacing.md) {
+                    if viewModel.isSearching {
+                        searchResults
+                    } else {
+                        continueReading
+                        sectionPicker
+                        content(columns: columns(for: proxy.size.width))
+                    }
                 }
+                .padding(AppSpacing.xl)
+                .frame(maxWidth: measure(width: proxy.size.width))
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(20)
-            .frame(maxWidth: 560)
-            .frame(maxWidth: .infinity, alignment: .center)
         }
         .background(theme.background)
         .navigationTitle(l10n.string(.quranTitle))
@@ -78,8 +84,53 @@ struct QuranListView: View {
         .padding(.bottom, 4)
     }
 
+    private func columns(for width: CGFloat) -> Int {
+        AppBreakpoint.chapterGridColumns(
+            width: width,
+            isAccessibilitySize: typeSize.isAccessibilitySize
+        )
+    }
+
+    /// How wide the content may get. A single column stops at the ordinary card measure; a board
+    /// is allowed the room, because the whole reason it became a board is that the room was there.
+    private func measure(width: CGFloat) -> CGFloat {
+        columns(for: width) > 1 ? .infinity : AppBreakpoint.contentMeasure
+    }
+
+    /// Either a stack of rows or a board of cells, from one list of chapters.
+    ///
+    /// `LazyVGrid` with a fixed count rather than `.adaptive(minimum:)`: adaptive fits as many
+    /// columns as will go, which is how a 1024-point iPad ends up with five narrow chapters in a
+    /// row. The design counts columns at named widths and caps the count at four, and the
+    /// minimum is what stops the third column forming on a window wide enough for the count but
+    /// not for the cells.
     @ViewBuilder
-    private var content: some View {
+    private func grid<Item: Identifiable, Cell: View>(
+        _ items: [Item],
+        columns: Int,
+        @ViewBuilder cell: @escaping (Item) -> Cell
+    ) -> some View {
+        if columns > 1 {
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(
+                        .flexible(minimum: AppBreakpoint.chapterCellMinimum),
+                        spacing: AppSpacing.md
+                    ),
+                    count: columns
+                ),
+                alignment: .leading,
+                spacing: AppSpacing.md
+            ) {
+                ForEach(items) { cell($0) }
+            }
+        } else {
+            ForEach(items) { cell($0) }
+        }
+    }
+
+    @ViewBuilder
+    private func content(columns: Int) -> some View {
         switch viewModel.listPhase {
         case .loading:
             // Labelled rather than a bare spinner, so VoiceOver announces something other than
@@ -92,12 +143,14 @@ struct QuranListView: View {
         case .ready:
             switch viewModel.section {
             case .surahs:
-                ForEach(viewModel.surahs) { surah in
-                    SurahRow(surah: surah) { coordinator.open(.surah(surah.id)) }
+                grid(viewModel.surahs, columns: columns) { surah in
+                    SurahRow(surah: surah, layout: columns > 1 ? .cell : .row) {
+                        coordinator.open(.surah(surah.id))
+                    }
                 }
 
             case .juz:
-                ForEach(viewModel.juz) { juz in
+                grid(viewModel.juz, columns: columns) { juz in
                     JuzRow(juz: juz) { coordinator.open(.juz(juz.number)) }
                 }
 

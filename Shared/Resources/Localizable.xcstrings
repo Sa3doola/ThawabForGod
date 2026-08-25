@@ -226,6 +226,23 @@
         }
       }
     },
+    "adhkar_dhikr_number": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذكر %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dhikr %@"
+          }
+        }
+      }
+    },
     "adhkar_empty": {
       "extractionState": "manual",
       "localizations": {
@@ -260,6 +277,23 @@
         }
       }
     },
+    "adhkar_of_total": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "of %@"
+          }
+        }
+      }
+    },
     "adhkar_progress_label": {
       "extractionState": "manual",
       "localizations": {
@@ -273,6 +307,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Completed"
+          }
+        }
+      }
+    },
+    "adhkar_remaining": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متبقية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "remaining"
           }
         }
       }
@@ -358,6 +409,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Source"
+          }
+        }
+      }
+    },
+    "adhkar_swipe_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسحب البطاقة للذكر التالي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe the card for the next dhikr"
           }
         }
       }
@@ -957,6 +1025,40 @@
         }
       }
     },
+    "hadith_bookmarks_across": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في %@ كتب"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Across %@ books"
+          }
+        }
+      }
+    },
+    "hadith_bookmarks_saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ محفوظة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ saved"
+          }
+        }
+      }
+    },
     "hadith_bookmarks_section": {
       "extractionState": "manual",
       "localizations": {
@@ -1004,6 +1106,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continue reading"
+          }
+        }
+      }
+    },
+    "hadith_deck_size": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ في المجموعة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in deck"
           }
         }
       }
@@ -1076,6 +1195,40 @@
         }
       }
     },
+    "hadith_grade_in_days": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعد %@ يومًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %@ days"
+          }
+        }
+      }
+    },
+    "hadith_grade_tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غدًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        }
+      }
+    },
     "hadith_loading": {
       "extractionState": "manual",
       "localizations": {
@@ -1127,19 +1280,19 @@
         }
       }
     },
-    "hadith_memorize_due_label": {
+    "hadith_memorize_due": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "للمراجعة"
+            "value": "%@ مستحقة"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "due"
+            "value": "%@ due"
           }
         }
       }
@@ -1280,6 +1433,23 @@
         }
       }
     },
+    "hadith_next_book": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكتاب التالي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next book"
+          }
+        }
+      }
+    },
     "hadith_number_label": {
       "extractionState": "manual",
       "localizations": {
@@ -1293,6 +1463,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No."
+          }
+        }
+      }
+    },
+    "hadith_previous_book": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكتاب السابق"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous book"
           }
         }
       }
@@ -1892,6 +2079,23 @@
         }
       }
     },
+    "home_section_today_times": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مواقيت اليوم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today's times"
+          }
+        }
+      }
+    },
     "home_shortcut_evening_adhkar": {
       "extractionState": "manual",
       "localizations": {
@@ -1956,6 +2160,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prayer Times"
+          }
+        }
+      }
+    },
+    "in_time_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعد %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in %@"
           }
         }
       }
@@ -2177,6 +2398,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shafi"
+          }
+        }
+      }
+    },
+    "menu_bar_log_prayer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل %@ كمُؤدّاة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log %@ as prayed"
+          }
+        }
+      }
+    },
+    "menu_bar_logged_prayer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ مسجّلة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ logged"
           }
         }
       }
@@ -2487,6 +2742,23 @@
         }
       }
     },
+    "names_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم التالي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next name"
+          }
+        }
+      }
+    },
     "names_no_matches": {
       "extractionState": "manual",
       "localizations": {
@@ -2517,6 +2789,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Name"
+          }
+        }
+      }
+    },
+    "names_previous": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم السابق"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous name"
           }
         }
       }
@@ -2606,40 +2895,6 @@
         }
       }
     },
-    "next_day_action": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اليوم التالي"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next day"
-          }
-        }
-      }
-    },
-    "next_prayer_badge": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التالية"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next"
-          }
-        }
-      }
-    },
     "next_prayer_label": {
       "extractionState": "manual",
       "localizations": {
@@ -2653,6 +2908,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Next prayer"
+          }
+        }
+      }
+    },
+    "next_week_action": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأسبوع التالي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next week"
           }
         }
       }
@@ -3490,19 +3762,19 @@
         }
       }
     },
-    "previous_day_action": {
+    "previous_week_action": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "اليوم السابق"
+            "value": "الأسبوع السابق"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Previous day"
+            "value": "Previous week"
           }
         }
       }
@@ -4068,6 +4340,40 @@
         }
       }
     },
+    "reader_keep_screen_awake": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إبقاء الشاشة مضاءة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep screen awake"
+          }
+        }
+      }
+    },
+    "reader_keep_screen_awake_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستهلك طاقة أكبر أثناء فتح القارئ."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uses more battery while the reader is open."
+          }
+        }
+      }
+    },
     "reader_line_spacing": {
       "extractionState": "manual",
       "localizations": {
@@ -4098,6 +4404,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading Options"
+          }
+        }
+      }
+    },
+    "reader_page_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصفحة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page"
           }
         }
       }
@@ -4187,6 +4510,23 @@
         }
       }
     },
+    "reader_show_verse_numbers": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار أرقام الآيات"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show verse numbers"
+          }
+        }
+      }
+    },
     "reader_text_section": {
       "extractionState": "manual",
       "localizations": {
@@ -4217,6 +4557,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Text Size"
+          }
+        }
+      }
+    },
+    "reminder_off_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التذكير متوقف"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder off"
+          }
+        }
+      }
+    },
+    "reminder_on_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التذكير مفعّل"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder on"
           }
         }
       }
@@ -4574,6 +4948,108 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show in menu bar"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_style": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنصر شريط القوائم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu bar item"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_style_automatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تلقائي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_style_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُسقط الوضع التلقائي اسم الصلاة ثم الرمز كلما ازدحم شريط القوائم. والعدّ التنازلي آخر ما يُسقط."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic drops the prayer name, and then the symbol, as the menu bar fills up. The countdown is the last thing to go."
+          }
+        }
+      }
+    },
+    "settings_menu_bar_style_full": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم والوقت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name and time"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_style_symbol_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرمز فقط"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol only"
+          }
+        }
+      }
+    },
+    "settings_menu_bar_style_time_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوقت فقط"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time only"
           }
         }
       }

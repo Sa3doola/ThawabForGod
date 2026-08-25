@@ -28,6 +28,9 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
 
     private let dateFormatters: [DateStyle: DateFormatter]
 
+    /// Very short weekday names, one formatter per language — the strip's seven letters.
+    private let weekdayFormatters: [AppLanguage: DateFormatter]
+
     /// Two digits, zero-padded, per numbering system. Padding a countdown by hand would mean
     /// prepending a Latin `"0"` in front of Arabic-Indic digits.
     private let paddedFormatters: [NumberSystem: NumberFormatter]
@@ -78,8 +81,22 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
             }
         }
 
+        var weekdays: [AppLanguage: DateFormatter] = [:]
+
+        for language in AppLanguage.allCases {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: language.rawValue)
+            formatter.timeZone = .autoupdatingCurrent
+            formatter.calendar = Calendar(identifier: .gregorian)
+            // `EEEEE` is the *narrow* weekday — one letter in English, one in Arabic. `EEE`
+            // would be "Mon", which is three times the width the strip has for it.
+            formatter.setLocalizedDateFormatFromTemplate("EEEEE")
+            weekdays[language] = formatter
+        }
+
         self.timeFormatters = times
         self.dateFormatters = dates
+        self.weekdayFormatters = weekdays
         self.paddedFormatters = Self.numberFormatters(minimumIntegerDigits: 2)
         self.plainFormatters = Self.numberFormatters(minimumIntegerDigits: 1)
     }
@@ -117,6 +134,10 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
         dateFormatters[DateStyle(language: language, system: system)]?.string(from: date) ?? ""
     }
 
+    func weekdayString(from date: Date, language: AppLanguage) -> String {
+        weekdayFormatters[language]?.string(from: date) ?? ""
+    }
+
     func countdownString(from interval: TimeInterval, system: NumberSystem) -> String {
         let total = Int(max(0, interval).rounded(.down))
         let hours = total / 3600
@@ -126,6 +147,23 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
         // Below an hour the hours component is noise, so it is dropped and minutes lead.
         let components = hours > 0
             ? [plain(hours, system), padded(minutes, system), padded(seconds, system)]
+            : [plain(minutes, system), padded(seconds, system)]
+
+        return Self.isolatedLeftToRight(components.joined(separator: ":"))
+    }
+
+    func briefCountdownString(from interval: TimeInterval, system: NumberSystem) -> String {
+        let total = Int(max(0, interval).rounded(.down))
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let seconds = total % 60
+
+        // Above the hour the leading figure is hours and the second is minutes; inside it the
+        // pair shifts down to minutes and seconds. Two components either way, which is what
+        // holds the slot still — the transition happens once, at the boundary, and the label
+        // narrows by at most one character when the hours figure was two digits.
+        let components = hours > 0
+            ? [plain(hours, system), padded(minutes, system)]
             : [plain(minutes, system), padded(seconds, system)]
 
         return Self.isolatedLeftToRight(components.joined(separator: ":"))

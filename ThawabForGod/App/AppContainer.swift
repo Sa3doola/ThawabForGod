@@ -441,7 +441,8 @@ final class AppContainer {
                     schedule: getPrayerSchedule,
                     settingsStore: settingsStore
                 ),
-                l10n: localizationManager
+                l10n: localizationManager,
+                tracker: prayerTracker
             ),
             preferences: menuBarPreferences,
             themeManager: themeManager,
@@ -607,6 +608,7 @@ final class AppContainer {
             useCase: getPrayerSchedule,
             tracker: prayerTracker,
             calculation: calculationSettings(),
+            reminders: reminderPreferences,
             hijriDates: hijriDates,
             coordinates: { home.coordinates },
             clock: clock
@@ -692,7 +694,7 @@ final class AppContainer {
     /// The tafsir sheet's view model, built on first use and kept.
     ///
     /// One for the app rather than one per verse: the sheet shows a single verse at a time, and
-    /// `TafsirSheet`'s `.task(id:)` reloads it when the reader taps another. Rebuilding it per
+    /// `TafsirPanel`'s `.task(id:)` reloads it when the reader taps another. Rebuilding it per
     /// row would put a view model inside a `LazyVStack` child, which the scroll throws away.
     func tafsirViewModel() -> TafsirViewModel {
         if let cachedTafsirViewModel {

@@ -46,6 +46,15 @@ final class HadithViewModel {
     nonisolated struct Reading: Equatable, Sendable {
         let book: HadithBook
         let hadiths: [Hadith]
+
+        /// The kitab either side of this one, for the footer that pages between them. `nil` at
+        /// the two ends of a collection, where the button is absent rather than disabled — a
+        /// control that can never do anything is not a control.
+        ///
+        /// References rather than whole books: the footer names the *direction*, and the title
+        /// it would need is the one thing this screen will load anyway on arriving.
+        let previous: BookReference?
+        let next: BookReference?
     }
 
     /// What the search field has turned up, or what is happening instead.
@@ -116,6 +125,11 @@ final class HadithViewModel {
     /// Whether the deck has anything in it at all, due or not.
     private(set) var hasDeck = false
 
+    /// How many narrations are in the deck. The second line of the memorize card — what is
+    /// *committed to*, beside what is due today, because a reader with nothing due has still
+    /// built something and the card should say so.
+    private(set) var deckCount = 0
+
     @ObservationIgnored private let useCase: GetHadithUseCase
     @ObservationIgnored private let progress: HadithProgressUseCase
     @ObservationIgnored private let memorize: MemorizeHadithUseCase
@@ -167,8 +181,14 @@ final class HadithViewModel {
     ///
     /// The division is fetched rather than taken from `books`, even when the reader arrived by
     /// tapping a row in that list. It costs one indexed lookup and it means this screen has no
-    /// opinion about what happened before it — which is what will let a bookmark open it later
-    /// without the list ever having been drawn.
+    /// opinion about what happened before it — which is what lets a bookmark or a search result
+    /// open it without the list ever having been drawn.
+    ///
+    /// The collection's divisions are read for the same reason, and that is what the footer's two
+    /// buttons are derived from. **Neighbours are positions in that list, never `number ± 1`:**
+    /// the kitab numbers are the published collections' own and are not guaranteed to run without
+    /// a gap, so arithmetic on them would eventually page to a division that does not exist and
+    /// leave the reader on an empty screen.
     func loadReading(_ reference: BookReference) async {
         reading = .loading
 
@@ -181,7 +201,17 @@ final class HadithViewModel {
             }
 
             let hadiths = try await useCase.hadiths(inBook: reference)
-            reading = .ready(Reading(book: book, hadiths: hadiths))
+            let siblings = try await useCase.books(inCollection: reference.collection)
+            let index = siblings.firstIndex { $0.number == reference.number }
+
+            reading = .ready(
+                Reading(
+                    book: book,
+                    hadiths: hadiths,
+                    previous: index.flatMap { $0 > 0 ? siblings[$0 - 1].id : nil },
+                    next: index.flatMap { $0 < siblings.count - 1 ? siblings[$0 + 1].id : nil }
+                )
+            )
         } catch {
             reading = .unavailable
         }
@@ -206,6 +236,7 @@ final class HadithViewModel {
             let deck = try await memorize.deck()
             memorizingIDs = Set(deck.map(\.id))
             hasDeck = !deck.isEmpty
+            deckCount = deck.count
             dueCount = try await memorize.dueCount(on: clock.now)
         } catch {
             // A store that will not read is not something the reader can act on, and it must not
@@ -215,8 +246,20 @@ final class HadithViewModel {
             lastRead = nil
             memorizingIDs = []
             hasDeck = false
+            deckCount = 0
             dueCount = 0
         }
+    }
+
+    /// How many distinct kitab the kept narrations are spread across — the bookmarks card's
+    /// second line.
+    ///
+    /// Counted from what is already loaded rather than asked of the store: `bookmarks` is in
+    /// memory and a `COUNT(DISTINCT …)` would be a second read for a number the app is holding
+    /// the inputs to.
+    var bookmarkedBookCount: Int {
+        Set(bookmarks.map { BookReference(collection: $0.hadith.collectionID, number: $0.hadith.bookNumber) })
+            .count
     }
 
     /// Whether a narration is in the review deck. Answered from memory, per narration on screen.
@@ -241,6 +284,7 @@ final class HadithViewModel {
             let deck = try await memorize.deck()
             memorizingIDs = Set(deck.map(\.id))
             hasDeck = !deck.isEmpty
+            deckCount = deck.count
             dueCount = try await memorize.dueCount(on: clock.now)
         } catch {
             // Put the mark back where the store says it is, rather than leaving it showing a

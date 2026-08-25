@@ -43,10 +43,7 @@ struct QiblaReadout: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 4)
-        .background(theme.surface, in: .rect(cornerRadius: 16))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16).strokeBorder(theme.separator)
-        }
+        .appCard()
     }
 }
 

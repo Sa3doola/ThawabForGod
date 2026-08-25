@@ -106,6 +106,7 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// The sections Home can stack, named for the customization screen — and, where a section
     /// draws its own heading, for that too.
     case homeSectionNextPrayer = "home_section_next_prayer"
+    case homeSectionTodayTimes = "home_section_today_times"
     case homeSectionShortcuts = "home_section_shortcuts"
     case homeSectionContinueReading = "home_section_continue_reading"
     case homeSectionLastActivity = "home_section_last_activity"
@@ -149,14 +150,16 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
 
     case prayerTimesSheetTitle = "prayer_times_sheet_title"
     case prayerTimesSheetHint = "prayer_times_sheet_hint"
-    case nextPrayerBadge = "next_prayer_badge"
 
     case settingsRemindersPrayerSection = "settings_reminders_prayer_section"
     case settingsCalculationReset = "settings_calculation_reset"
     case settingsCalculationResetConfirm = "settings_calculation_reset_confirm"
     case settingsPrivacyNote = "settings_privacy_note"
-    case previousDayAction = "previous_day_action"
-    case nextDayAction = "next_day_action"
+    case inTimeLabel = "in_time_label"
+    case reminderOnLabel = "reminder_on_label"
+    case reminderOffLabel = "reminder_off_label"
+    case previousWeekAction = "previous_week_action"
+    case nextWeekAction = "next_week_action"
     case todayAction = "today_action"
     case doneAction = "done_action"
     case aboutThisPrayerAction = "about_this_prayer_action"
@@ -254,6 +257,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case readerPaperSystem = "reader_paper_system"
     case readerPaperParchment = "reader_paper_parchment"
     case readerPaperNight = "reader_paper_night"
+    case readerPageSection = "reader_page_section"
+    case readerShowVerseNumbers = "reader_show_verse_numbers"
+    case readerKeepScreenAwake = "reader_keep_screen_awake"
+    case readerKeepScreenAwakeDetail = "reader_keep_screen_awake_detail"
     case readerTextSection = "reader_text_section"
     case readerTextSize = "reader_text_size"
     case readerLineSpacing = "reader_line_spacing"
@@ -296,7 +303,14 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case hadithMemorizeStop = "hadith_memorize_stop"
     /// Follows a count — "3 due" — rather than carrying one, so the digits go through
     /// `LocalizationManager` instead of a format string.
-    case hadithMemorizeDueLabel = "hadith_memorize_due_label"
+    case hadithMemorizeDue = "hadith_memorize_due"
+    case hadithDeckSize = "hadith_deck_size"
+    case hadithBookmarksSaved = "hadith_bookmarks_saved"
+    case hadithBookmarksAcross = "hadith_bookmarks_across"
+    case hadithPreviousBook = "hadith_previous_book"
+    case hadithNextBook = "hadith_next_book"
+    case hadithGradeTomorrow = "hadith_grade_tomorrow"
+    case hadithGradeInDays = "hadith_grade_in_days"
     case hadithMemorizeCaughtUp = "hadith_memorize_caught_up"
     case hadithMemorizePrompt = "hadith_memorize_prompt"
     case hadithMemorizeRecall = "hadith_memorize_recall"
@@ -326,6 +340,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case adhkarRepeatLabel = "adhkar_repeat_label"
     case adhkarCountHint = "adhkar_count_hint"
     case adhkarCompleted = "adhkar_completed"
+    case adhkarRemaining = "adhkar_remaining"
+    case adhkarOfTotal = "adhkar_of_total"
+    case adhkarDhikrNumber = "adhkar_dhikr_number"
+    case adhkarSwipeHint = "adhkar_swipe_hint"
     case adhkarReset = "adhkar_reset"
     case adhkarVerificationNotice = "adhkar_verification_notice"
 
@@ -342,6 +360,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
 
     // MARK: The 99 names
 
+    case namesPrevious = "names_previous"
+    case namesNext = "names_next"
     case namesTitle = "names_title"
     case namesLoading = "names_loading"
     case namesUnavailable = "names_unavailable"
@@ -407,12 +427,20 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case settingsMenuBarShow = "settings_menu_bar_show"
     case settingsMenuBarOnly = "settings_menu_bar_only"
     case settingsMenuBarFooter = "settings_menu_bar_footer"
+    case settingsMenuBarStyle = "settings_menu_bar_style"
+    case settingsMenuBarStyleAutomatic = "settings_menu_bar_style_automatic"
+    case settingsMenuBarStyleFull = "settings_menu_bar_style_full"
+    case settingsMenuBarStyleTimeOnly = "settings_menu_bar_style_time_only"
+    case settingsMenuBarStyleSymbolOnly = "settings_menu_bar_style_symbol_only"
+    case settingsMenuBarStyleFooter = "settings_menu_bar_style_footer"
     case settingsLaunchAtLogin = "settings_launch_at_login"
     case settingsLaunchAtLoginFooter = "settings_launch_at_login_footer"
     case settingsLaunchAtLoginApprove = "settings_launch_at_login_approve"
     case settingsLaunchAtLoginApprovalFooter = "settings_launch_at_login_approval_footer"
     case settingsLaunchAtLoginUnavailable = "settings_launch_at_login_unavailable"
     case settingsLaunchAtLoginFailed = "settings_launch_at_login_failed"
+    case menuBarLogPrayer = "menu_bar_log_prayer"
+    case menuBarLoggedPrayer = "menu_bar_logged_prayer"
     case menuBarQuit = "menu_bar_quit"
 
     // MARK: Widgets

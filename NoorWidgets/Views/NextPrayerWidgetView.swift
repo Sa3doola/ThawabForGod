@@ -22,7 +22,9 @@ struct NextPrayerWidgetView: View {
 
     var body: some View {
         content
-            .environment(\.theme, theme)
+            // On the ramp the palette is inverted, so every view inside goes on reading the same
+            // tokens — see `Theme.onDayRamp`.
+            .environment(\.theme, rampStop == nil ? theme : theme.onDayRamp)
             // The numbering system, as a locale, because `Text(timerInterval:)` is rendered by
             // the system and is the one string in this app whose digits it cannot format itself.
             .environment(\.locale, l10n.locale)
@@ -31,7 +33,37 @@ struct NextPrayerWidgetView: View {
                 entry.style.language.isRightToLeft ? .rightToLeft : .leftToRight
             )
             .widgetURL(DeepLink.prayerTimes.url)
-            .containerBackground(theme.background, for: .widget)
+            .containerBackground(for: .widget) {
+                if let rampStop {
+                    DayRampBackground(stop: rampStop)
+                } else {
+                    theme.background
+                }
+            }
+    }
+
+    /// The day's light behind this entry, or `nil` where the ramp must not be drawn.
+    ///
+    /// Two exclusions, and both are the point. **The Lock Screen accessories never get it**: the
+    /// system renders those monochrome and vibrant, so a gradient there is redrawn as a flat
+    /// smear and the lattice as noise. **`noLocation` and `notComputable` never get it** either —
+    /// the ramp *is* a claim about what time it is, and a widget that does not know where it is
+    /// has no business making one.
+    ///
+    /// Where it is drawn, it steps rather than glides: an entry exists per prayer transition, so
+    /// there is nothing between two markers for an interpolation to move across. That is the
+    /// honest widget reading of the same ramp the app's card blends through — one entry, one
+    /// light, and the light changes exactly when the prayer does.
+    private var rampStop: DayRampStop? {
+        guard case .schedule(let day) = entry.content, isSystemFamily else { return nil }
+        return DayRamp.stop(for: day.current ?? day.upcoming.prayer)
+    }
+
+    private var isSystemFamily: Bool {
+        switch family {
+        case .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge: true
+        default: false
+        }
     }
 
     @ViewBuilder

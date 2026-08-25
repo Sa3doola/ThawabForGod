@@ -19,7 +19,7 @@ struct RecentActivitySection: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
             Text(l10n.string(.homeSectionLastActivity))
                 .appFont(.headline, weight: .semibold)
                 .foregroundStyle(theme.textPrimary)
@@ -27,7 +27,7 @@ struct RecentActivitySection: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 // `.top` so the labels line up; the chips themselves stretch to match — see the
                 // chip's own frame.
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: AppSpacing.md) {
                     ForEach(items) { item in
                         RecentActivityChip(item: item, open: open)
                     }
@@ -55,7 +55,7 @@ private struct RecentActivityChip: View {
             guard let route = item.activity.route else { return }
             open(route)
         } label: {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 Label {
                     Text(l10n.string(item.activity.kind.titleKey))
                         .appFont(.caption, weight: .semibold)
@@ -78,15 +78,12 @@ private struct RecentActivityChip: View {
                 }
             }
             .frame(width: width, alignment: .leading)
-            .padding(12)
+            .padding(AppSpacing.md)
             // Equal heights across the row. Chips carry different amounts of text — a chapter's
             // name wraps where a dhikr's does not — and `maxHeight` inside an `HStack` grows each
             // one to the tallest, which is what keeps the row a row rather than a skyline.
             .frame(maxHeight: .infinity, alignment: .topLeading)
-            .background(theme.surface, in: .rect(cornerRadius: 14))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14).strokeBorder(theme.separator)
-            }
+            .appCard()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

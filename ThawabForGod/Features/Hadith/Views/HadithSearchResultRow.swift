@@ -46,9 +46,10 @@ struct HadithSearchResultRow: View {
                     .environment(\.layoutDirection, .rightToLeft)
                     .environment(\.locale, AppLanguage.arabic.locale)
             }
-            .padding(16)
+            .padding(AppSpacing.row)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.surface, in: .rect(cornerRadius: 14))
+            .appCard()
+                .appHover()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

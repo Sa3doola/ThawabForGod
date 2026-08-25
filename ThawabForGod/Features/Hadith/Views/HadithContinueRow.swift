@@ -38,9 +38,10 @@ struct HadithContinueRow: View {
 
                 Spacer(minLength: 8)
             }
-            .padding(14)
+            .padding(AppSpacing.row)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.accent.opacity(0.08), in: .rect(cornerRadius: 14))
+            .background(theme.accent.opacity(0.08), in: .rect(cornerRadius: AppRadius.lg))
+            .appHover()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

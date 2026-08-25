@@ -60,7 +60,9 @@ struct ThawabForGodApp: App {
                     coordinator: container.settingsCoordinator
                 )
             }
-            .frame(minWidth: 420, minHeight: 520)
+            // The tabbed window sizes itself — see `SettingsView.presentation` — so this only
+            // has to stop the scene squeezing it.
+            .frame(minWidth: 720, minHeight: 540)
             .themed(container.themeManager)
             .localized(container.localizationManager)
         }

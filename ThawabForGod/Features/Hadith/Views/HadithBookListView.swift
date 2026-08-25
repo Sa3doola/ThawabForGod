@@ -23,7 +23,7 @@ struct HadithBookListView: View {
             LazyVStack(spacing: 10) {
                 content
             }
-            .padding(20)
+            .padding(AppSpacing.xl)
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity, alignment: .center)
         }

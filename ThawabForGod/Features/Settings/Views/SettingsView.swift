@@ -17,9 +17,16 @@ import SwiftUI
 /// all of which persist through `SettingsStore`. The sub-screens forward to those; this one only
 /// routes.
 ///
-/// The same view on all three platforms. On iPhone and iPad it is the root of its own tab; on
-/// macOS it is the content of the `Settings` scene, reached with ⌘, where a Mac user expects to
-/// find it — which is why there is no settings tab in that build.
+/// **The same routes on all three platforms, drawn as the platform draws preferences.** On
+/// iPhone and iPad this is the root of its own tab: grouped rows that push. On macOS it is the
+/// content of the `Settings` scene, reached with ⌘, where a Mac user expects to find it — which
+/// is why there is no settings tab in that build — and there it is a *tabbed* window, because a
+/// list of rows that pushes is not what a Mac preferences window is.
+///
+/// The branch is over the presentation alone. Both arrangements iterate `SettingsRoute.root` and
+/// both build their screens with `screen(for:)`, so a route added to the enum appears in both
+/// without either being edited: the enum already carries a title and a symbol per case, which is
+/// exactly what a row needs and exactly what a tab item needs.
 struct SettingsView: View {
     let container: SettingsScreens
 
@@ -28,6 +35,34 @@ struct SettingsView: View {
     @Environment(LocalizationManager.self) private var l10n
 
     var body: some View {
+        presentation
+            .navigationTitle(l10n.string(.settingsTitle))
+            // One destination for the whole path, so `about` can push `sources` without either
+            // screen knowing how deep it is — on the Mac too, where the push covers the tabbed
+            // window rather than sliding beside it.
+            .navigationDestination(for: SettingsRoute.self, destination: screen)
+    }
+
+    #if os(macOS)
+    /// A tabbed preferences window, at the size the design specifies.
+    ///
+    /// Fixed rather than resizable: every one of these panes is a short column of controls, and a
+    /// preferences window a user has to size themselves is one more thing to have an opinion
+    /// about. The number is the design's — 720 × 540.
+    private var presentation: some View {
+        TabView {
+            ForEach(SettingsRoute.root, id: \.self) { route in
+                screen(for: route)
+                    .tabItem {
+                        Label(l10n.string(route.titleKey), systemImage: route.symbol)
+                    }
+            }
+        }
+        .frame(width: 720, height: 540)
+    }
+    #else
+    /// Grouped rows that push, which is what a preference screen is on a phone.
+    private var presentation: some View {
         Form {
             Section {
                 ForEach(SettingsRoute.root, id: \.self) { route in
@@ -36,11 +71,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(l10n.string(.settingsTitle))
-        // One destination for the whole path, so `about` can push `sources` without either
-        // screen knowing how deep it is.
-        .navigationDestination(for: SettingsRoute.self, destination: screen)
     }
+    #endif
 
     @ViewBuilder
     private func screen(for route: SettingsRoute) -> some View {

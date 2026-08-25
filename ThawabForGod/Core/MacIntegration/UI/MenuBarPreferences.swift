@@ -30,12 +30,27 @@ final class MenuBarPreferences {
     private(set) var isMenuBarEnabled: Bool
     private(set) var isMenuBarOnly: Bool
 
+    /// How much of the status item to draw. `automatic` unless the user has said otherwise —
+    /// which is the third default here, and it points the same way as the first: the item shows
+    /// everything it can, and gives ground only when the bar makes it.
+    private(set) var statusStyle: MenuBarStatusStyle
+
     @ObservationIgnored private let settingsStore: any SettingsStore
 
     init(settingsStore: any SettingsStore) {
         self.settingsStore = settingsStore
         self.isMenuBarEnabled = settingsStore.bool(for: .menuBarEnabled) ?? true
         self.isMenuBarOnly = settingsStore.bool(for: .menuBarOnly) ?? false
+        // An unreadable stored value falls back to the default rather than trapping: this is a
+        // raw string in a preferences file, and a build that renamed a case must not crash the
+        // one after it.
+        self.statusStyle = settingsStore.string(for: .menuBarStatusStyle)
+            .flatMap(MenuBarStatusStyle.init(rawValue:)) ?? .automatic
+    }
+
+    func setStatusStyle(_ style: MenuBarStatusStyle) {
+        statusStyle = style
+        settingsStore.set(style.rawValue, for: .menuBarStatusStyle)
     }
 
     func setMenuBarEnabled(_ isEnabled: Bool) {

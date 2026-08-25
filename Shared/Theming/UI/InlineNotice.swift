@@ -49,10 +49,8 @@ struct InlineNotice: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: tone.symbol)
-                .appFont(.title2)
-                .foregroundStyle(tint)
+        VStack(spacing: AppSpacing.lg) {
+            mark
 
             Text(message)
                 .appFont(.callout)
@@ -63,6 +61,33 @@ struct InlineNotice: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
         .accessibilityElement(children: .combine)
+    }
+
+    /// **A fault gets a symbol; an empty screen gets the motif.**
+    ///
+    /// The design's rule for the girih star is that the outline is two things — the app icon and
+    /// the empty-state mark — and this is the second. An empty bookmarks list, a search that
+    /// matched nothing, a commentary that passes over a verse: none of those is a fault, and a
+    /// grey `info.circle` over each of them says "notice" about an outcome that is simply the
+    /// answer. The star says the app has nothing here yet, in the app's own hand.
+    ///
+    /// A warning keeps its triangle. That glyph is the platform's, readers already know it, and
+    /// an ornament in its place would make a corpus that will not open look decorative.
+    @ViewBuilder
+    private var mark: some View {
+        switch tone {
+        case .warning:
+            Image(systemName: tone.symbol)
+                .appFont(.title2)
+                .foregroundStyle(tint)
+
+        case .informational:
+            GirihStar(inset: 2)
+                .stroke(tint, lineWidth: 1.5)
+                .frame(width: 44, height: 44)
+                .opacity(0.5)
+                .accessibilityHidden(true)
+        }
     }
 }
 

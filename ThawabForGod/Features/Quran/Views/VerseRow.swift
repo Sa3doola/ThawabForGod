@@ -14,6 +14,9 @@ import SwiftUI
 struct VerseRow: View {
     let verse: Verse
     let isBookmarked: Bool
+    /// Whether to set the ayah marker after the words. `true` everywhere the reader has not said
+    /// otherwise — see `ReaderSettings.showsVerseNumbers`.
+    var showsNumber = true
     let onSetBookmark: (Bool) -> Void
     /// Opens the commentary on this verse. Optional so the row still draws everywhere it is
     /// reused without a tafsir to reach for — a preview, or a screen that has no sheet to put it
@@ -59,12 +62,16 @@ struct VerseRow: View {
     }
 
     private var text: some View {
-        (
-            Text(verse.text)
+        // Concatenated `Text` rather than an `HStack`, so the marker is part of the paragraph and
+        // wraps with it — which is what a mushaf does and what a separate view could not. The
+        // accessibility label names the verse either way, so hiding the marker takes nothing away
+        // from a reader using VoiceOver.
+        (showsNumber
+            ? Text(verse.text)
                 + Text(verbatim: " ﴿")
                 + Text(l10n.string(verse.number, grouped: false))
                 + Text(verbatim: "﴾")
-        )
+            : Text(verse.text))
         .readingFont(size: style.typography.textSize)
         .foregroundStyle(style.palette.textPrimary)
         .lineSpacing(style.typography.lineSpacing)
@@ -88,9 +95,11 @@ struct VerseRow: View {
                 .foregroundStyle(isBookmarked ? style.palette.accent : style.palette.textSecondary)
                 // A fixed box, so filling the symbol does not nudge the sajda mark beside it.
                 .frame(width: 22, height: 22)
-                .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        // Drawn at 22 and tapped at 44 — see `minimumTapTarget()`. The glyph has to stay small
+        // to live quietly under 286 verses; the fingertip aiming at it does not shrink to match.
+        .minimumTapTarget()
         .accessibilityLabel(l10n.string(isBookmarked ? .quranBookmarkRemove : .quranBookmarkAdd))
         .accessibilityAddTraits(isBookmarked ? [.isButton, .isSelected] : .isButton)
     }
@@ -107,9 +116,9 @@ struct VerseRow: View {
                     .appFont(.footnote, weight: .medium)
                     .foregroundStyle(style.palette.textSecondary)
                     .frame(width: 22, height: 22)
-                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
+            .minimumTapTarget()
             .accessibilityLabel(l10n.string(.tafsirOpen))
         }
     }

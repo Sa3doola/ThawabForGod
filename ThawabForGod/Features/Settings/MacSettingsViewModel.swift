@@ -61,6 +61,17 @@ final class MacSettingsViewModel {
         onMenuBarChanged()
     }
 
+    /// How much of the status item to draw.
+    var statusStyle: MenuBarStatusStyle { preferences.statusStyle }
+
+    /// Whether the choice is even offerable — with no status item there is nothing to style.
+    var canChooseStatusStyle: Bool { preferences.isMenuBarEnabled }
+
+    func setStatusStyle(_ style: MenuBarStatusStyle) {
+        preferences.setStatusStyle(style)
+        onMenuBarChanged()
+    }
+
     // MARK: Launch at login
 
     /// Whether the switch reads as on. `requiresApproval` does — the user asked for it, and the

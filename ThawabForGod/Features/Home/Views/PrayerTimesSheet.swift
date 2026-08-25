@@ -41,7 +41,7 @@ struct PrayerTimesSheet: View {
         NavigationStack {
             List {
                 Section {
-                    DateStepper(viewModel: viewModel)
+                    WeekStrip(viewModel: viewModel)
                 }
 
                 content
@@ -103,59 +103,136 @@ struct PrayerTimesSheet: View {
     }
 }
 
-/// ‹ 20 August 2026 · 7 Rabi al-Awwal 1448 › with a way back to today.
-private struct DateStepper: View {
+/// ‹ S M T W T F S › — a week of tiles, with the Hijri date and a way back to today under it.
+///
+/// **A strip rather than the single-date stepper this replaced.** A stepper answers "what about
+/// tomorrow?" in one tap and "what about Friday?" in an unknown number of them, and this screen is
+/// where the reader goes *looking* — most often at a day this week. Seven tiles make that one tap
+/// and cost no more height than the one date did, because the date it used to spell out is now the
+/// Hijri line underneath.
+///
+/// The chevrons page a whole week; see the view model.
+private struct WeekStrip: View {
     let viewModel: PrayerTimesSheetViewModel
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack {
+        VStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.xs) {
                 // `chevron.backward` and `chevron.forward`, never left and right: the semantic
-                // direction flips for Arabic and the literal one does not, so "the day before"
+                // direction flips for Arabic and the literal one does not, so "the week before"
                 // stays on the side the reader expects it.
-                stepButton(symbol: "chevron.backward", action: viewModel.showPreviousDay)
-                    .accessibilityLabel(l10n.string(.previousDayAction))
+                pageButton(symbol: "chevron.backward", action: viewModel.showPreviousWeek)
+                    .accessibilityLabel(l10n.string(.previousWeekAction))
 
-                Spacer(minLength: 8)
+                // Equal columns rather than a stack of tiles: seven tiles whose ideal widths
+                // differ — "1" against "28" — would come out ragged in an `HStack`, and the
+                // filled tile marking the selection would be a different width each day of the
+                // month. `DayPrayerRow` learned the same thing.
+                LazyVGrid(columns: columns, spacing: 0) {
+                    ForEach(viewModel.week, id: \.self) { date in
+                        DayTile(
+                            date: date,
+                            isSelected: viewModel.isSelected(date),
+                            isToday: viewModel.isCurrentDay(date)
+                        ) {
+                            viewModel.select(date)
+                        }
+                    }
+                }
 
-                VStack(spacing: 2) {
-                    Text(l10n.dateString(viewModel.day))
-                        .appFont(.subheadline, weight: .semibold)
-                        .foregroundStyle(theme.textPrimary)
+                pageButton(symbol: "chevron.forward", action: viewModel.showNextWeek)
+                    .accessibilityLabel(l10n.string(.nextWeekAction))
+            }
 
-                    Text(HijriDateLabel.text(for: viewModel.hijriDate, l10n: l10n))
+            HStack(spacing: AppSpacing.xs) {
+                Text(HijriDateLabel.text(for: viewModel.hijriDate, l10n: l10n))
+                    .appFont(.caption)
+                    .foregroundStyle(theme.textSecondary)
+
+                if !viewModel.isToday {
+                    Text(verbatim: "·")
                         .appFont(.caption)
                         .foregroundStyle(theme.textSecondary)
+
+                    Button(l10n.string(.todayAction), action: viewModel.showToday)
+                        .appFont(.caption, weight: .semibold)
+                        .foregroundStyle(theme.accent)
+                        .buttonStyle(.plain)
                 }
-                .multilineTextAlignment(.center)
-
-                Spacer(minLength: 8)
-
-                stepButton(symbol: "chevron.forward", action: viewModel.showNextDay)
-                    .accessibilityLabel(l10n.string(.nextDayAction))
-            }
-
-            if !viewModel.isToday {
-                Button(l10n.string(.todayAction), action: viewModel.showToday)
-                    .appFont(.subheadline, weight: .medium)
-                    .foregroundStyle(theme.accent)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, AppSpacing.xs)
     }
 
-    private func stepButton(symbol: String, action: @escaping () -> Void) -> some View {
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(minimum: 0), spacing: AppSpacing.xxs), count: 7)
+    }
+
+    private func pageButton(symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .appFont(.body, weight: .semibold)
+                .appFont(.footnote, weight: .semibold)
                 .foregroundStyle(theme.accent)
-                .frame(width: 40, height: 40)
-                .contentShape(.rect)
+                .minimumTapTarget()
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// One day in the strip: a letter, a numeral, and two marks that do not mean the same thing.
+///
+/// The **fill** is the selection — the day whose times are below. The **rule under the numeral**
+/// is today, which stays marked whatever day is selected, so a reader three weeks out can still
+/// see where they came from. Colour is never the only channel for either: the selected tile is
+/// also the only filled one, and today's rule is a shape.
+private struct DayTile: View {
+    let date: Date
+    let isSelected: Bool
+    let isToday: Bool
+    let select: () -> Void
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+    @Environment(\.calendar) private var calendar
+
+    var body: some View {
+        Button(action: select) {
+            VStack(spacing: 2) {
+                Text(l10n.weekdayString(date))
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(isSelected ? theme.background : theme.textSecondary)
+
+                Text(l10n.string(dayOfMonth, grouped: false))
+                    .appFont(.subheadline, weight: .semibold)
+                    .foregroundStyle(isSelected ? theme.background : theme.textPrimary)
+                    .monospacedDigit()
+
+                // Drawn always and hidden when it does not apply, so the tiles keep one height
+                // and the strip does not grow a point taller on whichever week contains today.
+                Capsule()
+                    .fill(isSelected ? theme.background : theme.accent)
+                    .frame(width: 10, height: 2)
+                    .opacity(isToday ? 1 : 0)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AppSpacing.xs)
+            .background(isSelected ? theme.accent : .clear, in: .rect(cornerRadius: AppRadius.md))
+            .contentShape(.rect(cornerRadius: AppRadius.md))
+        }
+        .buttonStyle(.plain)
+        .minimumTapTarget()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(l10n.dateString(date))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var dayOfMonth: Int {
+        calendar.component(.day, from: date)
     }
 }
 
@@ -200,10 +277,8 @@ private struct PrayerDetailRow: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: time.prayer.symbol)
-                .foregroundStyle(theme.accent)
-                .frame(width: 24)
+        HStack(spacing: AppSpacing.md) {
+            StandingDot(standing: viewModel.standing(of: time))
 
             Text(l10n.string(time.prayer.labelKey))
                 .appFont(.body)
@@ -218,21 +293,36 @@ private struct PrayerDetailRow: View {
             .buttonStyle(.plain)
             .accessibilityLabel(l10n.string(.aboutThisPrayerAction))
 
-            if viewModel.upcomingPrayer == time.prayer {
-                Text(l10n.string(.nextPrayerBadge))
-                    .appFont(.caption, weight: .semibold)
-                    .foregroundStyle(theme.accent)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(theme.accent.opacity(0.15), in: .capsule)
+            Spacer(minLength: AppSpacing.sm)
+
+            // The time, and under it how far off it is. Stacked rather than set beside each
+            // other because the times are what the eye runs down this column for, and a second
+            // figure on the same line would break the alignment that makes that possible.
+            VStack(alignment: .trailing, spacing: AppSpacing.xxs) {
+                Text(l10n.timeString(time.date))
+                    .appFont(.body)
+                    .foregroundStyle(theme.textPrimary)
+                    .monospacedDigit()
+
+                if let remaining = viewModel.remaining(until: time) {
+                    Text(l10n.string(.inTimeLabel, l10n.countdownString(remaining)))
+                        .appFont(.caption)
+                        .foregroundStyle(theme.textSecondary)
+                        .monospacedDigit()
+                }
             }
 
-            Spacer(minLength: 8)
-
-            Text(l10n.timeString(time.date))
-                .appFont(.body)
-                .foregroundStyle(theme.textSecondary)
-                .monospacedDigit()
+            // A bell only where there is one to report — sunrise starts no prayer and so is
+            // never reminded of, and a slashed bell on that row would say a reminder had been
+            // switched off rather than that there was never one to switch.
+            if let isReminding = viewModel.isReminding(time.prayer) {
+                Image(systemName: isReminding ? "bell" : "bell.slash")
+                    .appFont(.footnote)
+                    .foregroundStyle(isReminding ? theme.accent : theme.separator)
+                    .accessibilityLabel(
+                        l10n.string(isReminding ? .reminderOnLabel : .reminderOffLabel)
+                    )
+            }
 
             // Sunrise gets no circle: it ends Fajr's window rather than starting a prayer, which
             // is the same line the reminders draw.
@@ -245,6 +335,45 @@ private struct PrayerDetailRow: View {
                 }
             }
         }
+    }
+}
+
+/// The four states of a prayer within its day, as one dot at the head of the row.
+///
+/// **Never the accent alone.** The dot is one of the places the design forbids accent from
+/// carrying meaning, because the accent is a choice the user makes and prayer state is not: a
+/// column of dots has to read the same in amber, emerald, sapphire and rose. So *logged* is
+/// Success and *passed* and *upcoming* are neutral inks, and only the one prayer being counted
+/// down to takes the accent — where it means "here", the same thing it means everywhere else.
+///
+/// Size is the second channel, so the states are still separable in monochrome and for a reader
+/// who cannot tell the greens from the greys.
+private struct StandingDot: View {
+    let standing: PrayerTimesSheetViewModel.Standing
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Circle()
+            .fill(fill)
+            .frame(width: diameter, height: diameter)
+            .frame(width: 24)
+            // The row says all of this in words; a dot repeated into VoiceOver is a second
+            // reading of the same line.
+            .accessibilityHidden(true)
+    }
+
+    private var fill: Color {
+        switch standing {
+        case .logged: theme.success
+        case .next: theme.accent
+        case .passed: theme.textSecondary.opacity(0.5)
+        case .upcoming: theme.separator
+        }
+    }
+
+    private var diameter: CGFloat {
+        standing == .next ? 12 : 9
     }
 }
 

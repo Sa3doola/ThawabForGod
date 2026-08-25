@@ -33,8 +33,9 @@ struct NameCell: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .padding(.horizontal, 10)
-            .background(theme.surface, in: .rect(cornerRadius: 14))
-            .contentShape(.rect(cornerRadius: 14))
+            .appCard()
+                .appHover()
+            .contentShape(.rect(cornerRadius: AppRadius.lg))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)

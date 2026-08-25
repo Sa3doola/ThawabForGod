@@ -22,7 +22,7 @@ struct AdhkarCategoryListView: View {
             VStack(spacing: 12) {
                 content
             }
-            .padding(20)
+            .padding(AppSpacing.xl)
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity, alignment: .center)
         }
@@ -74,8 +74,8 @@ struct AdhkarCategoryListView: View {
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .background(theme.warning.opacity(0.12), in: .rect(cornerRadius: 12))
+            .padding(AppSpacing.lg)
+            .background(theme.warning.opacity(0.12), in: .rect(cornerRadius: AppRadius.md))
             .padding(.top, 8)
     }
 

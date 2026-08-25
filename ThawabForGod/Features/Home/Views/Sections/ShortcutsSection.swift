@@ -32,12 +32,12 @@ struct ShortcutsSection: View {
     @ScaledMetric private var itemWidth: CGFloat = 76
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
             header
 
             LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: itemWidth), spacing: 8)],
-                spacing: 16
+                columns: [GridItem(.adaptive(minimum: itemWidth), spacing: AppSpacing.sm)],
+                spacing: AppSpacing.lg
             ) {
                 ForEach(shortcuts, id: \.self) { shortcut in
                     ShortcutButton(shortcut: shortcut) {
@@ -55,7 +55,7 @@ struct ShortcutsSection: View {
                 .appFont(.headline, weight: .semibold)
                 .foregroundStyle(theme.textPrimary)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: AppSpacing.sm)
 
             Button(action: edit) {
                 Text(l10n.string(.homeCustomizeAction))
@@ -74,20 +74,24 @@ private struct ShortcutButton: View {
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
 
-    @ScaledMetric private var circle: CGFloat = 56
+    @ScaledMetric private var circle: CGFloat = 57
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: AppSpacing.sm) {
                 Image(systemName: shortcut.symbol)
-                    .appFont(.title3)
+                    .appFont(.title3, weight: .medium)
                     .foregroundStyle(theme.accent)
                     .frame(width: circle, height: circle)
-                    .background(theme.accent.opacity(0.12), in: .circle)
+                    .background(theme.accent.opacity(0.10), in: .circle)
+                    // The edge is what keeps the circle a circle on a tinted ground: at ten per
+                    // cent the fill is nearly the page, and without a rule the row reads as five
+                    // floating glyphs rather than five targets.
+                    .overlay { Circle().strokeBorder(theme.separator) }
 
                 Text(l10n.string(shortcut.labelKey))
-                    .appFont(.caption)
-                    .foregroundStyle(theme.textPrimary)
+                    .appFont(.caption, weight: .semibold)
+                    .foregroundStyle(theme.textSecondary)
                     .multilineTextAlignment(.center)
                     // Two lines, then shrink. "أذكار الصباح" and "Morning adhkar" both want
                     // two; a third would push the row below it out of alignment.

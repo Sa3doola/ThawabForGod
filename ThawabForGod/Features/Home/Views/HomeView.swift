@@ -44,19 +44,19 @@ struct HomeView: View {
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
-                HomeHeader(viewModel: viewModel)
-
-                ForEach(viewModel.sections, id: \.self) { kind in
-                    section(for: kind)
-                }
+        // The width the *cards* get, which is what decides whether this is a stack or a board —
+        // not the size class, which cannot tell an iPad in a half-width Split View from a phone.
+        // See `AppBreakpoint`.
+        GeometryReader { proxy in
+            ScrollView {
+                stack(width: proxy.size.width)
+                    .padding(AppSpacing.xl)
+                    .frame(maxWidth: measure(width: proxy.size.width), alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(20)
-            .frame(maxWidth: 560, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .center)
         }
         .background(theme.background)
         // "Home", not "Prayer Times": the screen stopped being only prayer times when it became
@@ -90,6 +90,158 @@ struct HomeView: View {
         }
     }
 
+    /// The whole arrangement: a single column, or the board.
+    ///
+    /// **The hero spans the board and everything else flows around it.** A countdown in a
+    /// half-width column on a 1024-point iPad is a countdown nobody can read from across a room,
+    /// which is the one thing this screen exists to be. `HomeLayout` guarantees the pinned
+    /// section is first and cannot be hidden, so the split is a filter rather than a search.
+    @ViewBuilder
+    private func stack(width: CGFloat) -> some View {
+        let columns = AppBreakpoint.homeBoardColumns(
+            width: width,
+            isAccessibilitySize: typeSize.isAccessibilitySize
+        )
+
+        let pairs = AppBreakpoint.homeCardsPair(
+            width: width,
+            isAccessibilitySize: typeSize.isAccessibilitySize
+        )
+
+        LazyVStack(alignment: .leading, spacing: AppSpacing.xl) {
+            HomeHeader(viewModel: viewModel)
+
+            if columns > 1 {
+                ForEach(pinnedSections, id: \.self) { section(for: $0) }
+                board
+            } else if pairs {
+                ForEach(pairedRows, id: \.self) { row in
+                    pairedRow(row)
+                }
+            } else {
+                ForEach(viewModel.sections, id: \.self) { section(for: $0) }
+            }
+        }
+    }
+
+    /// The middle arrangement: the stack in order, with any two adjacent pairable cards drawn
+    /// side by side.
+    ///
+    /// **Adjacent, and in the arrangement's own order** — not "the tracker and the continue
+    /// card, wherever they are". Pulling two sections together across a third would reorder a
+    /// stack the user arranged by hand, which is the one thing this screen promised not to do;
+    /// somebody who put recent activity between them meant it there. So a pair forms only where
+    /// the arrangement already has two of them touching, which on a default layout is exactly
+    /// the pair the design draws.
+    private var pairedRows: [[HomeSectionKind]] {
+        var rows: [[HomeSectionKind]] = []
+
+        for kind in renderableSections {
+            // Extend the row in progress if it has room and this card can take half a width.
+            if kind.canPair,
+               var last = rows.last,
+               last.count == 1,
+               last[0].canPair {
+                last.append(kind)
+                rows[rows.count - 1] = last
+            } else {
+                rows.append([kind])
+            }
+        }
+
+        return rows
+    }
+
+    /// One row of the middle arrangement — a single card, or two sharing the width.
+    ///
+    /// `.top` alignment, because the two cards are short but not identically short: aligning
+    /// their centres would leave the shorter one floating against the taller, which reads as a
+    /// mistake rather than as a pair.
+    @ViewBuilder
+    private func pairedRow(_ row: [HomeSectionKind]) -> some View {
+        if row.count > 1 {
+            HStack(alignment: .top, spacing: AppSpacing.lg) {
+                ForEach(row, id: \.self) { kind in
+                    section(for: kind)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        } else if let kind = row.first {
+            section(for: kind)
+        }
+    }
+
+    /// Two columns of cards, dealt alternately rather than laid out in rows.
+    ///
+    /// A `LazyVGrid` would give every row the height of its tallest cell, so a short tracker
+    /// beside a long recent-activity list would sit above a band of nothing — which is exactly
+    /// what the design does *not* draw. Two stacks side by side is the board it does draw, and
+    /// the deal is by index so it is stable: reordering the cards moves them, but nothing moves
+    /// on its own between redraws.
+    private var board: some View {
+        HStack(alignment: .top, spacing: AppSpacing.lg) {
+            ForEach(0..<2, id: \.self) { column in
+                LazyVStack(alignment: .leading, spacing: AppSpacing.xl) {
+                    ForEach(flowingSections(in: column), id: \.self) { section(for: $0) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private var pinnedSections: [HomeSectionKind] {
+        viewModel.sections.filter(\.isPinned)
+    }
+
+    private func flowingSections(in column: Int) -> [HomeSectionKind] {
+        renderableSections
+            .filter { !$0.isPinned }
+            .enumerated()
+            .filter { $0.offset % 2 == column }
+            .map(\.element)
+    }
+
+    /// The arrangement, minus the sections that would draw nothing.
+    ///
+    /// Two sections are conditional on having something to say — "continue reading" before
+    /// anything has been read, recent activity before anything has been done — and in a single
+    /// column an empty one costs nothing, because a view that draws nothing takes no room.
+    ///
+    /// **In any arrangement that puts cards beside each other it costs a hole.** A pair whose
+    /// second half is an empty continue-reading card is a tracker at half width with a blank
+    /// space next to it, and in the board it is a column dealt one card light. So the emptiness
+    /// is resolved here, once, before the layout counts anything — rather than by each
+    /// arrangement discovering it downstream.
+    ///
+    /// The conditions are the same ones `section(for:)` applies; they are stated twice because
+    /// the alternative is a view that returns an optional and a layout that has to build it to
+    /// find out, which would defeat the `LazyVStack` above.
+    private var renderableSections: [HomeSectionKind] {
+        viewModel.sections.filter { kind in
+            switch kind {
+            case .continueReading: viewModel.continueReading != nil
+            case .lastActivity: !viewModel.recentActivities.isEmpty
+            case .todayTimes: viewModel.phase.isReady
+            default: true
+            }
+        }
+    }
+
+    /// How wide the content is allowed to get before it centres instead of stretching.
+    ///
+    /// Two numbers, because a board and a stack are answering different questions: one column of
+    /// cards past about 560 points is a row of very wide rows, while a two-column board wants the
+    /// room. Both still centre in whatever is left, so the Mac's window can be dragged to any
+    /// width without the content ever hanging off one edge.
+    private func measure(width: CGFloat) -> CGFloat {
+        let columns = AppBreakpoint.homeBoardColumns(
+            width: width,
+            isAccessibilitySize: typeSize.isAccessibilitySize
+        )
+
+        return columns > 1 ? AppBreakpoint.fourColumn : AppBreakpoint.contentMeasure
+    }
+
     /// One section of the stack.
     ///
     /// Every case of `HomeSectionKind` is answered here, including the reserved ones — which are
@@ -100,6 +252,14 @@ struct HomeView: View {
         switch kind {
         case .nextPrayer:
             nextPrayer
+
+        case .todayTimes:
+            // Only once the times exist. The hero has a loading and a failure state because it is
+            // pinned and something has to stand there; this card is free to be absent, and a
+            // strip of six empty cells says nothing the notice above it has not already said.
+            if case .ready(let state) = viewModel.phase {
+                TodayTimesSection(state: state, open: showPrayerTimes)
+            }
 
         case .continueReading:
             if let reading = viewModel.continueReading {

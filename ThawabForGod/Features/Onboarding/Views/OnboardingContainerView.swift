@@ -29,7 +29,7 @@ struct OnboardingContainerView: View {
 
             OnboardingNavigation(viewModel: viewModel, coordinator: coordinator)
         }
-        .padding(24)
+        .padding(AppSpacing.xl)
         .frame(maxWidth: 560, alignment: .leading)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(theme.background)

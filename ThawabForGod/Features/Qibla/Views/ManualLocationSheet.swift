@@ -52,7 +52,7 @@ struct ManualLocationSheet: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(20)
+            .padding(AppSpacing.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(theme.background)
             .navigationTitle(l10n.string(.qiblaSetLocation))

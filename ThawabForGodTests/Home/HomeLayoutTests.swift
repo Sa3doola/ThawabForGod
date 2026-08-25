@@ -99,7 +99,7 @@ struct HomeLayoutTests {
         #expect(layout.sections.first?.kind == .nextPrayer)
         #expect(
             layout.visibleSections
-                == [.nextPrayer, .continueReading, .shortcuts, .lastActivity, .prayerTracker]
+                == [.nextPrayer, .shortcuts, .todayTimes, .continueReading, .lastActivity, .prayerTracker]
         )
     }
 
@@ -132,11 +132,12 @@ struct HomeLayoutTests {
     @Test func hidingIsAllowedUntilTheFloorAndRefusedAtIt() {
         var layout = HomeLayout.default
 
-        #expect(layout.visibleSections.count == 5)
+        #expect(layout.visibleSections.count == 6)
         #expect(layout.canChangeVisibility(of: .continueReading))
 
         layout.setVisibility(false, of: .continueReading)
         layout.setVisibility(false, of: .prayerTracker)
+        layout.setVisibility(false, of: .todayTimes)
 
         #expect(layout.visibleSections.count == HomeLayout.minimumVisibleSections)
 
@@ -155,13 +156,13 @@ struct HomeLayoutTests {
     @Test func showingASectionIsAlwaysAllowed() {
         var layout = HomeLayout.default
         layout.setVisibility(false, of: .continueReading)
-        #expect(layout.visibleSections.count == 4)
+        #expect(layout.visibleSections.count == 5)
 
         #expect(layout.canChangeVisibility(of: .continueReading))
 
         layout.setVisibility(true, of: .continueReading)
 
-        #expect(layout.visibleSections.count == 5)
+        #expect(layout.visibleSections.count == 6)
     }
 
     /// `setVisibility` will not let a user reach this state, but an older build or a withdrawn
@@ -175,7 +176,7 @@ struct HomeLayoutTests {
         )
 
         #expect(layout.visibleSections.count == HomeLayout.minimumVisibleSections)
-        #expect(layout.visibleSections == [.nextPrayer, .shortcuts, .continueReading])
+        #expect(layout.visibleSections == [.nextPrayer, .todayTimes, .shortcuts])
     }
 
     // MARK: Rule 3 — forward and backward compatibility
@@ -276,23 +277,23 @@ struct HomeLayoutTests {
     @Test func movingDownwardsUsesTheOffsetSwiftUIWouldSend() {
         var layout = HomeLayout.default
 
-        // Move `shortcuts` from second place to the end of the editable list.
-        layout.moveSections(from: IndexSet(integer: 1), to: 5)
+        // Move `shortcuts` from third place to the end of the editable list.
+        layout.moveSections(from: IndexSet(integer: 2), to: 6)
 
         #expect(
             layout.visibleSections
-                == [.nextPrayer, .continueReading, .lastActivity, .prayerTracker, .shortcuts]
+                == [.nextPrayer, .todayTimes, .continueReading, .lastActivity, .prayerTracker, .shortcuts]
         )
     }
 
     @Test func movingSeveralRowsKeepsTheirRelativeOrder() {
         var layout = HomeLayout.default
 
-        layout.moveSections(from: IndexSet([1, 2]), to: 5)
+        layout.moveSections(from: IndexSet([2, 3]), to: 6)
 
         #expect(
             layout.visibleSections
-                == [.nextPrayer, .lastActivity, .prayerTracker, .shortcuts, .continueReading]
+                == [.nextPrayer, .todayTimes, .lastActivity, .prayerTracker, .shortcuts, .continueReading]
         )
     }
 
@@ -324,5 +325,31 @@ struct HomeLayoutTests {
     /// test to be written.
     @Test func theShortcutCeilingIsStillOutOfReach() {
         #expect(HomeShortcut.allCases.count <= HomeLayout.maximumVisibleShortcuts)
+    }
+
+    // MARK: Pairing
+
+    /// The pinned card spans at every width, so it may never be dealt into half of one — see
+    /// `HomeView.stack(width:)`, where a countdown in a half-width column is the failure the rule
+    /// exists to prevent.
+    @Test func thePinnedSectionNeverPairs() {
+        #expect(!HomeSectionKind.pinned.canPair)
+    }
+
+    /// Only the short cards pair. The rest either already fill the width or are made of
+    /// sentences, and half a width of sentence is truncation rather than density.
+    @Test func onlyTheShortCardsPair() {
+        let pairing = HomeSectionKind.allCases.filter(\.canPair)
+
+        #expect(pairing == [.continueReading, .prayerTracker])
+    }
+
+    /// A section nobody can see yet cannot pair either — shipping one must not silently
+    /// rearrange a Home screen somebody had settled on, which is the same rule
+    /// `defaultVisibility` follows.
+    @Test func noReservedSectionPairs() {
+        for kind in HomeSectionKind.allCases where !kind.isAvailable {
+            #expect(!kind.canPair, "\(kind) is reserved but pairs")
+        }
     }
 }

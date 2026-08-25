@@ -27,12 +27,30 @@ final class ReaderSettings {
     private(set) var paper: ReaderPaper
     private(set) var typography: ReaderTypography
 
+    /// Whether the ayah marker is drawn beside each verse.
+    ///
+    /// On unless turned off. A verse without its number is a verse nobody can cite, and citing is
+    /// most of what a reader does with one — but a reader working through a page they already
+    /// know wants the mushaf's flow rather than a column of markers, and that is a real way to
+    /// read. Nothing is written until the switch is moved; see the note above.
+    private(set) var showsVerseNumbers: Bool
+
+    /// Whether the screen is kept from dimming while the reader is on a page.
+    ///
+    /// Off unless asked for, and that asymmetry is deliberate: an app that quietly stopped a
+    /// phone sleeping would be draining a battery nobody consented to. A reader following a page
+    /// aloud, with the phone on a stand and their hands not on it, is the one who wants it — and
+    /// they are able to ask.
+    private(set) var keepsScreenAwake: Bool
+
     @ObservationIgnored private let settingsStore: any SettingsStore
 
     init(settingsStore: any SettingsStore) {
         self.settingsStore = settingsStore
         self.paper = Self.storedPaper(in: settingsStore)
         self.typography = Self.storedTypography(in: settingsStore)
+        self.showsVerseNumbers = settingsStore.bool(for: .readerShowsVerseNumbers) ?? true
+        self.keepsScreenAwake = settingsStore.bool(for: .readerKeepsScreenAwake) ?? false
     }
 
     /// The style the reading screen draws with, resolved against the app's current theme.
@@ -61,20 +79,34 @@ final class ReaderSettings {
         settingsStore.set(typography.lineSpacing, for: .readerLineSpacing)
     }
 
+    func select(showsVerseNumbers: Bool) {
+        self.showsVerseNumbers = showsVerseNumbers
+        settingsStore.set(showsVerseNumbers, for: .readerShowsVerseNumbers)
+    }
+
+    func select(keepsScreenAwake: Bool) {
+        self.keepsScreenAwake = keepsScreenAwake
+        settingsStore.set(keepsScreenAwake, for: .readerKeepsScreenAwake)
+    }
+
     /// Back to no preference at all — see the note above on why that is not the same as storing
     /// the defaults.
     func reset() {
         settingsStore.set(nil as String?, for: .readerPaper)
         settingsStore.set(nil as Double?, for: .readerTextSize)
         settingsStore.set(nil as Double?, for: .readerLineSpacing)
+        settingsStore.set(nil as Bool?, for: .readerShowsVerseNumbers)
+        settingsStore.set(nil as Bool?, for: .readerKeepsScreenAwake)
 
         paper = Self.storedPaper(in: settingsStore)
         typography = Self.storedTypography(in: settingsStore)
+        showsVerseNumbers = true
+        keepsScreenAwake = false
     }
 
     /// Whether anything here has been chosen — what the reset control is enabled by.
     var hasChoices: Bool {
-        paper != .fallback || typography != .fallback
+        paper != .fallback || typography != .fallback || !showsVerseNumbers || keepsScreenAwake
     }
 
     // MARK: Reading the store

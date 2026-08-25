@@ -24,6 +24,14 @@ final class HomeViewModel {
         /// The times could not be computed — the polar case. Not an error the user can fix,
         /// so it is a state rather than an alert.
         case unavailable
+
+        /// Whether there are times to draw. Asked by `HomeView.renderableSections`, which has to
+        /// know whether the times card will draw anything *before* it builds it — an empty card
+        /// in a pair or a board column costs a hole, not merely nothing.
+        var isReady: Bool {
+            if case .ready = self { return true }
+            return false
+        }
     }
 
     /// The whole of a "continue reading" card: where the reader stopped, and the chapter it is

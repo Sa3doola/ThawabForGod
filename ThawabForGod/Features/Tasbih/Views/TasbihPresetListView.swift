@@ -21,7 +21,7 @@ struct TasbihPresetListView: View {
             VStack(spacing: 12) {
                 content
             }
-            .padding(20)
+            .padding(AppSpacing.xl)
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity, alignment: .center)
         }

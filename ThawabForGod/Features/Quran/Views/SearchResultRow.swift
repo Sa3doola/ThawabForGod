@@ -29,9 +29,10 @@ struct SearchResultRow: View {
                 reference
                 text
             }
-            .padding(14)
+            .padding(AppSpacing.row)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.surface, in: .rect(cornerRadius: 14))
+            .appCard()
+                .appHover()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

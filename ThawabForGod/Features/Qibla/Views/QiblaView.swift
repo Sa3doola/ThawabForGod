@@ -22,7 +22,7 @@ struct QiblaView: View {
             VStack(spacing: 24) {
                 content
             }
-            .padding(20)
+            .padding(AppSpacing.xl)
             .frame(maxWidth: 480)
             .frame(maxWidth: .infinity, alignment: .center)
         }
@@ -129,8 +129,8 @@ private struct QiblaHint: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(theme.surface, in: .rect(cornerRadius: 12))
+        .padding(AppSpacing.lg)
+        .appCard(radius: AppRadius.md)
         .accessibilityElement(children: .combine)
     }
 }

@@ -5,19 +5,21 @@
 
 import SwiftUI
 
-/// Home's headline, and the one section that can never be hidden: which prayer is next, where,
-/// how long is left, and the whole day underneath.
+/// Home's headline, and the one section that can never be hidden: which prayer is next, how long
+/// is left, and the whole day underneath.
 ///
-/// One card rather than a card and a list. The day used to sit below in its own panel, which
-/// made the screen two answers to the same question — the row along the bottom of this card is
-/// that list, folded in, with the marker being counted down to picked out of it.
+/// **The card is the time of day.** Its ground is `DayRamp` — the light between the marker just
+/// passed and the one being counted down to — so the screen is a different colour at Fajr than at
+/// Isha without a word changing. That is the organising idea of the whole design, and this is the
+/// first of the three places it is allowed to appear.
+///
+/// The day's six markers used to hang underneath this card. They are `TodayTimesSection` now —
+/// see the reasoning there.
 struct NextPrayerCard: View {
     let viewModel: HomeViewModel
     let state: NextPrayerState
 
-    /// Opens the day sheet. The whole card is the target, not a chevron in the corner — the card
-    /// *is* a summary of the day, and tapping a summary to see the thing it summarises is what a
-    /// reader expects of it.
+    /// Opens the day sheet.
     let open: () -> Void
 
     @Environment(LocalizationManager.self) private var l10n
@@ -25,31 +27,94 @@ struct NextPrayerCard: View {
 
     var body: some View {
         Button(action: open) {
-            card
+            hero
         }
         .buttonStyle(.plain)
         .accessibilityHint(l10n.string(.prayerTimesSheetHint))
     }
 
-    private var card: some View {
-        VStack(alignment: .leading, spacing: 16) {
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             NextPrayerHeadline(state: state, placeName: viewModel.placeName)
             NextPrayerCountdown(viewModel: viewModel, state: state)
-
-            Divider().overlay(theme.separator)
-
-            DayPrayerRow(state: state)
         }
-        .padding(20)
+        .padding(AppSpacing.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.surface, in: .rect(cornerRadius: 20))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20).strokeBorder(theme.separator)
-        }
+        .background { DayRampSurface(viewModel: viewModel, state: state) }
+        // The rail is the progress bar, drawn as the card's own bottom edge rather than as a
+        // control inside it — a `ProgressView` on this ground would be a second, differently
+        // shaped thing saying what the countdown above it already says.
+        .overlay(alignment: .bottom) { NextPrayerRail(viewModel: viewModel, state: state) }
+        .clipShape(.rect(cornerRadius: AppRadius.lg))
+        .appElevation(.card)
+        // Everything inside the hero goes on reading `theme.textPrimary` and friends; what
+        // changes is which palette those names resolve to. See `Theme.onDayRamp`.
+        .environment(\.theme, theme.onDayRamp)
     }
 }
 
+// MARK: - The ground
+
+/// The ramp, on its own so the day's light can move without the words above it being rebuilt.
+///
+/// This view reads `countdown`, so Observation invalidates it once a second — but its body only
+/// builds a value, and `DayRampStop` is `Equatable`, so SwiftUI re-renders the gradient and the
+/// lattice underneath only when that value actually changes. The quantisation is what makes that
+/// bite: rounding the fraction to sixtieths turns one repaint a second into about one a minute,
+/// which is far finer than an eye can follow a gradient shifting over a three-hour window.
+private struct DayRampSurface: View {
+    let viewModel: HomeViewModel
+    let state: NextPrayerState
+
+    var body: some View {
+        DayRampBackground(stop: stop)
+    }
+
+    private var stop: DayRampStop {
+        // No near end — the hours before the day's Fajr, where anchoring the blend would need a
+        // second day's times. The light is simply the one being counted down to.
+        guard let previous = state.previous else {
+            return DayRamp.stop(for: state.upcoming.prayer)
+        }
+
+        let elapsed = state.progress(remaining: viewModel.countdown)
+        return DayRamp.stop(
+            from: previous.prayer,
+            to: state.upcoming.prayer,
+            elapsed: (elapsed * 60).rounded(.down) / 60
+        )
+    }
+}
+
+/// How full the window is, as the card's bottom edge.
+private struct NextPrayerRail: View {
+    let viewModel: HomeViewModel
+    let state: NextPrayerState
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Rectangle().fill(theme.separator)
+
+                Rectangle()
+                    .fill(theme.accent.opacity(0.92))
+                    .frame(width: proxy.size.width * state.progress(remaining: viewModel.countdown))
+            }
+        }
+        .frame(height: 3)
+        // The countdown label above says this in words, and says it better.
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - The words on the ramp
+
 /// The name, the time, and where the times are for.
+///
+/// It reads `theme.textPrimary` like everything else in the app; the hero has already swapped the
+/// palette for `Theme.onDayRamp`, so those names resolve to the fixed on-ramp ink here.
 private struct NextPrayerHeadline: View {
     let state: NextPrayerState
     let placeName: String?
@@ -59,25 +124,26 @@ private struct NextPrayerHeadline: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             Text(l10n.string(.nextPrayerLabel))
-                .appFont(.footnote, weight: .semibold)
-                .foregroundStyle(theme.textSecondary)
+                .appFont(.caption, weight: .bold)
+                .tracking(1.6)
                 .textCase(.uppercase)
+                .foregroundStyle(theme.textSecondary)
 
             // The name and the time share a line until they cannot. At an accessibility size
             // "المغرب" and "٥:٤٢ م" together are wider than a phone, and the pair on one line
             // truncates the *prayer's name* — which is the one word on this screen that has to
             // be readable. Stacking is what a reader at that size is already expecting.
             if typeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                     name
                     time
                 }
             } else {
                 HStack(alignment: .firstTextBaseline) {
                     name
-                    Spacer(minLength: 12)
+                    Spacer(minLength: AppSpacing.md)
                     time
                 }
             }
@@ -92,7 +158,7 @@ private struct NextPrayerHeadline: View {
             // name does not, and a placeholder would advertise a failure nobody can act on.
             if let placeName {
                 Label(placeName, systemImage: "mappin.and.ellipse")
-                    .appFont(.footnote)
+                    .appFont(.footnote, weight: .medium)
                     .foregroundStyle(theme.textSecondary)
             }
         }
@@ -108,16 +174,16 @@ private struct NextPrayerHeadline: View {
     private var time: some View {
         Text(l10n.timeString(state.upcoming.date))
             .appFont(.title3, weight: .semibold)
-            .foregroundStyle(theme.accent)
+            .foregroundStyle(theme.textSecondary)
             .monospacedDigit()
     }
 }
 
 /// The ticking half, split out on purpose.
 ///
-/// Observation tracks reads per property, and this is the only view that reads `countdown` — so
-/// the once-a-second change invalidates this block alone, not the headline and not the six
-/// entries along the bottom.
+/// Observation tracks reads per property, and this is one of only three views that read
+/// `countdown` — so the once-a-second change invalidates this block, the rail and the ramp's
+/// value, not the headline and not the six entries below.
 private struct NextPrayerCountdown: View {
     let viewModel: HomeViewModel
     let state: NextPrayerState
@@ -126,13 +192,9 @@ private struct NextPrayerCountdown: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(l10n.string(.timeRemainingLabel))
-                .appFont(.footnote, weight: .semibold)
-                .foregroundStyle(theme.textSecondary)
-
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
             Text(l10n.countdownString(viewModel.countdown))
-                .appFont(.largeTitle, weight: .semibold)
+                .appFont(.largeTitle, weight: .bold)
                 .foregroundStyle(theme.textPrimary)
                 // Digits vary in width as they tick; a monospaced set stops the label jittering.
                 .monospacedDigit()
@@ -141,11 +203,9 @@ private struct NextPrayerCountdown: View {
                 .accessibilityLabel(spokenRemaining)
                 .accessibilityAddTraits(.updatesFrequently)
 
-            // How far through the gap between the last prayer and the next we are. Hidden from
-            // assistive technology because the label above already says it, in words.
-            ProgressView(value: state.progress(remaining: viewModel.countdown))
-                .progressViewStyle(.linear)
-                .tint(theme.accent)
+            Text(l10n.string(.timeRemainingLabel))
+                .appFont(.footnote, weight: .medium)
+                .foregroundStyle(theme.textSecondary)
                 .accessibilityHidden(true)
         }
     }
@@ -170,3 +230,4 @@ private struct NextPrayerCountdown: View {
         )
     }
 }
+

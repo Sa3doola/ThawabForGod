@@ -32,7 +32,28 @@ nonisolated protocol TimeFormattingService: Sendable {
     /// not always agree.
     func dateString(from date: Date, language: AppLanguage, system: NumberSystem) -> String
 
+    /// The shortest form of a weekday name — `S`, `M`, `ح`, `ن` — for the week strip, where
+    /// seven of them share a phone's width and there is room for a letter and nothing more.
+    ///
+    /// No `NumberSystem`: a weekday name has no digits in it. Gregorian for the reason
+    /// `dateString(from:language:system:)` is.
+    func weekdayString(from date: Date, language: AppLanguage) -> String
+
     /// A remaining duration as `h:mm:ss`, dropping the hours component below an hour.
     /// Negative intervals clamp to zero, so a countdown that has just elapsed reads `0:00`.
     func countdownString(from interval: TimeInterval, system: NumberSystem) -> String
+
+    /// The same duration in the form a *label that cannot be allowed to move* wants: `h:mm`
+    /// above the hour, `mm:ss` inside it. Always four or five characters, in either digit system.
+    ///
+    /// **Not a shorter `countdownString(_:)` — a different rule, for a different reader.** On a
+    /// screen the seconds are worth showing because the reader is looking at the screen. In the
+    /// macOS menu bar they are worth less than the cost of them: a label that rewrites itself
+    /// once a second all day is a label that keeps catching the eye of somebody trying to work,
+    /// and — since the item only redraws every half minute outside the final hour — a seconds
+    /// figure up there would be *stale* between beats, jumping by thirty rather than counting.
+    ///
+    /// So the seconds arrive exactly when they start to matter, at the hour boundary, which is
+    /// also the one moment the slot is allowed to change shape. See `MenuBarStatusSlot`.
+    func briefCountdownString(from interval: TimeInterval, system: NumberSystem) -> String
 }

@@ -32,10 +32,23 @@ struct MacSettingsView: View {
                 )
                 // Without a status item there would be no way back to the app at all.
                 .disabled(!viewModel.canHideDockIcon)
+
+                SettingsPickerRow(
+                    titleKey: .settingsMenuBarStyle,
+                    selection: Binding(
+                        get: { viewModel.statusStyle },
+                        set: viewModel.setStatusStyle
+                    )
+                )
+                // Nothing to style when there is no item.
+                .disabled(!viewModel.canChooseStatusStyle)
             } header: {
                 Text(l10n.string(.settingsMenuBarSection))
             } footer: {
-                Text(l10n.string(.settingsMenuBarFooter))
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text(l10n.string(.settingsMenuBarFooter))
+                    Text(l10n.string(.settingsMenuBarStyleFooter))
+                }
             }
 
             Section {

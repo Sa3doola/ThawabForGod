@@ -22,7 +22,7 @@ struct HadithMemorizeView: View {
             VStack(spacing: 20) {
                 content
             }
-            .padding(20)
+            .padding(AppSpacing.xl)
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity, alignment: .center)
         }
@@ -91,8 +91,8 @@ struct HadithMemorizeView: View {
             .environment(\.layoutDirection, .leftToRight)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
-        .background(theme.surface, in: .rect(cornerRadius: 16))
+        .padding(AppSpacing.lg)
+        .appCard()
     }
 
     /// As much of the narration as the reader has asked to see.
@@ -117,8 +117,8 @@ struct HadithMemorizeView: View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
-        .padding(18)
-        .background(theme.surface, in: .rect(cornerRadius: 16))
+        .padding(AppSpacing.lg)
+        .appCard()
     }
 
     /// The first words of a narration, as a prompt to find the place by.
@@ -158,7 +158,7 @@ struct HadithMemorizeView: View {
                     .appFont(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(theme.accent, in: .rect(cornerRadius: 14))
+                    .background(theme.accent, in: .rect(cornerRadius: AppRadius.md))
                     // White rather than a token: this is text on the accent itself, and the
                     // palette has no "on accent" colour because this is the only place it is
                     // needed. Every accent the app offers is dark enough to carry it.
@@ -176,16 +176,38 @@ struct HadithMemorizeView: View {
                 Button {
                     Task { await viewModel.answer(grade) }
                 } label: {
-                    Text(l10n.string(label(for: grade)))
-                        .appFont(.footnote, weight: .semibold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(tint(for: grade).opacity(0.15), in: .rect(cornerRadius: 12))
-                        .foregroundStyle(tint(for: grade))
+                    VStack(spacing: AppSpacing.xxs) {
+                        Text(l10n.string(label(for: grade)))
+                            .appFont(.footnote, weight: .semibold)
+                            .foregroundStyle(tint(for: grade))
+
+                        // What the answer costs, under the answer. SM-2's whole bargain is that
+                        // an honest "hard" today is cheaper than a forgotten card next month,
+                        // and a reader who cannot see the intervals has no way to know that —
+                        // which is how "good" becomes the button everyone presses.
+                        Text(nextLabel(for: grade))
+                            .appFont(.caption)
+                            .foregroundStyle(tint(for: grade).opacity(0.75))
+                    }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(tint(for: grade).opacity(0.15), in: .rect(cornerRadius: AppRadius.md))
                 }
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    /// `Tomorrow` for one day, `In 12 days` beyond it — a day out is a word rather than a
+    /// number, because "in 1 day" is how nobody says it.
+    private func nextLabel(for grade: ReviewGrade) -> String {
+        guard let days = viewModel.interval(after: grade) else { return "" }
+
+        return days <= 1
+            ? l10n.string(.hadithGradeTomorrow)
+            : l10n.string(.hadithGradeInDays, l10n.string(days))
     }
 
     private func label(for grade: ReviewGrade) -> L10nKey {
@@ -199,11 +221,18 @@ struct HadithMemorizeView: View {
 
     /// Colour as a second channel beside the label, never as the only one — the labels say which
     /// is which, and a reader who cannot tell the tints apart loses nothing.
+    ///
+    /// **Not the accent, and "good" least of all.** These four are the one place in the app where
+    /// a semantic colour set carries meaning, so they are drawn from the fixed set — Danger,
+    /// Warning, Primary, Success — which does not move when the reader picks a different accent.
+    /// `.good` was the accent, which meant that a reader on rose saw "good" in almost the same
+    /// colour as "again", and a reader on emerald saw it in almost the same colour as "easy". The
+    /// four have to stay four whichever of the accents is selected.
     private func tint(for grade: ReviewGrade) -> Color {
         switch grade {
         case .again: theme.danger
         case .hard: theme.warning
-        case .good: theme.accent
+        case .good: theme.primary
         case .easy: theme.success
         }
     }

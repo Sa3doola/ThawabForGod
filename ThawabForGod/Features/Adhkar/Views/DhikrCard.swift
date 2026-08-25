@@ -5,18 +5,25 @@
 
 import SwiftUI
 
-/// One dhikr, as it is read: the Arabic first and largest, then whatever the reader has asked to
-/// see alongside it, then where it comes from, then the counter.
+/// One dhikr, as it is read: which one it is, the Arabic first and largest, then whatever the
+/// reader has asked to see alongside it, then where it comes from.
 ///
-/// Like `RepeatCounter`, it takes values and closures rather than a view model — the reading
-/// screen owns the state, and this stays a thing that can be previewed in any of its shapes.
+/// **The counter is no longer in here.** It used to sit at the foot of every card in a scrolling
+/// column, which meant the control the reader taps a hundred times moved with the text — and on a
+/// long dhikr it was below the fold, so counting meant scrolling. The reading screen now shows one
+/// card at a time and pins the counter under it, so the thumb has one place to be for the whole
+/// category. See `AdhkarReadingView`.
+///
+/// Like `RepeatCounter`, it takes values rather than a view model — the reading screen owns the
+/// state, and this stays a thing that can be previewed in any of its shapes.
 struct DhikrCard: View {
     let dhikr: Dhikr
+    /// Its position in the category, for the kicker. `nil` where the card is shown out of any
+    /// sequence, which is every use but the reader.
+    var position: Int?
     let counted: Int
     let showsTranslation: Bool
     let showsTransliteration: Bool
-    let onCount: () -> Void
-    let onReset: () -> Void
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
@@ -25,6 +32,10 @@ struct DhikrCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if let position {
+                kicker(position)
+            }
+
             arabicText
 
             if showsTransliteration, let transliteration = dhikr.transliteration {
@@ -40,22 +51,28 @@ struct DhikrCard: View {
             }
 
             reference
-
-            RepeatCounter(
-                counted: counted,
-                target: dhikr.repeatCount,
-                onCount: onCount,
-                onReset: onReset
-            )
         }
-        .padding(18)
+        .padding(AppSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.surface, in: .rect(cornerRadius: 16))
+        .appCard()
         .overlay {
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: AppRadius.lg)
                 .strokeBorder(isComplete ? theme.success : .clear, lineWidth: 1.5)
         }
         .animation(.snappy, value: isComplete)
+    }
+
+    /// `DHIKR 4` — which of the category's adhkar this is.
+    ///
+    /// The screen's pips say the same thing as a shape and the toolbar says it as a fraction;
+    /// this says it in words, which is the form that survives being read aloud by VoiceOver and
+    /// the one a reader can use to find their place again after a phone call.
+    private func kicker(_ position: Int) -> some View {
+        Text(l10n.string(.adhkarDhikrNumber, l10n.string(position, grouped: false)))
+            .appFont(.caption, weight: .semibold)
+            .tracking(1.2)
+            .textCase(.uppercase)
+            .foregroundStyle(theme.textSecondary)
     }
 
     /// The dhikr itself.
@@ -99,8 +116,8 @@ struct DhikrCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(theme.accent.opacity(0.08), in: .rect(cornerRadius: 10))
+        .padding(AppSpacing.md)
+        .background(theme.accent.opacity(0.08), in: .rect(cornerRadius: AppRadius.md))
         .accessibilityElement(children: .combine)
     }
 
@@ -139,11 +156,10 @@ struct DhikrCard: View {
                 virtue: "Whoever says this one hundred times in a day has his sins forgiven.",
                 repeatCount: 100
             ),
+            position: 4,
             counted: 3,
             showsTranslation: true,
-            showsTransliteration: true,
-            onCount: {},
-            onReset: {}
+            showsTransliteration: true
         )
         .padding()
     }

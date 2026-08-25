@@ -1,5 +1,5 @@
 //
-//  TafsirSheet.swift
+//  TafsirPanel.swift
 //  ThawabForGod
 //
 
@@ -7,30 +7,36 @@ import SwiftUI
 
 /// What a commentary says about one verse.
 ///
-/// A sheet rather than a push, and rather than text expanded inline under the verse. A push would
+/// A panel rather than a push, and rather than text expanded inline under the verse. A push would
 /// take the reader off the page they are reading; inline text would reflow the whole span and
-/// lose their place in it. A sheet leaves the verse where it is and can be dismissed with the
-/// thumb that opened it.
+/// lose their place in it. A panel leaves the verse exactly where it is.
 ///
-/// **The thumb is an iOS answer, and the Mac needed its own.** A Mac sheet has no swipe-down and
-/// does not close on Escape, so this panel came up with no way out of it at all — the window was
-/// stuck until the app was quit. Hence the Done button below, `#if os(macOS)`: the iPhone and the
-/// iPad keep the chrome-free sheet this was designed as, because there the swipe is real.
+/// **Three presentations, one view.** `ReaderView` puts this in an `.inspector`, which is a
+/// trailing column at regular width — a pane beside the text on a Mac, 340 points of it on an
+/// iPad — and a sheet at compact, where the thumb that opened it can swipe it away. The reader
+/// keeps their place in the verses in every one of them.
+///
+/// **The thumb is an iOS answer, and the Mac needs its own.** There is no swipe-down on a Mac and
+/// an inspector has no close of its own, so this carries a Done button under `#if os(macOS)`
+/// which calls back through `close` — the same path the swipe takes on iOS. The iPhone and the
+/// iPad keep the chrome-free panel this was designed as.
 ///
 /// It carries **no edition picker**, and that is a scope decision rather than an oversight: there
 /// is one edition in the bundle today, and a picker over a single row is a control that cannot be
 /// used. The repository, the schema and `GetTafsirUseCase` are all written for many — see
 /// `TafsirRepositoring` — so the picker is the first thing the second edition brings with it.
-struct TafsirSheet: View {
+struct TafsirPanel: View {
     let viewModel: TafsirViewModel
     let reference: VerseReference
     let surah: Surah?
 
+    /// Puts the panel away. A closure rather than `\.dismiss`, because an inspector is not a
+    /// presentation `dismiss` knows how to close — the state lives on the coordinator, and this
+    /// is the one call that reaches it.
+    let close: () -> Void
+
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
-    #if os(macOS)
-    @Environment(\.dismiss) private var dismiss
-    #endif
 
     var body: some View {
         NavigationStack {
@@ -39,8 +45,8 @@ struct TafsirSheet: View {
                     heading
                     content
                 }
-                .padding(20)
-                .frame(maxWidth: 620)
+                .padding(AppSpacing.xl)
+                .frame(maxWidth: AppBreakpoint.readingMeasure)
                 .frame(maxWidth: .infinity, alignment: .center)
             }
             .background(theme.background)
@@ -48,11 +54,11 @@ struct TafsirSheet: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #else
-            // Writes `nil` back through `ReaderView.openTafsir`, which is what calls
-            // `QuranCoordinator.closeTafsir()` — the same path the swipe takes on iOS.
+            // Writes through `QuranCoordinator.closeTafsir()` — the same path the swipe
+            // takes on iOS, and the only way out of an inspector pane.
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(l10n.string(.doneAction)) { dismiss() }
+                    Button(l10n.string(.doneAction), action: close)
                 }
             }
             #endif

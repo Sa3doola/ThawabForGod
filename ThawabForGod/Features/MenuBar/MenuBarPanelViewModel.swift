@@ -32,9 +32,23 @@ final class MenuBarPanelViewModel {
     @ObservationIgnored private let timeline: NextPrayerTimeline
     @ObservationIgnored private let l10n: LocalizationManager
 
-    init(timeline: NextPrayerTimeline, l10n: LocalizationManager, now: Date = Date()) {
+    /// Marks a prayer as prayed. Optional so the panel's tests — which are about the title, the
+    /// ticker and the day — need no store at all; the action is simply absent without one.
+    @ObservationIgnored private let tracker: PrayerTrackerUseCase?
+
+    /// What has been marked today, so the action can say whether it has already been used. Read
+    /// on `refresh()`, which runs every time the panel opens.
+    private(set) var record: PrayerRecord?
+
+    init(
+        timeline: NextPrayerTimeline,
+        l10n: LocalizationManager,
+        tracker: PrayerTrackerUseCase? = nil,
+        now: Date = Date()
+    ) {
         self.timeline = timeline
         self.l10n = l10n
+        self.tracker = tracker
         self.now = now
         // Never empty — see `NextPrayerTimeline.entries(from:)`, which turns every failure it can
         // meet into an entry that says so.
@@ -45,6 +59,43 @@ final class MenuBarPanelViewModel {
     func refresh(at date: Date = Date()) {
         now = date
         snapshot = timeline.entries(from: date)[0]
+    }
+
+    // MARK: Logging from the panel
+
+    /// The prayer the panel offers to mark, or `nil` when there is none to offer.
+    ///
+    /// **The prayer whose window is open, not the one being counted down to.** The countdown
+    /// names what is *next*, and nobody has prayed a prayer whose time has not come — offering to
+    /// log it would be offering to record something untrue. Before the day's Fajr there is no
+    /// open window at all, and the action is absent rather than disabled.
+    var loggablePrayer: Prayer? {
+        guard let prayer = currentPrayer, prayer.isObligatory, tracker != nil else { return nil }
+        return prayer
+    }
+
+    /// Whether that prayer has already been marked today — what turns the row into a tick.
+    var hasLoggedCurrentPrayer: Bool {
+        guard let prayer = loggablePrayer, let record else { return false }
+        return record.isCompleted(prayer)
+    }
+
+    /// Marks the open prayer, and re-reads what is stored rather than assuming the write landed.
+    ///
+    /// A toggle rather than a one-way mark, so a mis-tap in a panel that closes on the next click
+    /// is undone by opening it again and tapping the same row.
+    func toggleLoggingCurrentPrayer() async {
+        guard let tracker, let prayer = loggablePrayer else { return }
+
+        try? await tracker.setCompleted(!hasLoggedCurrentPrayer, of: prayer, on: now)
+        await loadRecord()
+    }
+
+    /// Reads today's marks. Called when the panel opens, which is the only time anyone is looking
+    /// at them — the status item itself says nothing about what has been prayed.
+    func loadRecord() async {
+        guard let tracker else { return }
+        record = try? await tracker.record(on: now)
     }
 
     /// One beat of the clock.
@@ -94,6 +145,54 @@ final class MenuBarPanelViewModel {
         return "\(l10n.string(day.upcoming.prayer.labelKey)) \(l10n.countdownString(remaining))"
     }
 
+    /// The status item as its parts, at whichever rung the bar and the preference allow.
+    ///
+    /// The countdown here is the *brief* one — `h:mm` above the hour, `mm:ss` inside it — padded
+    /// into a slot measured from the widest string this locale can produce. Both halves of that
+    /// are what stop the item twitching; see `MenuBarStatusSlot`, which carries the argument.
+    ///
+    /// When there is no schedule there is no countdown, so the item falls to its symbol and the
+    /// notice becomes the tooltip. That is the same honesty the widget shows: an item that said
+    /// nothing at all would look like an app that had crashed.
+    func statusTitle(rung: MenuBarStatusRung) -> MenuBarStatusTitle {
+        guard case .schedule(let day) = snapshot.content, let remaining else {
+            return MenuBarStatusTitle(
+                symbol: statusSymbol,
+                text: "",
+                tooltip: noticeKey.map { l10n.string($0) } ?? l10n.string(.appName)
+            )
+        }
+
+        let name = l10n.string(day.upcoming.prayer.labelKey)
+        let time = MenuBarStatusSlot.padded(
+            l10n.briefCountdownString(remaining),
+            toVisibleLength: statusSlotLength
+        )
+
+        var parts: [String] = []
+        if rung.showsName { parts.append(name) }
+        if rung.showsTime { parts.append(time) }
+
+        return MenuBarStatusTitle(
+            symbol: rung.showsSymbol ? statusSymbol : nil,
+            text: parts.joined(separator: " "),
+            // The full thing, at every rung — which is what makes dropping the name cost
+            // nothing, since it is still one hover away.
+            tooltip: "\(name) \(l10n.countdownString(remaining))"
+        )
+    }
+
+    /// How many characters wide the countdown's slot is, for the digits in use now.
+    ///
+    /// Recomputed rather than stored because the number system is a live preference: a reader who
+    /// switches to Arabic-Indic digits mid-afternoon gets the slot re-measured on the next beat,
+    /// which is at most a second away.
+    var statusSlotLength: Int {
+        MenuBarStatusSlot.visibleLength(
+            of: l10n.briefCountdownString(MenuBarStatusSlot.widestInterval)
+        )
+    }
+
     /// Seconds until the next prayer, floored at zero.
     var remaining: TimeInterval? {
         guard case .schedule(let day) = snapshot.content else { return nil }
@@ -109,10 +208,22 @@ final class MenuBarPanelViewModel {
     /// the status item exists for.
     ///
     /// A pure function of the state, so it is testable without a clock.
+    ///
+    /// Outside the final hour the beat is not a fixed half-minute but *however long is left of
+    /// the current minute*, because that is exactly when the label's last digit changes. A fixed
+    /// interval cannot manage that: at thirty seconds the displayed minute is stale for up to
+    /// half a minute and then jumps, and at one second the machine is woken sixty times a minute
+    /// to redraw a string that changed once. Sleeping to the boundary is both fewer wakeups than
+    /// either and always right.
     var tickInterval: Duration {
-        guard let remaining, remaining < 60 * 60 else { return .seconds(30) }
+        guard let remaining else { return .seconds(30) }
+        guard remaining >= 60 * 60 else { return .seconds(1) }
 
-        return .seconds(1)
+        // The countdown floors, so it reads a new minute when `remaining` next passes a multiple
+        // of sixty. Never zero — a beat of no duration would spin.
+        let toBoundary = remaining.truncatingRemainder(dividingBy: 60)
+
+        return .seconds(max(1, Int(toBoundary.rounded(.up))))
     }
 
     // MARK: The panel

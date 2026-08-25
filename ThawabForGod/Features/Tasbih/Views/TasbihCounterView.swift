@@ -25,7 +25,7 @@ struct TasbihCounterView: View {
                 counter
                 LapProgress(target: viewModel.targetCount, completedLaps: viewModel.completedLaps)
             }
-            .padding(20)
+            .padding(AppSpacing.xl)
             .frame(maxWidth: 480)
             .frame(maxWidth: .infinity, alignment: .center)
         }

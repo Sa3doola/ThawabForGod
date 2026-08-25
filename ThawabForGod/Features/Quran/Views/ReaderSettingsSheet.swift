@@ -28,6 +28,7 @@ struct ReaderSettingsSheet: View {
             Form {
                 paperSection
                 textSection
+                pageSection
                 resetSection
             }
             .navigationTitle(l10n.string(.readerOptionsTitle))
@@ -78,12 +79,12 @@ struct ReaderSettingsSheet: View {
             settings.select(paper: paper)
         } label: {
             VStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: AppRadius.sm)
                     .fill(palette.background)
                     .frame(width: 56, height: 44)
                     .overlay { pageLines(palette) }
                     .overlay {
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: AppRadius.sm)
                             .strokeBorder(
                                 isSelected ? theme.textPrimary : theme.separator,
                                 lineWidth: isSelected ? 2 : 1
@@ -141,6 +142,37 @@ struct ReaderSettingsSheet: View {
         }
     }
 
+    // MARK: The page
+
+    /// The two switches that change what is on the page rather than how it is set.
+    ///
+    /// Under the type section rather than in it, because neither is a measurement: one adds a
+    /// mark to the text and the other is about the device. Grouping them with the steppers would
+    /// say they were more of the same.
+    private var pageSection: some View {
+        Section {
+            Toggle(isOn: verseNumbers) {
+                Text(l10n.string(.readerShowVerseNumbers))
+                    .foregroundStyle(theme.textPrimary)
+            }
+
+            Toggle(isOn: screenAwake) {
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                    Text(l10n.string(.readerKeepScreenAwake))
+                        .foregroundStyle(theme.textPrimary)
+
+                    // The cost, said on the row rather than discovered later. A switch that
+                    // drains a battery without mentioning it is a switch nobody can consent to.
+                    Text(l10n.string(.readerKeepScreenAwakeDetail))
+                        .appFont(.caption)
+                        .foregroundStyle(theme.textSecondary)
+                }
+            }
+        } header: {
+            Text(l10n.string(.readerPageSection))
+        }
+    }
+
     /// A name and the number in effect, in the reader's own digits — through `LocalizationManager`
     /// rather than interpolation, like every other number in the app. Rounded to an `Int` because
     /// both steps are whole points and "20.0" is noise.
@@ -192,6 +224,20 @@ struct ReaderSettingsSheet: View {
         Binding(
             get: { settings.typography.lineSpacing },
             set: { settings.select(lineSpacing: $0) }
+        )
+    }
+
+    private var verseNumbers: Binding<Bool> {
+        Binding(
+            get: { settings.showsVerseNumbers },
+            set: { settings.select(showsVerseNumbers: $0) }
+        )
+    }
+
+    private var screenAwake: Binding<Bool> {
+        Binding(
+            get: { settings.keepsScreenAwake },
+            set: { settings.select(keepsScreenAwake: $0) }
         )
     }
 }

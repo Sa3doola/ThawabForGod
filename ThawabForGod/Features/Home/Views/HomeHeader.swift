@@ -1,5 +1,5 @@
 //
-//  HijriDateHeader.swift
+//  HomeHeader.swift
 //  ThawabForGod
 //
 
@@ -133,7 +133,7 @@ struct IslamicEventBadge: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.accent.opacity(0.12), in: .rect(cornerRadius: 12))
+        .background(theme.accent.opacity(0.12), in: .rect(cornerRadius: AppRadius.md))
         .accessibilityElement(children: .combine)
     }
 }
@@ -164,7 +164,7 @@ struct IslamicEventBadge: View {
             )
         )
     }
-    .padding(20)
+    .padding(AppSpacing.xl)
     .themed(ThemeManager(settingsStore: settingsStore))
     .localized(
         LocalizationManager(

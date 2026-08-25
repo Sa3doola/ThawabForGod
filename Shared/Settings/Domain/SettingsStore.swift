@@ -39,6 +39,8 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case readerPaper
     case readerTextSize
     case readerLineSpacing
+    case readerShowsVerseNumbers
+    case readerKeepsScreenAwake
 
     // One per obligatory prayer. Unset means on — a reminder the user has never opinionated
     // about should arrive, and writing `true` at first launch would breach the rule above.
@@ -54,6 +56,11 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     // arrive at by accident. macOS only; the iOS build never reads either.
     case menuBarEnabled
     case menuBarOnly
+    // How much of the status item to draw — a `MenuBarStatusStyle` raw value. Unset means
+    // `automatic`, which lets the width decide; the other cases pin a rung, for somebody whose
+    // menu bar is permanently crowded and who would rather choose once than watch the item grow
+    // back every time an app quits.
+    case menuBarStatusStyle
 }
 
 /// Small key/value store for user preferences.

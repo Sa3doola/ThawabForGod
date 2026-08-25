@@ -134,7 +134,18 @@ final class LocalizationManager {
     }
 
     /// A remaining duration as `h:mm:ss`.
+    /// One letter for a weekday — the week strip's column heading.
+    func weekdayString(_ date: Date) -> String {
+        timeFormatting.weekdayString(from: date, language: language)
+    }
+
     func countdownString(_ interval: TimeInterval) -> String {
         timeFormatting.countdownString(from: interval, system: numberSystem)
+    }
+
+    /// `h:mm` above the hour, `mm:ss` inside it — the form a label that must not move wants.
+    /// See `TimeFormattingService.briefCountdownString(from:system:)`.
+    func briefCountdownString(_ interval: TimeInterval) -> String {
+        timeFormatting.briefCountdownString(from: interval, system: numberSystem)
     }
 }

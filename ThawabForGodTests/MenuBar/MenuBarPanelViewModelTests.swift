@@ -65,11 +65,28 @@ struct MenuBarPanelViewModelTests {
         #expect(viewModel.remaining == TimeInterval(7_200))
     }
 
+    /// The prayer's name as *this bundle* resolves it.
+    ///
+    /// Not the literal `"Maghrib"`. `LocalizationManager.string(_:)` reads the app bundle, which
+    /// picks its `.lproj` from the host process's preferred languages — so on a simulator set to
+    /// Arabic the name comes back `المغرب` and an assertion against the English word fails for a
+    /// reason that has nothing to do with the title. What is under test here is that the *name*
+    /// is in the title beside the countdown, and this asks the same question in either language.
+    private var maghrib: String {
+        LocalizationManager(
+            settingsStore: InMemorySettingsStore(),
+            numberFormatting: LocaleNumberFormattingService(),
+            timeFormatting: LocaleTimeFormattingService(),
+            language: .english
+        )
+        .string(Prayer.maghrib.labelKey)
+    }
+
     @Test func theTitleCarriesBothTheNameAndTheCountdown() throws {
         let viewModel = makeViewModel(store: located(), at: PrayerTimeFixtures.instant(today, hour: 16))
         let title = try #require(viewModel.statusTitle)
 
-        #expect(title.contains("Maghrib"))
+        #expect(title.contains(maghrib))
         // The digits themselves come from `LocalizationManager.countdownString`, which wraps them
         // in directional isolates — so the assertion is that the number is in there, not that the
         // string equals something a bidi mark would break.
@@ -84,14 +101,29 @@ struct MenuBarPanelViewModelTests {
 
     // MARK: The heartbeat
 
-    /// A second inside the last hour, half a minute outside it. An idle Mac has no business being
-    /// woken sixty times a minute to redraw a label reading `3h 30m`.
+    /// A second inside the last hour, and outside it whatever is left of the current minute —
+    /// which is exactly when the label's last digit changes. An idle Mac has no business being
+    /// woken sixty times a minute to redraw a label reading `3:30`, and a fixed half-minute beat
+    /// would leave that label stale for up to thirty seconds and then jump by thirty.
     @Test func itTicksBySecondsOnlyWhenSecondsAreVisible() {
-        let far = makeViewModel(store: located(), at: PrayerTimeFixtures.instant(today, hour: 14))
-        #expect(far.tickInterval == .seconds(30))
+        // Twenty seconds past the minute, so the next minute figure is forty seconds away.
+        let far = makeViewModel(
+            store: located(),
+            at: PrayerTimeFixtures.instant(today, hour: 14).addingTimeInterval(20)
+        )
+        #expect(far.tickInterval == .seconds(40))
 
         let near = makeViewModel(store: located(), at: PrayerTimeFixtures.instant(today, hour: 17, minute: 30))
         #expect(near.tickInterval == .seconds(1))
+    }
+
+    /// The beat is never zero. Standing exactly on a minute boundary means the figure is about to
+    /// change, so the wait clamps to a second rather than to nothing — a sleep of no duration
+    /// would spin the ticker against the clock.
+    @Test func theBeatNeverCollapsesToNothing() {
+        let onTheMinute = makeViewModel(store: located(), at: PrayerTimeFixtures.instant(today, hour: 14))
+
+        #expect(onTheMinute.tickInterval == .seconds(1))
     }
 
     /// A tick moves the clock and nothing else. Recomputing the solar arithmetic once a second to

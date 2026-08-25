@@ -80,11 +80,59 @@ struct HadithViewModelTests {
 
         await viewModel.loadReading(reference)
 
-        #expect(viewModel.reading == .ready(.init(book: .stub(), hadiths: [.stub()])))
+        // One division stubbed, so there is nothing either side of it to page to.
+        #expect(
+            viewModel.reading
+                == .ready(.init(book: .stub(), hadiths: [.stub()], previous: nil, next: nil))
+        )
     }
 
     /// The screen fetches the division rather than taking it from the list above it, so that it
     /// can be opened without that list having been drawn. This is the check that it does.
+
+    @Test func theReaderKnowsTheDivisionsEitherSideOfIt() async {
+        let repository = StubHadithRepository(
+            books: .success([.stub(number: 1), .stub(number: 2), .stub(number: 3)])
+        )
+        let viewModel = makeViewModel(repository: repository)
+
+        await viewModel.loadReading(BookReference(collection: "bukhari", number: 2))
+
+        guard case .ready(let reading) = viewModel.reading else {
+            Issue.record("expected a reading, got \(viewModel.reading)")
+            return
+        }
+
+        #expect(reading.previous == BookReference(collection: "bukhari", number: 1))
+        #expect(reading.next == BookReference(collection: "bukhari", number: 3))
+    }
+
+    /// The two ends of a collection have one neighbour each, and the footer draws one button.
+    @Test func theEndsOfACollectionHaveOneNeighbourEach() async {
+        let repository = StubHadithRepository(
+            books: .success([.stub(number: 1), .stub(number: 2)])
+        )
+        let viewModel = makeViewModel(repository: repository)
+
+        await viewModel.loadReading(BookReference(collection: "bukhari", number: 1))
+        guard case .ready(let first) = viewModel.reading else {
+            Issue.record("expected a reading, got \(viewModel.reading)")
+            return
+        }
+
+        #expect(first.previous == nil)
+        #expect(first.next == BookReference(collection: "bukhari", number: 2))
+
+        await viewModel.loadReading(BookReference(collection: "bukhari", number: 2))
+        guard case .ready(let last) = viewModel.reading else {
+            Issue.record("expected a reading, got \(viewModel.reading)")
+            return
+        }
+
+        #expect(last.previous == BookReference(collection: "bukhari", number: 1))
+        #expect(last.next == nil)
+    }
+
     @Test func readingFetchesItsOwnDivision() async {
         let repository = StubHadithRepository()
         let viewModel = makeViewModel(repository: repository)
@@ -92,7 +140,12 @@ struct HadithViewModelTests {
 
         await viewModel.loadReading(reference)
 
-        #expect(repository.requests == [.book(reference), .hadiths(reference)])
+        // The collection's divisions come along, and they are what the reader's footer pages
+        // through — see `HadithViewModel.Reading`.
+        #expect(
+            repository.requests
+                == [.book(reference), .hadiths(reference), .books(reference.collection)]
+        )
     }
 
     /// A reference to a division the corpus does not have. There is nothing to show and nothing

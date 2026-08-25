@@ -70,6 +70,10 @@ final class HadithMemorizeViewModel {
     @ObservationIgnored private let useCase: MemorizeHadithUseCase
     @ObservationIgnored private let clock: any ClockService
 
+    /// Used only to answer "and when would that bring it back?", never to write anything —
+    /// the answer itself still goes through `useCase`, which owns the store.
+    @ObservationIgnored private let scheduler = SpacedRepetitionScheduler()
+
     init(useCase: MemorizeHadithUseCase, clock: any ClockService) {
         self.useCase = useCase
         self.clock = clock
@@ -122,6 +126,23 @@ final class HadithMemorizeViewModel {
 
     /// Records an answer and moves to the next card.
     ///
+    /// How many days each answer would push the card out by — the line under each of the four
+    /// buttons.
+    ///
+    /// **Computed rather than described**, because SM-2's intervals depend on the card's history:
+    /// "good" is four days on a card seen twice and three weeks on one seen six times, and a
+    /// button labelled with a fixed guess would be wrong for most of the deck. Running the
+    /// scheduler is a handful of arithmetic on a value type — it writes nothing and touches no
+    /// store, which is exactly what `Core/Memorization` was made pure for.
+    ///
+    /// `nil` when there is no card up, which is the only time the buttons are not on screen.
+    func interval(after grade: ReviewGrade) -> Int? {
+        guard let current else { return nil }
+
+        return scheduler.next(current.memorization.state, grade: grade, on: clock.now)
+            .intervalInDays
+    }
+
     /// The card is dropped from the queue whatever the grade, including `.again`. SM-2 would have
     /// it back tomorrow rather than later today, and re-queueing it inside this session would be
     /// this app inventing a rule the algorithm does not have — a decision worth making

@@ -38,7 +38,7 @@ struct LapProgress: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
-        .background(theme.surface, in: .rect(cornerRadius: 12))
+        .appCard(radius: AppRadius.md)
         .accessibilityElement(children: .combine)
     }
 }

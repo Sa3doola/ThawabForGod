@@ -47,6 +47,19 @@ final class HadithCoordinator {
         scrollTarget = nil
     }
 
+    /// Moves the reader to the kitab beside the one they are in, **without deepening the stack**.
+    ///
+    /// The footer's two buttons are a way through a collection, not a way further into it: a
+    /// reader who pages through six divisions and then goes back means the list they started
+    /// from, and `append` would give them six taps of Back through kitab they have already
+    /// finished. So the top of the path is replaced rather than pushed onto.
+    func page(to book: BookReference) {
+        guard !path.isEmpty else { return }
+
+        path[path.count - 1] = .book(book)
+        scrollTarget = nil
+    }
+
     /// Opens the kitab a narration belongs to, positioned at it — how a search result and, later,
     /// a bookmark both get back into the text.
     ///

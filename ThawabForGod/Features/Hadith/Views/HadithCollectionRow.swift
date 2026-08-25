@@ -32,9 +32,10 @@ struct HadithCollectionRow: View {
 
                 counts
             }
-            .padding(16)
+            .padding(AppSpacing.row)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.surface, in: .rect(cornerRadius: 16))
+            .appCard()
+                .appHover()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

@@ -45,11 +45,14 @@ struct ReaderView: View {
                 // visible pause on open and the reason `onAppear` could not be used to track
                 // position — with an eager stack every row appears at once, so "the verse in
                 // view" would have been the last verse of the chapter, immediately.
-                LazyVStack(alignment: .leading, spacing: 18) {
+                LazyVStack(alignment: .leading, spacing: AppSpacing.lg) {
                     content
                 }
-                .padding(20)
-                .frame(maxWidth: 620)
+                .padding(AppSpacing.xl)
+                // The measure, and the one number on this screen that is a cap rather than a
+                // proportion: a line of scripture the width of a Mac window loses the reader on
+                // the way back from the end of it. See `AppBreakpoint.readingMeasure`.
+                .frame(maxWidth: AppBreakpoint.readingMeasure)
                 .frame(maxWidth: .infinity, alignment: .center)
             }
             .task(id: scrollTargetKey) { scroll(proxy) }
@@ -57,6 +60,7 @@ struct ReaderView: View {
         .background(background)
         .navigationTitle(title)
         .environment(\.readingStyle, style)
+        .keepScreenAwake(settings.keepsScreenAwake)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -69,14 +73,16 @@ struct ReaderView: View {
         .sheet(isPresented: isCustomizing) {
             ReaderSettingsSheet(settings: settings, coordinator: coordinator)
         }
-        // `item:` rather than `isPresented:` with a stored verse, so the sheet cannot be up with
-        // nothing to show — see `QuranCoordinator.openTafsir`.
-        .sheet(item: openTafsir) { reference in
-            TafsirSheet(
-                viewModel: tafsir,
-                reference: reference,
-                surah: viewModel.surah(reference.surah)
-            )
+        // **One modifier, three presentations.** The design asks for the commentary as a Mac
+        // inspector pane, a 340-point trailing column on iPad and a medium sheet on iPhone —
+        // which is exactly what `.inspector` already is: a trailing pane at regular width and a
+        // sheet at compact. Writing that as a size-class branch over a sheet and an `HStack`
+        // would be three layouts to keep in step, and the sheet would lose its detents on the
+        // way. The detents below apply only in the case that becomes a sheet.
+        .inspector(isPresented: isShowingTafsir) {
+            tafsirPanel
+                .inspectorColumnWidth(min: 320, ideal: 340, max: 420)
+                .presentationDetents([.medium, .large])
         }
         .task { await viewModel.load(reading) }
         // On the way out rather than as they scroll — one save per sitting instead of one per
@@ -130,11 +136,29 @@ struct ReaderView: View {
     }
 
     /// Two-way for the same reason: a swipe down and a Done button are one value changing.
-    private var openTafsir: Binding<VerseReference?> {
+    ///
+    /// A `Bool` rather than the `VerseReference?` a sheet took, because that is what `.inspector`
+    /// asks for — so the "cannot be up with nothing to show" guarantee moves from the modifier
+    /// into `tafsirPanel`, which draws nothing at all when there is no verse.
+    private var isShowingTafsir: Binding<Bool> {
         Binding(
-            get: { coordinator.openTafsir },
-            set: { if $0 == nil { coordinator.closeTafsir() } }
+            get: { coordinator.openTafsir != nil },
+            set: { if !$0 { coordinator.closeTafsir() } }
         )
+    }
+
+    /// The commentary, or nothing. See `QuranCoordinator.openTafsir` — the reference is the
+    /// presentation state, so there is no case where the panel is up without one.
+    @ViewBuilder
+    private var tafsirPanel: some View {
+        if let reference = coordinator.openTafsir {
+            TafsirPanel(
+                viewModel: tafsir,
+                reference: reference,
+                surah: viewModel.surah(reference.surah),
+                close: { coordinator.closeTafsir() }
+            )
+        }
     }
 
     @ViewBuilder
@@ -185,6 +209,7 @@ struct ReaderView: View {
             VerseRow(
                 verse: verse,
                 isBookmarked: viewModel.isBookmarked(verse.id),
+                showsNumber: settings.showsVerseNumbers,
                 onSetBookmark: { isBookmarked in
                     Task { await viewModel.setBookmark(isBookmarked, for: verse.id) }
                 },
@@ -199,10 +224,31 @@ struct ReaderView: View {
         }
     }
 
+    /// Where one chapter ends and the next begins.
+    ///
+    /// A rule broken by the girih star, and the name centred under it — the mushaf's own way of
+    /// marking a sura, and the one place in the reader the app's motif is drawn rather than
+    /// implied. Centred rather than flush left because a heading that hangs off the same edge as
+    /// the verses reads as another verse; a span that crosses a chapter boundary has to make that
+    /// boundary unmistakable, since it is the only thing telling the reader the words changed
+    /// book.
+    ///
+    /// The ornament is tinted from the *paper's* accent, not the app's: on parchment the app's
+    /// amber washes out, which is the whole reason a named paper carries an accent of its own.
     private func chapterHeading(_ surah: Surah) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.md) {
+                rule
+                GirihStar(inset: 3)
+                    .stroke(style.palette.accent, lineWidth: 1.4)
+                    .frame(width: 34, height: 34)
+                    .opacity(0.5)
+                rule
+            }
+            .accessibilityHidden(true)
+
             Text(surah.arabicName)
-                .appFont(.headline)
+                .appFont(.title3, weight: .semibold)
                 .foregroundStyle(style.palette.textPrimary)
                 .environment(\.locale, AppLanguage.arabic.locale)
 
@@ -210,10 +256,18 @@ struct ReaderView: View {
                 .appFont(.caption)
                 .foregroundStyle(style.palette.textSecondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
+        .multilineTextAlignment(.center)
         // Extra breathing room above a new chapter, which the per-chapter stack used to give it
         // before the span was flattened.
-        .padding(.top, 10)
+        .padding(.top, AppSpacing.lg)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var rule: some View {
+        Rectangle()
+            .fill(style.palette.textSecondary.opacity(0.3))
+            .frame(height: 1)
     }
 
     /// The chapter's Arabic name, or the part's number.

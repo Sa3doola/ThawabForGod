@@ -41,9 +41,10 @@ struct CategoryRow: View {
                     .appFont(.footnote, weight: .semibold)
                     .foregroundStyle(theme.textSecondary)
             }
-            .padding(16)
-            .background(theme.surface, in: .rect(cornerRadius: 14))
-            .contentShape(.rect(cornerRadius: 14))
+            .padding(AppSpacing.row)
+            .appCard()
+            .appHover()
+            .contentShape(.rect(cornerRadius: AppRadius.lg))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

@@ -58,6 +58,11 @@ final class MenuBarController {
     func apply() {
         if preferences.isMenuBarEnabled {
             install()
+            // `install()` returns early when the item is already there, so the redraw is here
+            // rather than inside it: changing the *style* changes nothing about whether the item
+            // exists, and without this the new rung would not appear until the next beat — up to
+            // a minute of a switch that looked like it had not worked.
+            redraw()
         } else {
             remove()
         }
@@ -134,13 +139,69 @@ final class MenuBarController {
     private func redraw() {
         guard let button = statusItem?.button else { return }
 
-        button.image = NSImage(
-            systemSymbolName: viewModel.statusSymbol,
-            accessibilityDescription: l10n.string(.appName)
+        let rung = preferences.statusStyle.rung(freeWidth: freeMenuBarWidth)
+        let title = viewModel.statusTitle(rung: rung)
+
+        button.image = title.symbol.flatMap {
+            let image = NSImage(
+                systemSymbolName: $0,
+                accessibilityDescription: l10n.string(.appName)
+            )
+            // A template image, so AppKit inverts it for a dark menu bar rather than the app
+            // owning two artworks and a guess about which bar it is in.
+            image?.isTemplate = true
+            return image
+        }
+
+        button.imagePosition = title.text.isEmpty ? .imageOnly : .imageLeading
+        button.attributedTitle = attributed(title.text, hasSymbol: title.symbol != nil)
+        button.toolTip = title.tooltip
+    }
+
+    /// The title, in a font whose digits are all the same width.
+    ///
+    /// **This is the other half of holding still**, and without it the slot does nothing: padding
+    /// a countdown to a fixed number of characters only fixes its width if the characters are of
+    /// a fixed width, and the menu bar's font is proportional — `1` is markedly narrower than
+    /// `8` in it. `monospacedDigitSystemFont` keeps the menu bar's own metrics and size while
+    /// making every digit, and the FIGURE SPACE that pads them, share one advance.
+    ///
+    /// The leading space is drawn as part of the string rather than by `imagePosition`, so it is
+    /// absent at the rung that has no symbol instead of leaving the text hanging off its edge.
+    private func attributed(_ text: String, hasSymbol: Bool) -> NSAttributedString {
+        guard !text.isEmpty else { return NSAttributedString(string: "") }
+
+        return NSAttributedString(
+            string: hasSymbol ? " \(text)" : text,
+            attributes: [
+                .font: NSFont.monospacedDigitSystemFont(
+                    ofSize: NSFont.systemFontSize(for: .small),
+                    weight: .regular
+                )
+            ]
         )
-        button.image?.isTemplate = true
-        button.imagePosition = viewModel.statusTitle == nil ? .imageOnly : .imageLeading
-        button.title = viewModel.statusTitle.map { " \($0)" } ?? ""
+    }
+
+    /// Roughly how much of the menu bar is not already spoken for, in points.
+    ///
+    /// Measured as the room between the app menus on the left and this item on the right, which
+    /// is the space every *other* status item is competing for. `nil` before the item has a
+    /// window to measure — see `MenuBarStatusStyle.rung(freeWidth:)`, which treats an unmeasured
+    /// bar as a roomy one rather than flickering through the ladder at launch.
+    ///
+    /// **An estimate, and deliberately a cheap one.** AppKit publishes no "free menu bar width",
+    /// and the exact figure would need the widths of the frontmost app's menus, which change
+    /// with every app switch. What the ladder needs is not a measurement but an order of
+    /// magnitude — is the bar comfortable, tight, or hopeless — and the item's own left edge
+    /// answers that, because macOS lays status items out from the right and pushes ours further
+    /// left with every one that appears. Anyone who wants a guarantee rather than an estimate
+    /// pins a rung in Settings, which is what `MenuBarStatusStyle`'s other three cases are for.
+    private var freeMenuBarWidth: CGFloat? {
+        guard let window = statusItem?.button?.window else { return nil }
+
+        let menus = NSApp.mainMenu?.size.width ?? 0
+
+        return max(0, window.frame.minX - menus)
     }
 
     // MARK: The panel

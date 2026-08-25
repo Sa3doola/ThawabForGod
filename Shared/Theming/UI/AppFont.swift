@@ -75,13 +75,41 @@ extension View {
     }
 }
 
+/// Applies a step of the scale — the face, and the two metrics that go with it.
+///
+/// **The script decides both of them, and the script is read from `\.locale`.** That is the one
+/// signal that is right per *text* rather than per app: the whole hierarchy carries the interface
+/// language, and the handful of leaves that draw Arabic inside an English screen — a chapter's
+/// name, a verse, a dhikr — already pin `\.locale` to Arabic so that VoiceOver reads them in the
+/// right voice. Asking the same question for type means an Arabic name in an English list is set
+/// as Arabic, which a per-app answer could never manage.
 private struct AppFontModifier: ViewModifier {
     @Environment(\.appFont) private var provider
+    @Environment(\.locale) private var locale
+
+    /// The step's nominal size, scaled the way the system scales the face it belongs to — so the
+    /// leading derived from it grows with Dynamic Type instead of staying at its default-size
+    /// value while the text around it doubles.
+    @ScaledMetric private var scaledSize: CGFloat
+
     let style: AppTextStyle
     let weight: Font.Weight
 
+    init(style: AppTextStyle, weight: Font.Weight) {
+        self.style = style
+        self.weight = weight
+        _scaledSize = ScaledMetric(wrappedValue: style.nominalSize, relativeTo: style.textStyle)
+    }
+
     func body(content: Content) -> some View {
-        content.font(provider.font(style, weight: weight))
+        content
+            .font(provider.font(style, weight: weight))
+            .tracking(style.tracking(isArabic: isArabic))
+            .lineSpacing(style.additionalLineSpacing(isArabic: isArabic, size: scaledSize))
+    }
+
+    private var isArabic: Bool {
+        locale.language.languageCode?.identifier == "ar"
     }
 }
 

@@ -43,37 +43,69 @@ struct PrayerTimesSheetViewModelTests {
         #expect(viewModel.isToday)
     }
 
-    @Test func steppingMovesADayAtATime() {
+    @Test func tappingADayInTheStripSelectsIt() {
         let (viewModel, _) = makeViewModel()
 
-        viewModel.showNextDay()
+        viewModel.select(tomorrow)
 
         #expect(viewModel.day == tomorrow)
         #expect(viewModel.isToday == false)
+        #expect(viewModel.isSelected(tomorrow))
+        #expect(viewModel.isSelected(today) == false)
+    }
 
-        viewModel.showPreviousDay()
-        viewModel.showPreviousDay()
+    /// Today keeps its own mark whichever day is selected — the two are separate questions, which
+    /// is why the strip asks them separately.
+    @Test func todayIsMarkedEvenWhenAnotherDayIsSelected() {
+        let (viewModel, _) = makeViewModel()
 
-        #expect(viewModel.day == PrayerTimeFixtures.day(2026, 6, 14))
+        viewModel.select(tomorrow)
+
+        #expect(viewModel.isCurrentDay(today))
+        #expect(viewModel.isCurrentDay(tomorrow) == false)
+    }
+
+    @Test func theChevronsPageAWholeWeek() {
+        let (viewModel, _) = makeViewModel()
+
+        viewModel.showNextWeek()
+
+        #expect(viewModel.day == PrayerTimeFixtures.day(2026, 6, 22))
+
+        viewModel.showPreviousWeek()
+        viewModel.showPreviousWeek()
+
+        #expect(viewModel.day == PrayerTimeFixtures.day(2026, 6, 8))
+    }
+
+    /// Seven days, running from whatever weekday the calendar starts on, and containing the day
+    /// on screen.
+    @Test func theStripIsTheWeekAroundTheSelectedDay() throws {
+        let (viewModel, _) = makeViewModel()
+        let week = viewModel.week
+
+        #expect(week.count == 7)
+        #expect(week.contains(today))
+        #expect(PrayerTimeFixtures.calendar.component(.weekday, from: try #require(week.first))
+            == PrayerTimeFixtures.calendar.firstWeekday)
     }
 
     @Test func theTodayButtonComesBack() {
         let (viewModel, _) = makeViewModel()
 
-        viewModel.showNextDay()
-        viewModel.showNextDay()
+        viewModel.showNextWeek()
         viewModel.showToday()
 
         #expect(viewModel.day == today)
         #expect(viewModel.isToday)
     }
 
-    /// The stepper lands on midnight whatever hour the sheet was opened at, so a day is one day
+    /// Selecting lands on midnight whatever hour the sheet was opened at, so a day is one day
     /// rather than "twenty-four hours from when you looked".
-    @Test func steppingLandsOnMidnight() {
+    @Test func selectingLandsOnMidnight() {
         let (viewModel, _) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 23, minute: 45))
 
-        viewModel.showNextDay()
+        viewModel.select(PrayerTimeFixtures.instant(tomorrow, hour: 9, minute: 30))
 
         #expect(viewModel.day == tomorrow)
     }
@@ -95,7 +127,7 @@ struct PrayerTimesSheetViewModelTests {
     @Test func aDayThatCannotBeComputedSaysSo() async {
         let (viewModel, _) = makeViewModel(days: [today])
 
-        viewModel.showNextDay()
+        viewModel.select(tomorrow)
         await viewModel.load()
 
         #expect(viewModel.phase == .unavailable)

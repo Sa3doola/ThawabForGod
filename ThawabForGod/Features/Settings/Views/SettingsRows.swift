@@ -211,7 +211,7 @@ struct SettingsIconRow: View {
                     .appFont(.footnote, weight: .semibold)
                     .foregroundStyle(theme.accent)
                     .frame(width: side, height: side)
-                    .background(theme.accent.opacity(0.15), in: .rect(cornerRadius: 7))
+                    .background(theme.accent.opacity(0.15), in: .rect(cornerRadius: AppRadius.sm))
 
                 Text(l10n.string(route.titleKey))
                     .foregroundStyle(theme.textPrimary)

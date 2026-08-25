@@ -21,7 +21,7 @@ struct ContinueReadingSection: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
             Text(l10n.string(.quranTitle))
                 .appFont(.headline, weight: .semibold)
                 .foregroundStyle(theme.textPrimary)

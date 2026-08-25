@@ -31,7 +31,7 @@ struct HadithReadingView: View {
                 LazyVStack(spacing: 14) {
                     content
                 }
-                .padding(20)
+                .padding(AppSpacing.xl)
                 .frame(maxWidth: 640)
                 .frame(maxWidth: .infinity, alignment: .center)
             }
@@ -85,6 +85,15 @@ struct HadithReadingView: View {
                 .id(hadith.id)
             }
 
+            BookPager(previous: reading.previous, next: reading.next) { book in
+                // The position is written here rather than left to `onDisappear`, which does not
+                // fire when the screen stays and only its content changes. Without it a reader
+                // who paged forward and closed the app would be returned to the kitab they
+                // started in.
+                viewModel.recordLastRead(book)
+                coordinator.page(to: book)
+            }
+
         case .unavailable:
             InlineNotice(message: l10n.string(.hadithUnavailable))
         }
@@ -120,5 +129,70 @@ struct HadithReadingView: View {
 
         proxy.scrollTo(target, anchor: .top)
         coordinator.clearScrollTarget()
+    }
+}
+
+/// The way out of a kitab that is not Back: the two divisions either side of it.
+///
+/// **At the foot of the text rather than in the toolbar**, because that is where a reader who has
+/// finished one arrives. A toolbar control is for something you might want at any moment; this is
+/// for the one moment the last narration has been read, and putting it there means the reader
+/// never has to go back up to a list to carry on.
+///
+/// A missing neighbour is a missing button, not a disabled one — at either end of a collection
+/// there is nothing to page to, and a greyed control that can never be used is furniture.
+private struct BookPager: View {
+    let previous: BookReference?
+    let next: BookReference?
+    let open: (BookReference) -> Void
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        if previous != nil || next != nil {
+            HStack(spacing: AppSpacing.md) {
+                if let previous {
+                    button(.hadithPreviousBook, symbol: "chevron.backward", isLeading: true) {
+                        open(previous)
+                    }
+                }
+
+                if let next {
+                    button(.hadithNextBook, symbol: "chevron.forward", isLeading: false) {
+                        open(next)
+                    }
+                }
+            }
+            .padding(.top, AppSpacing.sm)
+        }
+    }
+
+    /// The symbol leads on the way back and trails on the way forward, so the pair reads as an
+    /// axis rather than as two unrelated buttons. `backward`/`forward` rather than `left`/`right`
+    /// for the reason the day picker gives: the semantic direction flips for Arabic, the literal
+    /// one does not.
+    private func button(
+        _ key: L10nKey,
+        symbol: String,
+        isLeading: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: AppSpacing.xs) {
+                if isLeading { Image(systemName: symbol) }
+                Text(l10n.string(key))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                if !isLeading { Image(systemName: symbol) }
+            }
+            .appFont(.subheadline, weight: .semibold)
+            .foregroundStyle(theme.accent)
+            .padding(.vertical, AppSpacing.md)
+            .frame(maxWidth: .infinity)
+            .appCard()
+            .appHover()
+        }
+        .buttonStyle(.plain)
     }
 }

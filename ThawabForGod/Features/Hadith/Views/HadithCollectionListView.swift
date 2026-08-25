@@ -26,19 +26,24 @@ struct HadithCollectionListView: View {
         @Bindable var viewModel = viewModel
 
         return ScrollView {
-            VStack(spacing: 12) {
-                if viewModel.isSearching {
-                    searchResults
-                } else {
-                    review
-                    continueReading
-                    content
-                    kept
+            // The bookmarks card is at the top and the narrations it counts are at the bottom,
+            // so tapping it has to be able to move the screen. A reader who taps a number and
+            // watches nothing happen has been told the card is not a control.
+            ScrollViewReader { scroll in
+                VStack(spacing: 12) {
+                    if viewModel.isSearching {
+                        searchResults
+                    } else {
+                        summary(scroll)
+                        continueReading
+                        content
+                        kept
+                    }
                 }
+                .padding(AppSpacing.xl)
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(20)
-            .frame(maxWidth: 560)
-            .frame(maxWidth: .infinity, alignment: .center)
         }
         .background(theme.background)
         .navigationTitle(l10n.string(.hadithTitle))
@@ -57,20 +62,32 @@ struct HadithCollectionListView: View {
         .task(id: coordinator.path) { await viewModel.loadProgress() }
     }
 
-    /// The review session, offered only once the reader has put something in the deck.
+    /// The deck and the bookmarks, as a pair across the top.
     ///
-    /// Absent until then rather than shown empty, for the reason "continue reading" is: a row
-    /// offering to review nothing is an invitation the app cannot honour. It stays visible with a
-    /// count of zero *after* the deck exists, because "you are done for today" is worth saying
-    /// and is different from having never started.
+    /// Each half is absent until there is something to put in it, for the reason "continue
+    /// reading" is: a card offering to review nothing is an invitation the app cannot honour. The
+    /// deck's half stays visible with a count of zero *after* the deck exists, because "you are
+    /// done for today" is worth saying and is different from having never started.
     @ViewBuilder
-    private var review: some View {
-        if viewModel.hasDeck {
-            HadithReviewRow(due: viewModel.dueCount) {
-                coordinator.memorize()
+    private func summary(_ scroll: ScrollViewProxy) -> some View {
+        HadithSummaryCards(
+            dueCount: viewModel.dueCount,
+            deckCount: viewModel.deckCount,
+            bookmarkCount: viewModel.bookmarks.count,
+            bookmarkedBookCount: viewModel.bookmarkedBookCount,
+            review: { coordinator.memorize() },
+            showBookmarks: {
+                withAnimation { scroll.scrollTo(Self.bookmarksAnchor, anchor: .top) }
             }
-        }
+        )
     }
+
+    /// What the bookmarks card scrolls to. A constant rather than a literal in two places,
+    /// because an anchor that does not match its target fails silently — the scroll simply does
+    /// nothing, which looks exactly like a card that is not a button.
+    private static let bookmarksAnchor = "hadith.bookmarks"
+
+
 
     // MARK: Where the reader was, and what they kept
 
@@ -100,6 +117,7 @@ struct HadithCollectionListView: View {
                     .appFont(.footnote, weight: .semibold)
                     .foregroundStyle(theme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .id(Self.bookmarksAnchor)
 
                 ForEach(viewModel.bookmarks) { kept in
                     HadithSearchResultRow(
@@ -164,8 +182,8 @@ struct HadithCollectionListView: View {
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .background(theme.surface, in: .rect(cornerRadius: 12))
+            .padding(AppSpacing.lg)
+            .appCard(radius: AppRadius.md)
             .padding(.top, 8)
     }
 

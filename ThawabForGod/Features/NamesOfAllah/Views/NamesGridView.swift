@@ -26,7 +26,7 @@ struct NamesGridView: View {
     var body: some View {
         ScrollView {
             content
-                .padding(20)
+                .padding(AppSpacing.xl)
                 .frame(maxWidth: 900)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
@@ -38,7 +38,7 @@ struct NamesGridView: View {
         // Pushes into the stack Home owns rather than opening one of its own. Two-way: a back
         // swipe writes `nil` through the binding and the coordinator follows.
         .navigationDestination(item: openName) { name in
-            NameDetail(name: name)
+            NameDetail(name: name, viewModel: viewModel, coordinator: coordinator)
         }
     }
 

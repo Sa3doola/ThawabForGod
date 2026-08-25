@@ -5,13 +5,32 @@
 
 import SwiftUI
 
-/// One chapter in the list: its place, its names, and what it is.
+/// One chapter, as a row on a phone and as a cell on a board.
 ///
 /// A `Button` rather than a tappable `VStack`, like every other tappable thing in the app — it
 /// buys the pressed state, the VoiceOver trait and keyboard focus without any of them being
 /// rebuilt by hand.
+///
+/// **The same cell, unwrapped.** The design's iPad grid is not a second design: it is these four
+/// pieces — the number, the two names, what it is and how long — turned from a line into a block.
+/// So there is one view with two arrangements rather than a `SurahCell` beside a `SurahRow`,
+/// which would be two things to keep in step and one of them always a version behind.
+///
+/// The arrangement is passed in rather than measured here. The list already knows the width it is
+/// laying out for, and a row that measured itself would have to do it 114 times to reach the same
+/// answer the grid above it worked out once.
 struct SurahRow: View {
+    /// Which way round the four pieces go.
+    enum Layout {
+        /// One line: number, names, then what it is on the trailing edge.
+        case row
+        /// A block: number and kind on one line, the names under them, the length last. What a
+        /// 200-point column can hold without either name shrinking.
+        case cell
+    }
+
     let surah: Surah
+    var layout: Layout = .row
     let action: () -> Void
 
     @Environment(LocalizationManager.self) private var l10n
@@ -19,18 +38,40 @@ struct SurahRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 14) {
-                number
-                names
-                Spacer(minLength: 8)
-                detail
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(theme.surface, in: .rect(cornerRadius: 14))
+            content
+                .padding(AppSpacing.row)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .appCard()
+                .appHover()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch layout {
+        case .row:
+            HStack(spacing: AppSpacing.md) {
+                number
+                names
+                Spacer(minLength: AppSpacing.sm)
+                detail
+            }
+
+        case .cell:
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                HStack(spacing: AppSpacing.sm) {
+                    number
+                    Spacer(minLength: AppSpacing.xs)
+                    place
+                }
+
+                names
+
+                verses
+            }
+        }
     }
 
     /// Its place in the mushaf, which is how most readers refer to a chapter.
@@ -43,7 +84,7 @@ struct SurahRow: View {
     }
 
     private var names: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
             // Arabic whatever the interface language is, so VoiceOver is told which language to
             // read it in. A name is one word, so unlike a verse it needs no paragraph direction
             // pinned — the bidi algorithm places it correctly on either screen.
@@ -59,21 +100,29 @@ struct SurahRow: View {
     }
 
     private var detail: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            Text(l10n.string(surah.revelationPlace == .meccan ? .quranMeccan : .quranMedinan))
-                .appFont(.caption, weight: .medium)
-                .foregroundStyle(theme.textSecondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(theme.separator.opacity(0.35), in: .capsule)
-
-            HStack(spacing: 4) {
-                Text(l10n.string(.quranVersesLabel))
-                Text(l10n.string(surah.verseCount, grouped: false))
-            }
-            .appFont(.caption)
-            .foregroundStyle(theme.textSecondary)
+        VStack(alignment: .trailing, spacing: AppSpacing.xs) {
+            place
+            verses
         }
+    }
+
+    /// Meccan or Medinan, as a chip.
+    private var place: some View {
+        Text(l10n.string(surah.revelationPlace == .meccan ? .quranMeccan : .quranMedinan))
+            .appFont(.caption, weight: .medium)
+            .foregroundStyle(theme.textSecondary)
+            .padding(.horizontal, AppSpacing.sm)
+            .padding(.vertical, 3)
+            .background(theme.separator.opacity(0.35), in: .capsule)
+    }
+
+    private var verses: some View {
+        HStack(spacing: AppSpacing.xs) {
+            Text(l10n.string(.quranVersesLabel))
+            Text(l10n.string(surah.verseCount, grouped: false))
+        }
+        .appFont(.caption)
+        .foregroundStyle(theme.textSecondary)
     }
 }
 
