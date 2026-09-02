@@ -32,6 +32,13 @@ nonisolated protocol TimeFormattingService: Sendable {
     /// not always agree.
     func dateString(from date: Date, language: AppLanguage, system: NumberSystem) -> String
 
+    /// The same date with the month abbreviated and the year dropped — `2 Sep`, `٢ سبتمبر`.
+    ///
+    /// For the places a whole date will not fit and the year is not in doubt: the Lock Screen's
+    /// inline slot is one truncated line, and it sits directly under a clock that already says
+    /// what year it is. Gregorian for the reason above.
+    func shortDateString(from date: Date, language: AppLanguage, system: NumberSystem) -> String
+
     /// The shortest form of a weekday name — `S`, `M`, `ح`, `ن` — for the week strip, where
     /// seven of them share a phone's width and there is room for a letter and nothing more.
     ///

@@ -133,6 +133,11 @@ final class LocalizationManager {
         timeFormatting.dateString(from: date, language: language, system: numberSystem)
     }
 
+    /// The same date abbreviated and without the year — `2 Sep`.
+    func shortDateString(_ date: Date) -> String {
+        timeFormatting.shortDateString(from: date, language: language, system: numberSystem)
+    }
+
     /// A remaining duration as `h:mm:ss`.
     /// One letter for a weekday — the week strip's column heading.
     func weekdayString(_ date: Date) -> String {

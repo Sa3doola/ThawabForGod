@@ -98,10 +98,16 @@ struct HijriDateLabel: View {
     }
 
     /// Shared with `HomeHeader`'s date line, which shows this reading beside the Gregorian one.
-    /// Static rather than duplicated, so the three parts are assembled once.
+    ///
+    /// The assembly itself is `HijriDateText`, in `Shared/`, because the widget extension draws
+    /// the same line and two spellings of one date is exactly the kind of drift that goes
+    /// unnoticed until somebody puts the app and the Lock Screen side by side.
     static func text(for date: HijriDate, l10n: LocalizationManager) -> String {
-        // The year is ungrouped: it names a year, it does not count 1,448 of anything.
-        "\(l10n.string(date.day)) \(l10n.string(date.month.labelKey)) \(l10n.string(date.year, grouped: false))"
+        HijriDateText.string(
+            for: date,
+            localized: { l10n.string($0) },
+            number: { l10n.string($0, grouped: $1) }
+        )
     }
 }
 

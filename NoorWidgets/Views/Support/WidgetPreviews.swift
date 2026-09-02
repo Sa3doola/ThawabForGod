@@ -82,6 +82,30 @@ enum WidgetPreviewData {
     static var afterIsha: NextPrayerSnapshot {
         entry(.schedule(day(current: nil, upcoming: .fajr)))
     }
+
+    // MARK: The date widget
+
+    /// A fixed Hijri date, so the canvas does not change what it is showing between runs.
+    static func date(
+        _ hijri: HijriDate = HijriDate(day: 10, month: .muharram, year: 1447),
+        events: [IslamicEvent] = [],
+        style: NextPrayerSnapshot.Style = style()
+    ) -> HijriDateSnapshot {
+        HijriDateSnapshot(date: Date(), hijri: hijri, events: events, style: style)
+    }
+
+    /// A day with something on it, and with the caveat that belongs to it — the layout that has
+    /// to survive an event name *and* its note is the one worth looking at.
+    static var eventDay: HijriDateSnapshot {
+        date(
+            HijriDate(day: 1, month: .shawwal, year: 1447),
+            events: IslamicEventTable.bundled()
+        )
+    }
+
+    static var arabicDate: HijriDateSnapshot {
+        date(style: style(.arabicIndic, .arabic))
+    }
 }
 
 // MARK: - Next prayer
@@ -157,6 +181,24 @@ enum WidgetPreviewData {
     WidgetPreviewData.afterIsha
 }
 
+// MARK: - Hijri date
+
+#Preview("Date · Small", as: .systemSmall) {
+    HijriDateWidget()
+} timeline: {
+    WidgetPreviewData.date()
+    WidgetPreviewData.arabicDate
+    WidgetPreviewData.eventDay
+}
+
+#Preview("Date · Medium", as: .systemMedium) {
+    HijriDateWidget()
+} timeline: {
+    WidgetPreviewData.date()
+    WidgetPreviewData.arabicDate
+    WidgetPreviewData.eventDay
+}
+
 // MARK: - Lock Screen
 
 #if os(iOS)
@@ -193,6 +235,30 @@ enum WidgetPreviewData {
 } timeline: {
     WidgetPreviewData.schedule
     WidgetPreviewData.arabic
+}
+
+/// The one that truncates first — both calendars on a single line, in a language whose month
+/// names are longer than English's.
+#Preview("Date · Inline", as: .accessoryInline) {
+    HijriDateWidget()
+} timeline: {
+    WidgetPreviewData.date()
+    WidgetPreviewData.arabicDate
+}
+
+#Preview("Date · Rectangular", as: .accessoryRectangular) {
+    HijriDateWidget()
+} timeline: {
+    WidgetPreviewData.date()
+    WidgetPreviewData.arabicDate
+    WidgetPreviewData.eventDay
+}
+
+#Preview("Date · Circular", as: .accessoryCircular) {
+    HijriDateWidget()
+} timeline: {
+    WidgetPreviewData.date()
+    WidgetPreviewData.arabicDate
 }
 #endif
 #endif

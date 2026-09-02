@@ -28,6 +28,9 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
 
     private let dateFormatters: [DateStyle: DateFormatter]
 
+    /// The same four again, abbreviated and yearless — see `shortDateString(from:language:system:)`.
+    private let shortDateFormatters: [DateStyle: DateFormatter]
+
     /// Very short weekday names, one formatter per language — the strip's seven letters.
     private let weekdayFormatters: [AppLanguage: DateFormatter]
 
@@ -81,6 +84,23 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
             }
         }
 
+        var shortDates: [DateStyle: DateFormatter] = [:]
+
+        for language in AppLanguage.allCases {
+            for system in NumberSystem.allCases {
+                let formatter = DateFormatter()
+                formatter.locale = Locale(
+                    identifier: "\(language.rawValue)@numbers=\(system.numberingSystemTag)"
+                )
+                formatter.timeZone = .autoupdatingCurrent
+                formatter.calendar = Calendar(identifier: .gregorian)
+                // `dMMM` — abbreviated month, no year. The template is what puts the day and the
+                // month in the order the language wants, which is not the same in both.
+                formatter.setLocalizedDateFormatFromTemplate("dMMM")
+                shortDates[DateStyle(language: language, system: system)] = formatter
+            }
+        }
+
         var weekdays: [AppLanguage: DateFormatter] = [:]
 
         for language in AppLanguage.allCases {
@@ -96,6 +116,7 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
 
         self.timeFormatters = times
         self.dateFormatters = dates
+        self.shortDateFormatters = shortDates
         self.weekdayFormatters = weekdays
         self.paddedFormatters = Self.numberFormatters(minimumIntegerDigits: 2)
         self.plainFormatters = Self.numberFormatters(minimumIntegerDigits: 1)
@@ -132,6 +153,10 @@ nonisolated final class LocaleTimeFormattingService: TimeFormattingService, @unc
 
     func dateString(from date: Date, language: AppLanguage, system: NumberSystem) -> String {
         dateFormatters[DateStyle(language: language, system: system)]?.string(from: date) ?? ""
+    }
+
+    func shortDateString(from date: Date, language: AppLanguage, system: NumberSystem) -> String {
+        shortDateFormatters[DateStyle(language: language, system: system)]?.string(from: date) ?? ""
     }
 
     func weekdayString(from date: Date, language: AppLanguage) -> String {

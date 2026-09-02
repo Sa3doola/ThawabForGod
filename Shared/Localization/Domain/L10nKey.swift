@@ -453,6 +453,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case widgetCountdownDescription = "widget_countdown_description"
     case widgetAllPrayersName = "widget_all_prayers_name"
     case widgetAllPrayersDescription = "widget_all_prayers_description"
+    case widgetHijriDateName = "widget_hijri_date_name"
+    case widgetHijriDateDescription = "widget_hijri_date_description"
     case widgetPrayerIn = "widget_prayer_in"
     case widgetAtTime = "widget_at_time"
 

@@ -6112,6 +6112,40 @@
         }
       }
     },
+    "widget_hijri_date_description": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تاريخ اليوم بالتقويمين الهجري والميلادي."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today in the Hijri and Gregorian calendars."
+          }
+        }
+      }
+    },
+    "widget_hijri_date_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التاريخ الهجري"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hijri date"
+          }
+        }
+      }
+    },
     "widget_next_prayer_description": {
       "extractionState": "manual",
       "localizations": {
