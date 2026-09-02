@@ -11,12 +11,13 @@ import SwiftUI
 /// sizes. What separates them is how much room there is after the name — the small has none, the
 /// medium spends it on the day as a strip, the large on the day as a list.
 ///
-/// The small and the large share `NextPrayerHeader`, whose third line is the upcoming prayer's
-/// clock time. The medium builds its own two-line header instead, because its strip already picks
-/// that time out in a tile and a 360-point widget cannot afford to print it twice.
+/// All three share `NextPrayerHeader` — symbol, kicker, name, clock time — which is what makes
+/// them read as one widget at three sizes rather than three drawings of the same data.
 ///
-/// The countdown is present but never the largest thing here. That is the whole line between this
-/// kind and the countdown kind: a reader who wants the timer picks the widget whose timer fills it.
+/// **Only the small and the large carry a countdown, and neither makes it the largest thing.**
+/// That is the line between this kind and `PrayerCountdownWidget`: a reader who wants the timer
+/// picks the widget whose timer fills it. The medium has none at all, because the strip it gained
+/// wants the height more than a second reading of a number another kind exists to show.
 
 /// The header both larger families lead with: symbol, kicker, name, clock time.
 private struct NextPrayerHeader: View {
@@ -81,41 +82,33 @@ struct NextPrayerSmallView: View {
     }
 }
 
-/// The wide one: what is next across the top, the whole day as a strip underneath.
+/// The wide one: which prayer is next across the top, the whole day as a strip underneath.
 ///
-/// **Stacked rather than set side by side.** The two halves were a countdown column and the header
-/// beside it, and neither got the width it wanted: the day is a *sequence*, and a sequence wants
-/// the full width — so it gets the whole row, six equal columns of it, and the countdown gets the
-/// line above.
+/// **No countdown on this family.** It carries `NextPrayerHeader` — symbol, kicker, name, clock
+/// time — and hands "how long is left" to `PrayerCountdownWidget`, which is a whole kind built
+/// around that question. Sharing the header is what makes the small, medium and large read as one
+/// widget at three sizes rather than three drawings of the same data.
 ///
-/// The header does not repeat the upcoming prayer's clock time. It is in the strip below, picked
-/// out by the tile, so printing it twice in a 360-point widget would spend the one line this
-/// layout has to give — which is why this family builds its own header rather than taking
-/// `NextPrayerHeader`, whose third line is exactly that time.
+/// The consequence is that the upcoming prayer's clock time appears twice: once on the header's
+/// third line and again in the strip, picked out by its tile. That is a real cost in a 360-point
+/// widget and it is accepted knowingly — the header would not be the header without the time, and
+/// the strip cannot leave a hole where the next prayer is.
 ///
-/// The kicker sits at the far end of the name's own line rather than on a line of its own: it is
-/// what makes the widget self-describing on a Home Screen full of other numbers, and the row it
-/// shares had the width going spare.
+/// **Stacked rather than set side by side**, because the day is a *sequence* and a sequence wants
+/// the full width — six equal columns of it, with the name above.
 ///
 /// The day is the list the entry carries, which after Isha is *tomorrow's* — see
-/// `NextPrayerTimeline`. Showing today's six times under a countdown to a seventh that is not
-/// among them would be six rows in the past and an answer matching none of them.
+/// `NextPrayerTimeline`. Showing today's six times when the widget has already rolled over would
+/// be six rows in the past.
 struct NextPrayerMediumView: View {
     let day: NextPrayerSnapshot.Day
     let style: NextPrayerSnapshot.Style
 
     @Environment(\.theme) private var theme
 
-    private var l10n: WidgetLocalization { WidgetLocalization(style) }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            upcoming
-
-            // The header pins to the top and the strip to the bottom, so whatever height the
-            // family actually gives us goes into the gap between them rather than into a band of
-            // nothing under the day.
-            Spacer(minLength: AppSpacing.sm)
+            NextPrayerHeader(day: day, style: style)
 
             Divider()
                 .overlay(theme.separator)
@@ -124,38 +117,6 @@ struct NextPrayerMediumView: View {
             DayStrip(day: day, style: style)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    }
-
-    /// Which prayer, and how long is left. Two lines, both leading — the countdown is why anyone
-    /// looks at this widget, so it is the one thing drawn large.
-    private var upcoming: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
-                Label {
-                    Text(l10n.string(day.upcoming.prayer.labelKey))
-                        .appFont(.subheadline, weight: .semibold)
-                } icon: {
-                    Image(systemName: day.upcoming.prayer.symbol)
-                }
-                .foregroundStyle(theme.accent)
-
-                Spacer(minLength: AppSpacing.xs)
-
-                Text(l10n.string(.nextPrayerLabel))
-                    .appFont(.caption)
-                    .foregroundStyle(theme.textSecondary)
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-
-            CountdownText(to: day.upcoming.date)
-                .appFont(.title2, weight: .semibold)
-                .foregroundStyle(theme.textPrimary)
-                .monospacedDigit()
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
