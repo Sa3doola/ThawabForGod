@@ -1,19 +1,32 @@
 //
-//  NextPrayerWidgetView.swift
+//  WidgetChrome.swift
 //  NoorWidgets
 //
 
 import SwiftUI
 import WidgetKit
 
-/// Picks the layout for the family, and is the one place the three states are handled.
+/// Everything the three widget kinds do *around* their content.
 ///
-/// A `switch` over the content rather than a chain of `if let`: the two states that are not a
-/// schedule are answers, not failures, and each has something specific to say. Falling through to
-/// a blank rectangle — or worse, to Makkah's times — is exactly what this shape prevents.
-struct NextPrayerWidgetView: View {
+/// Each kind differs only in which layout it picks for a family. The theme, the locale, the layout
+/// direction, the deep link and the ground behind it are the same argument three times over — so
+/// they are made once, here, and a fourth kind costs a `WidgetChrome` and a family switch.
+///
+/// It also owns the two states that are not a schedule. A `switch` over the content rather than a
+/// chain of `if let`: `noLocation` and `notComputable` are answers, not failures, and each has
+/// something specific to say. Falling through to a blank rectangle — or worse, to Makkah's times —
+/// is exactly what this shape prevents.
+struct WidgetChrome<Content: View>: View {
 
     let entry: NextPrayerSnapshot
+
+    /// Where a tap lands. Every kind opens the day sheet today; the parameter is here so a kind
+    /// that wants somewhere else does not have to unpick this view to say so.
+    var link: DeepLink = .prayerTimes
+
+    /// The layout for this family, given a day. Called only in the `.schedule` case — the other
+    /// two states have no day to hand it.
+    @ViewBuilder let content: (NextPrayerSnapshot.Day) -> Content
 
     @Environment(\.widgetFamily) private var family
 
@@ -21,7 +34,7 @@ struct NextPrayerWidgetView: View {
     private var l10n: WidgetLocalization { WidgetLocalization(entry.style) }
 
     var body: some View {
-        content
+        body(for: entry.content)
             // On the ramp the palette is inverted, so every view inside goes on reading the same
             // tokens — see `Theme.onDayRamp`.
             .environment(\.theme, rampStop == nil ? theme : theme.onDayRamp)
@@ -32,7 +45,7 @@ struct NextPrayerWidgetView: View {
                 \.layoutDirection,
                 entry.style.language.isRightToLeft ? .rightToLeft : .leftToRight
             )
-            .widgetURL(DeepLink.prayerTimes.url)
+            .widgetURL(link.url)
             .containerBackground(for: .widget) {
                 if let rampStop {
                     DayRampBackground(stop: rampStop)
@@ -40,6 +53,23 @@ struct NextPrayerWidgetView: View {
                     theme.background
                 }
             }
+    }
+
+    @ViewBuilder
+    private func body(for state: NextPrayerSnapshot.Content) -> some View {
+        switch state {
+        case .schedule(let day):
+            content(day)
+
+        case .noLocation:
+            NoticeView(message: l10n.string(.widgetNoLocation), symbol: "location.slash")
+
+        case .notComputable:
+            NoticeView(
+                message: l10n.string(.widgetTimesUnavailable),
+                symbol: "sun.max.trianglebadge.exclamationmark"
+            )
+        }
     }
 
     /// The day's light behind this entry, or `nil` where the ramp must not be drawn.
@@ -65,45 +95,6 @@ struct NextPrayerWidgetView: View {
         default: false
         }
     }
-
-    @ViewBuilder
-    private var content: some View {
-        switch entry.content {
-        case .schedule(let day):
-            schedule(day)
-
-        case .noLocation:
-            NoticeView(message: l10n.string(.widgetNoLocation), symbol: "location.slash")
-
-        case .notComputable:
-            NoticeView(
-                message: l10n.string(.widgetTimesUnavailable),
-                symbol: "sun.max.trianglebadge.exclamationmark"
-            )
-        }
-    }
-
-    @ViewBuilder
-    private func schedule(_ day: NextPrayerSnapshot.Day) -> some View {
-        switch family {
-        case .systemMedium:
-            PrayerScheduleMediumView(day: day, style: entry.style)
-
-        #if os(iOS)
-        case .accessoryCircular:
-            AccessoryCircularView(day: day, style: entry.style)
-
-        case .accessoryRectangular:
-            AccessoryRectangularView(day: day, style: entry.style)
-
-        case .accessoryInline:
-            AccessoryInlineView(day: day, style: entry.style)
-        #endif
-
-        default:
-            NextPrayerSmallView(day: day, style: entry.style)
-        }
-    }
 }
 
 /// The two states with nothing to count down to.
@@ -112,14 +103,14 @@ struct NextPrayerWidgetView: View {
 /// move differs — one is "open Noor and set your location", the other is "the sun does not rise
 /// or set here today" — and a widget that merely looked broken would get deleted instead of
 /// fixed.
-private struct NoticeView: View {
+struct NoticeView: View {
     let message: String
     let symbol: String
 
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: AppSpacing.sm) {
             Image(systemName: symbol)
                 .foregroundStyle(theme.accent)
 

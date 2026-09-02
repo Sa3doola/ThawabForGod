@@ -14,6 +14,10 @@ import WidgetKit
 /// target cannot import. Previews are the substitute — and a better one than adding the widget to
 /// a Home Screen each time, because every state can be looked at side by side, including the two
 /// that are hard to produce on a real device.
+///
+/// Every family of every kind gets one, English above Arabic. Three kinds times three system
+/// families is nine layouts, which is nine chances for a string to overflow a slot in one language
+/// and not the other.
 enum WidgetPreviewData {
 
     /// A day pinned to round hours so the countdown is a readable number rather than astronomy.
@@ -72,16 +76,24 @@ enum WidgetPreviewData {
     static var arabic: NextPrayerSnapshot {
         entry(.schedule(day()), style: style(.arabicIndic, .arabic))
     }
+
+    /// After Isha: the list is tomorrow's, so nothing has passed and nothing is current. The
+    /// highlight should land on Fajr rather than nowhere.
+    static var afterIsha: NextPrayerSnapshot {
+        entry(.schedule(day(current: nil, upcoming: .fajr)))
+    }
 }
 
-#Preview("Small", as: .systemSmall) {
+// MARK: - Next prayer
+
+#Preview("Next · Small", as: .systemSmall) {
     NextPrayerWidget()
 } timeline: {
     WidgetPreviewData.schedule
     WidgetPreviewData.arabic
 }
 
-#Preview("Medium", as: .systemMedium) {
+#Preview("Next · Medium", as: .systemMedium) {
     NextPrayerWidget()
 } timeline: {
     WidgetPreviewData.schedule
@@ -90,9 +102,94 @@ enum WidgetPreviewData {
     WidgetPreviewData.entry(.notComputable)
 }
 
-#if os(iOS)
-#Preview("Lock Screen", as: .accessoryRectangular) {
+#Preview("Next · Large", as: .systemLarge) {
     NextPrayerWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+    WidgetPreviewData.afterIsha
+}
+
+// MARK: - Countdown
+
+#Preview("Countdown · Small", as: .systemSmall) {
+    PrayerCountdownWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("Countdown · Medium", as: .systemMedium) {
+    PrayerCountdownWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("Countdown · Large", as: .systemLarge) {
+    PrayerCountdownWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+// MARK: - All prayers
+
+#Preview("All · Small", as: .systemSmall) {
+    AllPrayersWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("All · Medium", as: .systemMedium) {
+    AllPrayersWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("All · Large", as: .systemLarge) {
+    AllPrayersWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+    WidgetPreviewData.afterIsha
+}
+
+// MARK: - Lock Screen
+
+#if os(iOS)
+#Preview("Next · Circular", as: .accessoryCircular) {
+    NextPrayerWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("Next · Rectangular", as: .accessoryRectangular) {
+    NextPrayerWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("Next · Inline", as: .accessoryInline) {
+    NextPrayerWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("Countdown · Circular", as: .accessoryCircular) {
+    PrayerCountdownWidget()
+} timeline: {
+    WidgetPreviewData.schedule
+    WidgetPreviewData.arabic
+}
+
+#Preview("Countdown · Rectangular", as: .accessoryRectangular) {
+    PrayerCountdownWidget()
 } timeline: {
     WidgetPreviewData.schedule
     WidgetPreviewData.arabic

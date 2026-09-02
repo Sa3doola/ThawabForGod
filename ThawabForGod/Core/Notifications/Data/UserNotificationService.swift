@@ -24,6 +24,9 @@ final class UserNotificationService: NotificationService {
     private let planner: PrayerReminderPlanner
     private let content: any ReminderContentProviding
     private let inputs: any ReminderInputsProviding
+
+    /// The banner's thumbnail. Optional in effect rather than in type — see `artwork(for:)`.
+    private let artwork: any ReminderArtworkProviding
     private let now: @Sendable () -> Date
 
     /// Gregorian and in the user's zone, to match the engine that produced the times — the
@@ -39,6 +42,7 @@ final class UserNotificationService: NotificationService {
         planner: PrayerReminderPlanner,
         content: any ReminderContentProviding,
         inputs: any ReminderInputsProviding,
+        artwork: any ReminderArtworkProviding,
         timeZone: TimeZone = .autoupdatingCurrent,
         now: @escaping @Sendable () -> Date = Date.init
     ) {
@@ -46,6 +50,7 @@ final class UserNotificationService: NotificationService {
         self.planner = planner
         self.content = content
         self.inputs = inputs
+        self.artwork = artwork
         self.now = now
 
         var calendar = Calendar(identifier: .gregorian)
@@ -74,6 +79,13 @@ final class UserNotificationService: NotificationService {
     // MARK: Scheduling
 
     func refreshSchedule() async {
+        // Idempotent, and free. Registering here rather than from a trigger of its own is the
+        // same call `refillReminders()` makes about widget reloads: a second launch-time trigger
+        // would be a second thing to keep in step, and the failure when the two drifted would be
+        // a delivered notification falling back to the system's layout with nobody able to say
+        // why. The categories are what tell iOS to hand a notification to the content extension.
+        center.setCategories(ReminderCategory.registrations)
+
         guard await authorizationStatus() == .authorized else {
             // Permission can be taken away in the Settings app between launches. Clearing here
             // means the pending window does not sit there waiting for it to come back.
@@ -115,12 +127,34 @@ final class UserNotificationService: NotificationService {
     // MARK: Translation
 
     private func request(for reminder: PrayerReminder) -> UNNotificationRequest {
-        let text = content.content(for: reminder.prayer)
+        let text = content.content(for: reminder)
 
         let notification = UNMutableNotificationContent()
         notification.title = text.title
+        notification.subtitle = text.subtitle
         notification.body = text.body
         notification.sound = .default
+
+        // What routes a delivered notification to the content extension, which declares the same
+        // identifier in its `Info.plist`.
+        notification.categoryIdentifier = text.category.identifier
+        notification.userInfo = text.presentation.userInfo
+
+        // The banner's thumbnail. Attached last and swallowed on failure: a reminder without its
+        // picture is still a reminder, and losing the reminder to save the picture is the wrong
+        // trade.
+        if let url = artwork.artwork(for: reminder.prayer) {
+            if let attachment = try? UNNotificationAttachment(
+                identifier: "artwork", url: url, options: nil
+            ) {
+                notification.attachments = [attachment]
+            } else {
+                // The provider hands back a fresh file each time, because a successful attachment
+                // *moves* it into the system's store — so an unsuccessful one leaves it behind,
+                // and fifty of those per refresh is a directory nobody owns.
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
 
         // Calendar components rather than a time interval, so a reminder scheduled for next
         // Tuesday still lands at Maghrib if the clock changes for daylight saving in between.

@@ -27,6 +27,13 @@ protocol NotificationCenterClient {
 
     func add(_ request: UNNotificationRequest) async throws
 
+    /// Declares the notification kinds this app delivers.
+    ///
+    /// Here rather than in a launch-time call to `UNUserNotificationCenter` for the reason
+    /// everything else in this protocol is: it is the one seam that touches the real centre, and
+    /// a registration that bypassed it would be a piece of behaviour no test could assert.
+    func setCategories(_ categories: Set<UNNotificationCategory>)
+
     /// The identifiers of everything still waiting to fire.
     func pendingRequestIdentifiers() async -> [String]
 
@@ -60,6 +67,10 @@ struct UserNotificationCenterClient: NotificationCenterClient {
 
     func pendingRequestIdentifiers() async -> [String] {
         await center.pendingNotificationRequests().map(\.identifier)
+    }
+
+    func setCategories(_ categories: Set<UNNotificationCategory>) {
+        center.setNotificationCategories(categories)
     }
 
     func removeAllPendingRequests() {

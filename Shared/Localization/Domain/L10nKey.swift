@@ -449,6 +449,13 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case widgetNextPrayerDescription = "widget_next_prayer_description"
     case widgetNoLocation = "widget_no_location"
     case widgetTimesUnavailable = "widget_times_unavailable"
+    case widgetCountdownName = "widget_countdown_name"
+    case widgetCountdownDescription = "widget_countdown_description"
+    case widgetAllPrayersName = "widget_all_prayers_name"
+    case widgetAllPrayersDescription = "widget_all_prayers_description"
+    case widgetPrayerIn = "widget_prayer_in"
+    case widgetAtTime = "widget_at_time"
+    case widgetIn = "widget_in"
 
     // MARK: Hijri calendar
 

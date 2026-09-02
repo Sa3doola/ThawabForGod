@@ -25,6 +25,7 @@ final class FakeNotificationCenter: NotificationCenterClient {
     private(set) var pending: [String: UNNotificationRequest] = [:]
     private(set) var authorizationRequestCount = 0
     private(set) var removeAllCount = 0
+    private(set) var registeredCategories: Set<UNNotificationCategory> = []
 
     init(status: UNAuthorizationStatus = .authorized, authorizationOutcome: Bool = true) {
         self.status = status
@@ -47,6 +48,10 @@ final class FakeNotificationCenter: NotificationCenterClient {
         pending[request.identifier] = request
     }
 
+    func setCategories(_ categories: Set<UNNotificationCategory>) {
+        registeredCategories = categories
+    }
+
     func pendingRequestIdentifiers() async -> [String] {
         pending.keys.sorted()
     }
@@ -60,8 +65,37 @@ final class FakeNotificationCenter: NotificationCenterClient {
 /// Fixed reminder text, so the scheduler's tests never need a bundle or a language.
 @MainActor
 struct StubReminderContent: ReminderContentProviding {
-    func content(for prayer: Prayer) -> ReminderContent {
-        ReminderContent(title: prayer.rawValue, body: "body")
+    func content(for reminder: PrayerReminder) -> ReminderContent {
+        ReminderContent(
+            title: reminder.prayer.rawValue,
+            subtitle: "subtitle",
+            body: "body",
+            presentation: ReminderPresentation(
+                subject: .prayer(reminder.prayer),
+                date: reminder.date,
+                body: "body"
+            )
+        )
+    }
+}
+
+/// Artwork that is whatever the test says it is.
+///
+/// Defaults to `nil` — no picture — because that is the path the scheduler must survive, and
+/// because writing a real PNG per request would put file I/O into a suite about scheduling. Set
+/// `url` to a scratch file to exercise the attaching branch.
+@MainActor
+final class StubReminderArtwork: ReminderArtworkProviding {
+    var url: URL?
+    private(set) var requestedPrayers: [Prayer] = []
+
+    init(url: URL? = nil) {
+        self.url = url
+    }
+
+    func artwork(for prayer: Prayer) -> URL? {
+        requestedPrayers.append(prayer)
+        return url
     }
 }
 

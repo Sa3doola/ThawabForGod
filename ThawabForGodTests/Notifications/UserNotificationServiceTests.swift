@@ -44,16 +44,19 @@ struct UserNotificationServiceTests {
         let service: UserNotificationService
         let center: FakeNotificationCenter
         let inputs: StubReminderInputs
+        let artwork: StubReminderArtwork
     }
 
     private func makeContext(
         at now: Date? = nil,
         status: UNAuthorizationStatus = .authorized,
         coordinates: Coordinates? = .makkah,
-        enabledPrayers: Set<Prayer> = Set(Prayer.remindable)
+        enabledPrayers: Set<Prayer> = Set(Prayer.remindable),
+        artworkURL: URL? = nil
     ) -> Context {
         let center = FakeNotificationCenter(status: status)
         let inputs = StubReminderInputs(coordinates: coordinates, enabledPrayers: enabledPrayers)
+        let artwork = StubReminderArtwork(url: artworkURL)
         let dates = (0..<14).compactMap {
             PrayerTimeFixtures.calendar.date(byAdding: .day, value: $0, to: firstDay)
         }
@@ -67,11 +70,12 @@ struct UserNotificationServiceTests {
             ),
             content: StubReminderContent(),
             inputs: inputs,
+            artwork: artwork,
             timeZone: .gmt,
             now: { instant }
         )
 
-        return Context(service: service, center: center, inputs: inputs)
+        return Context(service: service, center: center, inputs: inputs, artwork: artwork)
     }
 
     // MARK: Permission
@@ -237,7 +241,108 @@ struct UserNotificationServiceTests {
         let maghrib = try #require(context.center.pending["prayer-reminder.2026-06-15.maghrib"])
 
         #expect(maghrib.content.title == Prayer.maghrib.rawValue)
+        #expect(maghrib.content.subtitle == "subtitle")
         #expect(maghrib.content.body == "body")
+    }
+
+    // MARK: The custom presentation
+
+    /// Without this identifier iOS never consults the content extension, and every reminder falls
+    /// back to the system's own layout — silently, and identically to the extension being absent.
+    @Test func eachRequestIsFiledUnderTheReminderCategory() async throws {
+        let context = makeContext()
+
+        await context.service.refreshSchedule()
+
+        let maghrib = try #require(context.center.pending["prayer-reminder.2026-06-15.maghrib"])
+
+        #expect(maghrib.content.categoryIdentifier == ReminderCategory.prayer.identifier)
+    }
+
+    @Test func eachRequestCarriesADecodablePayload() async throws {
+        let context = makeContext()
+
+        await context.service.refreshSchedule()
+
+        let maghrib = try #require(context.center.pending["prayer-reminder.2026-06-15.maghrib"])
+        let payload = try #require(ReminderPresentation(userInfo: maghrib.content.userInfo))
+
+        #expect(payload.subject == .prayer(.maghrib))
+        #expect(payload.body == "body")
+        // The card formats this itself, so it has to be the prayer's own instant rather than a
+        // string somebody already rendered — which is the whole reason the payload carries a
+        // `Date` and not a time.
+        #expect(payload.date == firingDate(of: try #require(maghrib.trigger)))
+    }
+
+    /// The categories have to be registered before the system will route anything to the
+    /// extension, and the refresh is the only place that happens.
+    @Test func refreshingRegistersTheCategories() async {
+        let context = makeContext()
+
+        await context.service.refreshSchedule()
+
+        #expect(context.center.registeredCategories == ReminderCategory.registrations)
+    }
+
+    /// Registration happens even when there is nothing to schedule. A reader who has not granted
+    /// permission yet may grant it from the Settings app, at which point the first delivery must
+    /// already know where to go.
+    @Test func categoriesAreRegisteredEvenWithoutPermission() async {
+        let context = makeContext(status: .denied)
+
+        await context.service.refreshSchedule()
+
+        #expect(context.center.registeredCategories == ReminderCategory.registrations)
+    }
+
+    // MARK: Artwork
+
+    @Test func artworkIsAskedForOncePerReminder() async {
+        let context = makeContext()
+
+        await context.service.refreshSchedule()
+
+        #expect(context.artwork.requestedPrayers.count == context.center.pending.count)
+    }
+
+    /// The trade this branch exists to make: losing the reminder to save the picture is the wrong
+    /// way round, so a provider that cannot draw must not cost the window.
+    @Test func aReminderSurvivesArtworkItCannotDraw() async throws {
+        let context = makeContext(artworkURL: nil)
+
+        await context.service.refreshSchedule()
+
+        let maghrib = try #require(context.center.pending["prayer-reminder.2026-06-15.maghrib"])
+
+        #expect(maghrib.content.attachments.isEmpty)
+        #expect(context.center.pending.count == 50)
+    }
+
+    /// A URL naming nothing is the same trade one step further on: `UNNotificationAttachment`
+    /// throws, and the request still has to be added.
+    @Test func aReminderSurvivesAnArtworkFileThatIsNotThere() async throws {
+        let missing = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(UUID().uuidString).png")
+
+        let context = makeContext(artworkURL: missing)
+
+        await context.service.refreshSchedule()
+
+        let maghrib = try #require(context.center.pending["prayer-reminder.2026-06-15.maghrib"])
+
+        #expect(maghrib.content.attachments.isEmpty)
+        #expect(context.center.pending.count == 50)
+    }
+
+    /// The instant a calendar trigger will fire at, read back out through the same calendar the
+    /// service built it with.
+    private func firingDate(of trigger: UNNotificationTrigger) -> Date? {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+
+        return (trigger as? UNCalendarNotificationTrigger)
+            .flatMap { calendar.date(from: $0.dateComponents) }
     }
 
     /// Today's past prayers are the planner's rule, asserted here as well because it is the

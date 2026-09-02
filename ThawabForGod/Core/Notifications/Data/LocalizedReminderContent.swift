@@ -9,11 +9,12 @@ import Foundation
 ///
 /// Through `LocalizationManager` rather than `String(localized:)`, for the reason the whole app
 /// goes through it: the language is a setting rather than the process's launch language, so
-/// only the manager knows which bundle to read.
+/// only the manager knows which bundle to read. The time goes through it too — `timeString(_:)`,
+/// the same call every screen in the app makes — so the digits and the hour cycle on a banner are
+/// the ones the reader chose.
 ///
-/// The title is the prayer's name and the body is one fixed sentence — no time, no place, no
-/// count. A notification is displayed on a locked screen, so the least that carries the meaning
-/// is the right amount.
+/// Three lines, and no more: the prayer's name, its time, and one fixed sentence. A notification
+/// is displayed on a locked screen, so the least that carries the meaning is the right amount.
 @MainActor
 struct LocalizedReminderContent: ReminderContentProviding {
     private let l10n: LocalizationManager
@@ -22,10 +23,18 @@ struct LocalizedReminderContent: ReminderContentProviding {
         self.l10n = l10n
     }
 
-    func content(for prayer: Prayer) -> ReminderContent {
-        ReminderContent(
-            title: l10n.string(prayer.labelKey),
-            body: l10n.string(.notificationPrayerBody)
+    func content(for reminder: PrayerReminder) -> ReminderContent {
+        let body = l10n.string(.notificationPrayerBody)
+
+        return ReminderContent(
+            title: l10n.string(reminder.prayer.labelKey),
+            subtitle: l10n.timeString(reminder.date),
+            body: body,
+            presentation: ReminderPresentation(
+                subject: .prayer(reminder.prayer),
+                date: reminder.date,
+                body: body
+            )
         )
     }
 }

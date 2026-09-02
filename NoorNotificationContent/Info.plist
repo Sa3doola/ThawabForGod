@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionAttributes</key>
+		<dict>
+			<!-- Must equal `ReminderCategory.prayer.identifier`. A plist cannot read a Swift
+			     constant, so `ReminderPresentationTests` asserts the string on the other side. -->
+			<key>UNNotificationExtensionCategory</key>
+			<string>noor.reminder.prayer</string>
+			<!-- The card replaces Apple's layout rather than sitting above it: it already carries
+			     the title, the time and the body, and drawing the default underneath would print
+			     all three twice. -->
+			<key>UNNotificationExtensionDefaultContentHidden</key>
+			<true/>
+			<!-- Wide and short. The card is one row — symbol, three lines of text — so a taller
+			     initial ratio would open onto a band of ramp with nothing in it. -->
+			<key>UNNotificationExtensionInitialContentSizeRatio</key>
+			<real>0.35</real>
+			<!-- No custom action handling, so the system's own controls stay. -->
+			<key>UNNotificationExtensionUserInteractionEnabled</key>
+			<false/>
+		</dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.usernotifications.content-extension</string>
+		<key>NSExtensionPrincipalClass</key>
+		<string>$(PRODUCT_MODULE_NAME).NotificationViewController</string>
+	</dict>
+</dict>
+</plist>

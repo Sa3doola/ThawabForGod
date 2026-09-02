@@ -304,7 +304,8 @@ final class AppContainer {
             inputs: AppReminderInputs(
                 location: self.locationService,
                 settingsStore: settingsStore
-            )
+            ),
+            artwork: ReminderArtwork(settingsStore: settingsStore)
         )
 
         #if os(iOS)
