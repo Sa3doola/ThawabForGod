@@ -13,8 +13,17 @@ import SwiftUI
 /// Isha without a word changing. That is the organising idea of the whole design, and this is the
 /// first of the three places it is allowed to appear.
 ///
-/// The day's six markers used to hang underneath this card. They are `TodayTimesSection` now —
-/// see the reasoning there.
+/// **The day's six markers are inside it, not in a card of their own.** They were split out for a
+/// while, on the argument that the hero is the *next* prayer and the strip is the *whole day* — two
+/// questions, so two surfaces. The screen said otherwise: a countdown and the strip it belongs to,
+/// stacked as separate cards, are one thought with a rule drawn through it, and the reader's eye
+/// crosses a card boundary to answer "and then?". The widget never made that split — see
+/// `PrayerScheduleMediumView`, which is this same layout in 360 points — and the app now matches
+/// it. One prayer-times surface, one tap, one ground.
+///
+/// The strip is a sibling in the stack rather than something the ramp is decorated with, and it
+/// takes only `state`: everything that ticks is in `NextPrayerCountdown` and the rail, so the six
+/// markers are rebuilt when a *prayer* changes rather than once a second.
 struct NextPrayerCard: View {
     let viewModel: HomeViewModel
     let state: NextPrayerState
@@ -35,10 +44,23 @@ struct NextPrayerCard: View {
 
     private var hero: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            NextPrayerHeadline(state: state, placeName: viewModel.placeName)
-            NextPrayerCountdown(viewModel: viewModel, state: state)
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                NextPrayerHeadline(state: state, placeName: viewModel.placeName)
+                NextPrayerCountdown(viewModel: viewModel, state: state)
+            }
+            // The words keep the card's own margin; the strip below does not, and that is the
+            // whole reason the padding is per-block rather than on the card. Six columns inside
+            // a 24-point inset on each side is a third of a 4.7-inch phone spent on white space,
+            // and at that width "4:52 AM" stops shrinking and truncates instead.
+            .padding(.horizontal, AppSpacing.xl)
+
+            DayPrayerStrip(state: state)
         }
-        .padding(AppSpacing.xl)
+        .padding(.top, AppSpacing.xl)
+        // Less than the top, because the strip brings its own: `DayPrayerEntry` pads itself
+        // vertically, so the card's full margin here would read as a band of nothing above the
+        // rail.
+        .padding(.bottom, AppSpacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background { DayRampSurface(viewModel: viewModel, state: state) }
         // The rail is the progress bar, drawn as the card's own bottom edge rather than as a
@@ -50,6 +72,35 @@ struct NextPrayerCard: View {
         // Everything inside the hero goes on reading `theme.textPrimary` and friends; what
         // changes is which palette those names resolve to. See `Theme.onDayRamp`.
         .environment(\.theme, theme.onDayRamp)
+    }
+}
+
+// MARK: - The day
+
+/// The six markers, with the rule that separates them from the countdown above.
+///
+/// **A view of its own rather than a block inside `hero`, because of where the palette changes.**
+/// `NextPrayerCard` swaps the theme for `Theme.onDayRamp` on the hero, which reaches the views
+/// *inside* it — the card's own `theme` property is still the app's. A divider drawn from that
+/// one would come out in the app's separator grey on a ground the whole design says is dark, so
+/// the rule is drawn by something that reads the environment for itself.
+private struct DayPrayerStrip: View {
+    let state: NextPrayerState
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(spacing: AppSpacing.sm) {
+            Divider()
+                .overlay(theme.separator)
+                // Inset from the card's edge rather than bleeding to it: a rule that runs the
+                // full width would cut the card in two, which is the reading this merge exists
+                // to undo.
+                .padding(.horizontal, AppSpacing.lg)
+
+            DayPrayerRow(state: state)
+                .padding(.horizontal, AppSpacing.sm)
+        }
     }
 }
 
@@ -157,7 +208,7 @@ private struct NextPrayerHeadline: View {
             // Absent rather than empty when there is no name: the coordinates work offline, the
             // name does not, and a placeholder would advertise a failure nobody can act on.
             if let placeName {
-                Label(placeName, systemImage: "mappin.and.ellipse")
+                Label(placeName, systemImage: "location.fill")
                     .appFont(.footnote, weight: .medium)
                     .foregroundStyle(theme.textSecondary)
             }

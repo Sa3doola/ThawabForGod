@@ -51,7 +51,7 @@ actor CoreLocationPlaceNameResolver: PlaceNameResolving {
     /// The narrowest name that is still recognisable, widening until something answers. At sea or
     /// in a desert `locality` is empty and the country is the honest answer.
     private static func name(from placemark: CLPlacemark) -> String? {
-        placemark.locality
+        placemark.subLocality
             ?? placemark.subAdministrativeArea
             ?? placemark.administrativeArea
             ?? placemark.country

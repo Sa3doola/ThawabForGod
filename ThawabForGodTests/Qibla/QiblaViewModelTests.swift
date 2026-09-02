@@ -182,6 +182,117 @@ struct QiblaViewModelTests {
         #expect(viewModel.coordinates == nil)
     }
 
+    // MARK: Alignment
+
+    /// The offset is measured the short way round the dial, which is the only reading a
+    /// tolerance can be compared against: a needle at 359° is one degree off, not 359.
+    @Test(arguments: [
+        (100.0, 100.0, 0.0),
+        (100.0, 96.0, 4.0),
+        (100.0, 104.0, 4.0),
+        (1.0, 359.0, 2.0),
+        (359.0, 1.0, 2.0),
+        (0.0, 180.0, 180.0)
+    ])
+    func theOffsetIsTheShorterArcToStraightAhead(
+        bearing: Double,
+        heading: Double,
+        expected: Double
+    ) {
+        let (viewModel, _) = makeViewModel(bearing: bearing, coordinates: london)
+
+        viewModel.apply(.stub(heading))
+
+        #expect(abs(viewModel.alignmentOffset - expected) < 0.000_1)
+    }
+
+    @Test func pointingAtTheKaabaAligns() {
+        let (viewModel, _) = makeViewModel(bearing: 100, coordinates: london)
+
+        viewModel.apply(.stub(0))
+        #expect(viewModel.isAlignedWithQibla == false)
+
+        viewModel.apply(.stub(98))
+        #expect(viewModel.isAlignedWithQibla)
+    }
+
+    /// The whole reason there are two thresholds. A hand held at the edge of the tolerance
+    /// wanders across it several times a second, and on a single boundary every crossing is a
+    /// ring appearing and a haptic firing.
+    @Test func alignmentHoldsThroughTheGapBetweenTheTwoThresholds() {
+        let (viewModel, _) = makeViewModel(bearing: 100, coordinates: london)
+
+        // Inside the tolerance: it takes.
+        viewModel.apply(.stub(97))
+        #expect(viewModel.isAlignedWithQibla)
+
+        // Past the tolerance but inside the release: it stays, which a single threshold would
+        // not have done.
+        viewModel.apply(.stub(107))
+        #expect(viewModel.isAlignedWithQibla)
+
+        // Past the release: it lets go.
+        viewModel.apply(.stub(110))
+        #expect(viewModel.isAlignedWithQibla == false)
+
+        // And getting it back needs the tolerance again, not the release.
+        viewModel.apply(.stub(107))
+        #expect(viewModel.isAlignedWithQibla == false)
+    }
+
+    /// A reading the system itself has asked the user to recalibrate cannot support the claim
+    /// the ring and the haptic make, so it is never aligned — however close the angle looks.
+    @Test func anUnreliableHeadingIsNeverAligned() {
+        let (viewModel, _) = makeViewModel(bearing: 100, coordinates: london)
+
+        viewModel.apply(.stub(100, accuracy: DeviceHeading.calibrationThreshold + 5))
+
+        #expect(viewModel.status == .needsCalibration)
+        #expect(viewModel.alignmentOffset == 0)
+        #expect(viewModel.isAlignedWithQibla == false)
+    }
+
+    /// An alignment that dropped when the compass wobbled comes back on the next good reading
+    /// rather than waiting for the user to turn away and back.
+    @Test func alignmentReturnsWhenTheHeadingBecomesReliableAgain() {
+        let (viewModel, _) = makeViewModel(bearing: 100, coordinates: london)
+
+        viewModel.apply(.stub(100))
+        #expect(viewModel.isAlignedWithQibla)
+
+        viewModel.apply(.stub(100, accuracy: DeviceHeading.calibrationThreshold + 5))
+        #expect(viewModel.isAlignedWithQibla == false)
+
+        viewModel.apply(.stub(100))
+        #expect(viewModel.isAlignedWithQibla)
+    }
+
+    /// With no position there is no bearing to be aligned with, and `qiblaDirection` falls back
+    /// to zero — so a device facing north would otherwise buzz at nothing.
+    @Test func withNoPositionNothingIsAligned() {
+        let (viewModel, _) = makeViewModel(bearing: 100)
+
+        viewModel.apply(.stub(0))
+
+        #expect(viewModel.isAlignedWithQibla == false)
+    }
+
+    /// A position can arrive after the heading has: the compass was already pointing the right
+    /// way, and typing coordinates is what makes that mean something. Nothing new comes off the
+    /// magnetometer, so the answer has to be recomputed where the position lands.
+    @Test func aPositionTypedInResolvesAlignmentWithNoNewHeading() {
+        let (viewModel, _) = makeViewModel(bearing: 100)
+
+        viewModel.apply(.stub(100))
+        #expect(viewModel.isAlignedWithQibla == false)
+
+        viewModel.manualLatitude = "51.5074"
+        viewModel.manualLongitude = "-0.1278"
+        #expect(viewModel.applyManualCoordinates())
+
+        #expect(viewModel.isAlignedWithQibla)
+    }
+
     // MARK: No magnetometer
 
     /// A Mac, or an iPad without a compass. The screen must land on the static readout, which

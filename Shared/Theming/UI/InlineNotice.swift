@@ -82,7 +82,7 @@ struct InlineNotice: View {
                 .foregroundStyle(tint)
 
         case .informational:
-            GirihStar(inset: 2)
+            GirihStar(inset: 0)
                 .stroke(tint, lineWidth: 1.5)
                 .frame(width: 44, height: 44)
                 .opacity(0.5)

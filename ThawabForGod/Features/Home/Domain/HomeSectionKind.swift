@@ -17,11 +17,15 @@ import Foundation
 /// before the features behind them do, so that adding one is a change to `isAvailable` rather
 /// than a migration of everybody's stored layout. That is the whole reason the enum is longer
 /// than the app.
+///
+/// A case can also be *withdrawn*, and one has been: `todayTimes` drew the day's six markers as a
+/// card of their own until they moved back inside the hero. Nothing had to be migrated — rule 3
+/// of `HomeLayout` drops a stored raw value that no longer maps to a case, and the layout either
+/// side of it survives.
 nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
-    /// The next-prayer card. Pinned — see `isPinned`.
+    /// The next-prayer card — the countdown and the day's six markers under it. Pinned, see
+    /// `isPinned`.
     case nextPrayer
-    /// The day's six markers as a strip of their own.
-    case todayTimes
     case shortcuts
     case continueReading
     case lastActivity
@@ -47,7 +51,7 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
     /// to `true` is the one-line change that ships a reserved section.
     var isAvailable: Bool {
         switch self {
-        case .nextPrayer, .todayTimes, .shortcuts, .continueReading, .lastActivity, .prayerTracker:
+        case .nextPrayer, .shortcuts, .continueReading, .lastActivity, .prayerTracker:
             true
         // Phase 3 and beyond: there is no calendar screen, no verse-of-the-day corpus, and no
         // hadith yet.
@@ -75,9 +79,7 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
         switch self {
         case .prayerTracker, .continueReading:
             true
-        // The times strip is six columns that already divide the full width between them; at
-        // half of it the names truncate, which is the one thing pairing must never buy.
-        case .nextPrayer, .todayTimes, .shortcuts, .lastActivity:
+        case .nextPrayer, .shortcuts, .lastActivity:
             false
         // Reserved. A verse and a hadith are passages, and a passage at half width is a column
         // of two words — so they will span when they land, and the calendar's month grid with
@@ -92,7 +94,6 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
     var labelKey: L10nKey {
         switch self {
         case .nextPrayer: .homeSectionNextPrayer
-        case .todayTimes: .homeSectionTodayTimes
         case .shortcuts: .homeSectionShortcuts
         case .continueReading: .homeSectionContinueReading
         case .lastActivity: .homeSectionLastActivity
@@ -108,7 +109,6 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
     var symbol: String {
         switch self {
         case .nextPrayer: "clock"
-        case .todayTimes: "calendar.day.timeline.left"
         case .shortcuts: "square.grid.2x2"
         case .continueReading: "book"
         case .lastActivity: "clock.arrow.circlepath"
@@ -127,7 +127,7 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
     /// rearrange a Home screen somebody had already settled on.
     var defaultVisibility: Bool {
         switch self {
-        case .nextPrayer, .todayTimes, .shortcuts, .continueReading, .lastActivity, .prayerTracker:
+        case .nextPrayer, .shortcuts, .continueReading, .lastActivity, .prayerTracker:
             true
         case .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
             false

@@ -142,6 +142,12 @@ private struct WeekStrip: View {
                         }
                     }
                 }
+                // Flexible columns divide whatever width they are *proposed*, and inside an
+                // `HStack` that proposal is the grid's own ideal — which for seven tiles of one
+                // or two digits is about half the row. So the week came out bunched against the
+                // leading chevron with the trailing one stranded beside it. This is what claims
+                // the space between them; the columns divide it after that.
+                .frame(maxWidth: .infinity)
 
                 pageButton(symbol: "chevron.forward", action: viewModel.showNextWeek)
                     .accessibilityLabel(l10n.string(.nextWeekAction))

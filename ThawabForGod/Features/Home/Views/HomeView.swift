@@ -221,7 +221,6 @@ struct HomeView: View {
             switch kind {
             case .continueReading: viewModel.continueReading != nil
             case .lastActivity: !viewModel.recentActivities.isEmpty
-            case .todayTimes: viewModel.phase.isReady
             default: true
             }
         }
@@ -252,14 +251,6 @@ struct HomeView: View {
         switch kind {
         case .nextPrayer:
             nextPrayer
-
-        case .todayTimes:
-            // Only once the times exist. The hero has a loading and a failure state because it is
-            // pinned and something has to stand there; this card is free to be absent, and a
-            // strip of six empty cells says nothing the notice above it has not already said.
-            if case .ready(let state) = viewModel.phase {
-                TodayTimesSection(state: state, open: showPrayerTimes)
-            }
 
         case .continueReading:
             if let reading = viewModel.continueReading {

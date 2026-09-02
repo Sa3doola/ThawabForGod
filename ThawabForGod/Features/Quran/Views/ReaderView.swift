@@ -239,21 +239,22 @@ struct ReaderView: View {
         VStack(spacing: AppSpacing.sm) {
             HStack(spacing: AppSpacing.md) {
                 rule
-                GirihStar(inset: 3)
-                    .stroke(style.palette.accent, lineWidth: 1.4)
-                    .frame(width: 34, height: 34)
-                    .opacity(0.5)
+                SurahHeaderView(surahName: l10n.language == .arabic ? surah.arabicName : surah.englishName)
+//                GirihStar(inset: 3)
+//                    .stroke(style.palette.accent, lineWidth: 1.4)
+//                    .frame(width: 34, height: 34)
+//                    .opacity(0.5)
                 rule
             }
             .accessibilityHidden(true)
-
-            Text(surah.arabicName)
-                .appFont(.title3, weight: .semibold)
-                .foregroundStyle(style.palette.textPrimary)
-                .environment(\.locale, AppLanguage.arabic.locale)
-
-            Text(l10n.language == .arabic ? surah.transliteration : surah.englishName)
-                .appFont(.caption)
+//
+//            Text(surah.arabicName)
+//                .appFont(.title3, weight: .semibold)
+//                .foregroundStyle(style.palette.textPrimary)
+//                .environment(\.locale, AppLanguage.arabic.locale)
+//
+//            Text(l10n.language == .arabic ? surah.transliteration : surah.englishName)
+//                .appFont(.caption)
                 .foregroundStyle(style.palette.textSecondary)
         }
         .frame(maxWidth: .infinity)

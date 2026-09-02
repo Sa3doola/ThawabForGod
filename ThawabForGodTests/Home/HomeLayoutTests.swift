@@ -99,7 +99,7 @@ struct HomeLayoutTests {
         #expect(layout.sections.first?.kind == .nextPrayer)
         #expect(
             layout.visibleSections
-                == [.nextPrayer, .shortcuts, .todayTimes, .continueReading, .lastActivity, .prayerTracker]
+                == [.nextPrayer, .continueReading, .shortcuts, .lastActivity, .prayerTracker]
         )
     }
 
@@ -132,12 +132,11 @@ struct HomeLayoutTests {
     @Test func hidingIsAllowedUntilTheFloorAndRefusedAtIt() {
         var layout = HomeLayout.default
 
-        #expect(layout.visibleSections.count == 6)
+        #expect(layout.visibleSections.count == 5)
         #expect(layout.canChangeVisibility(of: .continueReading))
 
         layout.setVisibility(false, of: .continueReading)
         layout.setVisibility(false, of: .prayerTracker)
-        layout.setVisibility(false, of: .todayTimes)
 
         #expect(layout.visibleSections.count == HomeLayout.minimumVisibleSections)
 
@@ -156,13 +155,13 @@ struct HomeLayoutTests {
     @Test func showingASectionIsAlwaysAllowed() {
         var layout = HomeLayout.default
         layout.setVisibility(false, of: .continueReading)
-        #expect(layout.visibleSections.count == 5)
+        #expect(layout.visibleSections.count == 4)
 
         #expect(layout.canChangeVisibility(of: .continueReading))
 
         layout.setVisibility(true, of: .continueReading)
 
-        #expect(layout.visibleSections.count == 6)
+        #expect(layout.visibleSections.count == 5)
     }
 
     /// `setVisibility` will not let a user reach this state, but an older build or a withdrawn
@@ -176,7 +175,7 @@ struct HomeLayoutTests {
         )
 
         #expect(layout.visibleSections.count == HomeLayout.minimumVisibleSections)
-        #expect(layout.visibleSections == [.nextPrayer, .todayTimes, .shortcuts])
+        #expect(layout.visibleSections == [.nextPrayer, .shortcuts, .continueReading])
     }
 
     // MARK: Rule 3 — forward and backward compatibility
@@ -277,23 +276,23 @@ struct HomeLayoutTests {
     @Test func movingDownwardsUsesTheOffsetSwiftUIWouldSend() {
         var layout = HomeLayout.default
 
-        // Move `shortcuts` from third place to the end of the editable list.
-        layout.moveSections(from: IndexSet(integer: 2), to: 6)
+        // Move `shortcuts` from second place to the end of the editable list.
+        layout.moveSections(from: IndexSet(integer: 1), to: 5)
 
         #expect(
             layout.visibleSections
-                == [.nextPrayer, .todayTimes, .continueReading, .lastActivity, .prayerTracker, .shortcuts]
+                == [.nextPrayer, .continueReading, .lastActivity, .prayerTracker, .shortcuts]
         )
     }
 
     @Test func movingSeveralRowsKeepsTheirRelativeOrder() {
         var layout = HomeLayout.default
 
-        layout.moveSections(from: IndexSet([2, 3]), to: 6)
+        layout.moveSections(from: IndexSet([1, 2]), to: 5)
 
         #expect(
             layout.visibleSections
-                == [.nextPrayer, .todayTimes, .lastActivity, .prayerTracker, .shortcuts, .continueReading]
+                == [.nextPrayer, .lastActivity, .prayerTracker, .shortcuts, .continueReading]
         )
     }
 

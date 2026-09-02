@@ -56,16 +56,32 @@ final class AppSceneDelegate: NSObject, UIWindowSceneDelegate {
         deliver(item.type)
     }
 
-    /// `nonisolated` because the protocol requirement is, and because
-    /// `UIApplicationShortcutItem` is not `Sendable` — a main-actor implementation would mean
-    /// the system sending a non-`Sendable` UIKit object across an isolation boundary on every
-    /// tap. The one thing worth having off it is a `String`, which is read here and carried
-    /// across on its own.
+    /// The **completion-handler** form of the shortcut callback, deliberately, and not the
+    /// `async` one Swift refines it into.
+    ///
+    /// The async form is what this was, and it aborted the app on every warm tap. Its `@objc`
+    /// thunk wraps the body in a task and calls UIKit's completion block from wherever that task
+    /// happens to finish; written `nonisolated`, that was the cooperative pool, and the block
+    /// runs `-[UIApplication _performBlockAfterCATransactionCommitSynchronizes:]`, which asserts
+    /// off the main thread. Cold launches never hit it because they arrive through
+    /// `scene(_:willConnectTo:options:)` instead, which is why only one of the two ever crashed.
+    ///
+    /// Writing the witness `@MainActor` fixes the thread and costs a `Sendable` diagnostic —
+    /// `UIApplicationShortcutItem` crossing from a `nonisolated` protocol requirement into
+    /// main-actor code — which is an error under Swift 6. This form has neither problem: there
+    /// is no task, so the completion is called synchronously on the thread UIKit called us on,
+    /// and the selector is spelled out so it is dispatched whichever form the SDK refines.
+    ///
+    /// `assumeIsolated` rather than a hop, because UIKit calls scene delegates on the main
+    /// thread and a hop would put the completion back on the wrong one.
+    @objc(windowScene:performActionForShortcutItem:completionHandler:)
     nonisolated func windowScene(
         _ windowScene: UIWindowScene,
-        performActionFor shortcutItem: UIApplicationShortcutItem
-    ) async -> Bool {
-        await deliver(shortcutItem.type)
+        performActionFor shortcutItem: UIApplicationShortcutItem,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        let type = shortcutItem.type
+        completionHandler(MainActor.assumeIsolated { deliver(type) })
     }
 
     /// - Returns: whether the type named something this build could open, which is what the

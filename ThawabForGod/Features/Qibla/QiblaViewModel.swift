@@ -64,6 +64,14 @@ final class QiblaViewModel {
     /// because it changes almost never, and `status` reads it.
     private(set) var isHeadingReliable = true
 
+    /// Whether the device is being held pointing at the Kaaba.
+    ///
+    /// Its own stored property rather than a computed one over `deviceHeading`, and that is the
+    /// point of the whole feature: a computed answer would change with every reading, and the
+    /// screen turns this into a ring and a haptic — things that must fire on the *crossing*, not
+    /// on the angle. Stored, guarded, and written only when it actually flips.
+    private(set) var isAlignedWithQibla = false
+
     /// Whether the attempt to find the user has finished, however it went. Without it, "no
     /// position yet" and "no position, and there will not be one" look the same.
     private(set) var hasAttemptedPosition = false
@@ -132,6 +140,55 @@ final class QiblaViewModel {
         return remainder < 0 ? remainder + 360 : remainder
     }
 
+    // MARK: Alignment
+
+    /// How far the needle is from straight ahead, in degrees — `0` facing the Kaaba, `180`
+    /// directly away from it.
+    ///
+    /// The *shorter* way round the dial, which is the only reading that makes sense to compare
+    /// against a tolerance: a needle at 359° is one degree off, not three hundred and fifty-nine.
+    var alignmentOffset: Double {
+        let rotation = needleRotation
+        return min(rotation, 360 - rotation)
+    }
+
+    /// Close enough to say the phone is facing the Kaaba.
+    static let alignmentTolerance: Double = 5
+
+    /// Far enough to say it no longer is.
+    ///
+    /// **Two thresholds rather than one, and the gap between them is the feature.** On a single
+    /// boundary a hand resting at exactly five degrees does not hold still — it crosses back and
+    /// forth several times a second, and here every crossing is a ring appearing and a haptic
+    /// firing. Widening the exit turns that into one bump on arrival and one clean release when
+    /// the user genuinely turns away, which is what a physical detent does.
+    static let alignmentRelease: Double = 9
+
+    /// Recomputes `isAlignedWithQibla` from the latest reading.
+    ///
+    /// **Alignment is a claim, so it is only made where the claim can be supported.** No
+    /// position means no bearing to be aligned with, and an unreliable heading means the angle
+    /// on screen is not worth a promise — a phone that buzzed "you are facing the Kaaba" off a
+    /// magnetometer the system itself has asked the user to recalibrate would be asserting
+    /// something it cannot know. Both fall back to *not aligned* rather than to a guess.
+    private func updateAlignment() {
+        let aligned: Bool
+
+        if info == nil || !isHeadingReliable {
+            aligned = false
+        } else if isAlignedWithQibla {
+            aligned = alignmentOffset <= Self.alignmentRelease
+        } else {
+            aligned = alignmentOffset <= Self.alignmentTolerance
+        }
+
+        // Guarded for the reason `isHeadingReliable` is: Observation invalidates on every write,
+        // and this one is read by a view that must only react when the answer changes.
+        if isAlignedWithQibla != aligned {
+            isAlignedWithQibla = aligned
+        }
+    }
+
     // MARK: Lifecycle
 
     /// Finds the user, then follows the compass until cancelled.
@@ -184,10 +241,17 @@ final class QiblaViewModel {
         if isHeadingReliable != heading.isReliable {
             isHeadingReliable = heading.isReliable
         }
+
+        updateAlignment()
     }
 
     private func apply(_ coordinates: Coordinates) {
         info = getQiblaInfo.qiblaInfo(for: coordinates)
+
+        // A new position moves the bearing under a needle that has not turned, so the answer to
+        // "am I facing it?" can change without a single new heading arriving — typing a set of
+        // coordinates on the other side of the world is the obvious case.
+        updateAlignment()
     }
 
     // MARK: Manual location

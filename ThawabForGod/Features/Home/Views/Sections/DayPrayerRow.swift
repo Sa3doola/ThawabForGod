@@ -5,8 +5,12 @@
 
 import SwiftUI
 
-/// The whole day along the bottom of the card: six markers, the next one picked out, the ones
+/// The whole day along the bottom of the hero: six markers, the next one picked out, the ones
 /// behind us dimmed.
+///
+/// It is drawn on the day ramp, inside `NextPrayerCard` — so every colour below resolves through
+/// `Theme.onDayRamp` rather than through the app's own palette, and there is no second place this
+/// row appears.
 ///
 /// **Two layouts, chosen by type size rather than by measurement.** At ordinary sizes the six
 /// entries divide the width evenly, which is what makes the row read as a timeline. At an
@@ -120,7 +124,12 @@ private struct DayPrayerEntry: View {
         // A tile with a ring, not a capsule. The strip reads as six cells of one object, and a
         // pill floating inside one cell reads as a badge stuck onto it — the design picks the
         // marker out by outlining its own cell instead.
-        .background(isUpcoming ? theme.accent.opacity(0.10) : .clear, in: .rect(cornerRadius: AppRadius.md))
+        //
+        // The ring is what carries it and the fill only supports it, which matters here because
+        // this is drawn on the ramp: a wash at the opacity that reads on the app's near-black
+        // background all but disappears on Maghrib's amber. The widget's strip records the same
+        // finding.
+        .background(isUpcoming ? theme.accent.opacity(0.15) : .clear, in: .rect(cornerRadius: AppRadius.md))
         .overlay {
             if isUpcoming {
                 RoundedRectangle(cornerRadius: AppRadius.md)

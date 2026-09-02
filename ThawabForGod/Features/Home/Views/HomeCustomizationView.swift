@@ -31,7 +31,9 @@ struct HomeCustomizationView: View {
                 ForEach(viewModel.sections) { preference in
                     SectionRow(viewModel: viewModel, preference: preference)
                 }
+               
                 .onMove(perform: viewModel.moveSections)
+                
             } header: {
                 Text(l10n.string(.homeCustomizeSectionsHeader))
             } footer: {
@@ -45,6 +47,7 @@ struct HomeCustomizationView: View {
                 .onMove(perform: viewModel.moveShortcuts)
             }
         }
+        
         .navigationTitle(l10n.string(.homeCustomizeTitle))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -53,6 +56,7 @@ struct HomeCustomizationView: View {
                 }
             }
         }
+        
         .confirmationDialog(
             l10n.string(.homeCustomizeResetConfirm),
             isPresented: Bindable(viewModel).isConfirmingReset,

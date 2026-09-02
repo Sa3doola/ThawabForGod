@@ -106,7 +106,6 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// The sections Home can stack, named for the customization screen — and, where a section
     /// draws its own heading, for that too.
     case homeSectionNextPrayer = "home_section_next_prayer"
-    case homeSectionTodayTimes = "home_section_today_times"
     case homeSectionShortcuts = "home_section_shortcuts"
     case homeSectionContinueReading = "home_section_continue_reading"
     case homeSectionLastActivity = "home_section_last_activity"
@@ -207,6 +206,7 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case qiblaDistanceUnitKilometres = "qibla_distance_unit_km"
     case qiblaNorthMarker = "qibla_north_marker"
     case qiblaNeedleLabel = "qibla_needle_label"
+    case qiblaAlignedValue = "qibla_aligned_value"
     case qiblaCompassUnavailable = "qibla_compass_unavailable"
     case qiblaCalibrationHint = "qibla_calibration_hint"
     case qiblaLocationNeededBody = "qibla_location_needed_body"
