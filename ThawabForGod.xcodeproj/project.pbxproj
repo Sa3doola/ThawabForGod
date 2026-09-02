@@ -8,11 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		6908DA1F1AC183258DCC507E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B1FCD3CF11B5758AB16D4C8C /* Foundation.framework */; };
-		9874BDE495B39D7438121460 /* NoorNotificationContent.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0CDEE2184FC589A9820F1B0A /* NoorNotificationContent.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9874BDE495B39D7438121460 /* NoorNotificationContent.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0CDEE2184FC589A9820F1B0A /* NoorNotificationContent.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9D2E1FF5303A5C2800BDF1BE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D2E1FD8303A5B7D00BDF1BE /* WidgetKit.framework */; };
 		9D2E1FF6303A5C2800BDF1BE /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D2E1FDA303A5B7E00BDF1BE /* SwiftUI.framework */; };
 		9D2E2001303A5C2800BDF1BE /* NoorWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9D2E1FF4303A5C2800BDF1BE /* NoorWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9D2E200B303A5C4300BDF1BE /* Adhan in Frameworks */ = {isa = PBXBuildFile; productRef = 9D2E200A303A5C4300BDF1BE /* Adhan */; };
+		9D7D64AB3048803A0079B9FC /* Adhan in Frameworks */ = {isa = PBXBuildFile; productRef = DD936F943D1B7087D5370BD1 /* Adhan */; };
 		CD1E732091901126F8E740AA /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 2C71CE3FCDE2C2F4A4C3B29E /* GRDB */; };
 		D10419A6F6B6EB503A4D7E06 /* Adhan in Frameworks */ = {isa = PBXBuildFile; productRef = F589A7CDDE099DD57049EF07 /* Adhan */; };
 /* End PBXBuildFile section */
@@ -118,22 +119,16 @@
 		};
 		9D285A32302A054500164D4C /* ThawabForGodTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ThawabForGodTests;
 			sourceTree = "<group>";
 		};
 		9D285A3C302A054500164D4C /* ThawabForGodUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ThawabForGodUITests;
 			sourceTree = "<group>";
 		};
 		9D2E1F9E303A5AF900BDF1BE /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
@@ -152,6 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9D7D64AB3048803A0079B9FC /* Adhan in Frameworks */,
 				6908DA1F1AC183258DCC507E /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -395,7 +391,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0DD56495FC908CFB1C802C0F /* XCRemoteSwiftPackageReference "adhan-swift" */,
-				154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+				154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9D285A21302A054500164D4C /* Products */;
@@ -506,9 +502,7 @@
 		9FF114E7D881491C89B36DD5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = NoorNotificationContent;
-			platformFilters = (
-				ios,
-			);
+			platformFilter = ios;
 			target = 4BB87CB1D2425FA88113F56C /* NoorNotificationContent */;
 			targetProxy = A061236B42785C6865BF112E /* PBXContainerItemProxy */;
 		};
@@ -541,6 +535,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1013,6 +1008,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1090,7 +1086,7 @@
 				minimumVersion = 1.5.0;
 			};
 		};
-		154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+		154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift";
 			requirement = {
@@ -1103,7 +1099,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		2C71CE3FCDE2C2F4A4C3B29E /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			package = 154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */;
 			productName = GRDB;
 		};
 		9D2E200A303A5C4300BDF1BE /* Adhan */ = {

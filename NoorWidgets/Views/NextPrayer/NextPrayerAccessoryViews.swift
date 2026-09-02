@@ -42,10 +42,6 @@ struct NextPrayerAccessoryCircularView: View {
         .lineLimit(1)
         .minimumScaleFactor(0.5)
         .padding(2)
-        .background { AccessoryWidgetBackground() }
-        .clipShape(.circle)
-        // The three labels read as "sunset, Maghrib, 6:15 PM" one after the other, which is not a
-        // sentence.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(l10n.string(day.upcoming.prayer.labelKey))
         .accessibilityValue(l10n.time(day.upcoming.date))

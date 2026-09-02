@@ -6112,23 +6112,6 @@
         }
       }
     },
-    "widget_in": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بعد"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in"
-          }
-        }
-      }
-    },
     "widget_next_prayer_description": {
       "extractionState": "manual",
       "localizations": {
