@@ -128,70 +128,36 @@
         }
       }
     },
-    "adhkar_category_evening": {
+    "adhkar_category_count": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أذكار المساء"
+            "value": "%@ من الأذكار"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evening Adhkar"
+            "value": "%@ adhkar"
           }
         }
       }
     },
-    "adhkar_category_evening_subtitle": {
+    "adhkar_chapter_complete": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تُقرأ عادةً بعد صلاة العصر"
+            "value": "تم الباب"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commonly read after the Asr prayer"
-          }
-        }
-      }
-    },
-    "adhkar_category_morning": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أذكار الصباح"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morning Adhkar"
-          }
-        }
-      }
-    },
-    "adhkar_category_morning_subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُقرأ عادةً بعد صلاة الفجر"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Commonly read after the Fajr prayer"
+            "value": "Chapter complete"
           }
         }
       }
@@ -264,6 +230,210 @@
         }
       }
     },
+    "adhkar_group_daily": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل يوم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every day"
+          }
+        }
+      }
+    },
+    "adhkar_group_distress": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهم والشدة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distress & difficulty"
+          }
+        }
+      }
+    },
+    "adhkar_group_food": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطعام والصيام"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food & fasting"
+          }
+        }
+      }
+    },
+    "adhkar_group_hajj": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحج والعمرة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hajj & Umrah"
+          }
+        }
+      }
+    },
+    "adhkar_group_home": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المنزل واللباس"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home & dress"
+          }
+        }
+      }
+    },
+    "adhkar_group_illness": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المرض والموت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Illness & death"
+          }
+        }
+      }
+    },
+    "adhkar_group_nature": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطقس والطبيعة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather & nature"
+          }
+        }
+      }
+    },
+    "adhkar_group_praise": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذكر والاستغفار"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Praise & forgiveness"
+          }
+        }
+      }
+    },
+    "adhkar_group_prayer": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصلاة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prayer"
+          }
+        }
+      }
+    },
+    "adhkar_group_purification": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطهارة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purification"
+          }
+        }
+      }
+    },
+    "adhkar_group_social": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الآداب والمجالس"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manners & company"
+          }
+        }
+      }
+    },
+    "adhkar_group_travel": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السفر"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Travel"
+          }
+        }
+      }
+    },
     "adhkar_loading": {
       "extractionState": "manual",
       "localizations": {
@@ -281,6 +451,74 @@
         }
       }
     },
+    "adhkar_mark_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم القول"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as said"
+          }
+        }
+      }
+    },
+    "adhkar_marked_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمّ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Said"
+          }
+        }
+      }
+    },
+    "adhkar_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التالي"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        }
+      }
+    },
+    "adhkar_no_results": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد نتائج مطابقة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing here matches that."
+          }
+        }
+      }
+    },
     "adhkar_of_total": {
       "extractionState": "manual",
       "localizations": {
@@ -294,6 +532,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "of %@"
+          }
+        }
+      }
+    },
+    "adhkar_previous": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السابق"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous"
           }
         }
       }
@@ -366,53 +621,36 @@
         }
       }
     },
-    "adhkar_show_translation": {
+    "adhkar_search_prompt": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إظهار الترجمة"
+            "value": "ابحث في الأذكار"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show translation"
+            "value": "Search the adhkar"
           }
         }
       }
     },
-    "adhkar_show_transliteration": {
+    "adhkar_source_attribution": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إظهار النطق"
+            "value": "من حصن المسلم"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show transliteration"
-          }
-        }
-      }
-    },
-    "adhkar_source_label": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المصدر"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Source"
+            "value": "From Hisn al-Muslim"
           }
         }
       }
@@ -430,6 +668,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Swipe the card for the next dhikr"
+          }
+        }
+      }
+    },
+    "adhkar_text_larger": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكبر"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larger"
+          }
+        }
+      }
+    },
+    "adhkar_text_size": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حجم النص"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text size"
+          }
+        }
+      }
+    },
+    "adhkar_text_smaller": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصغر"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smaller"
           }
         }
       }
@@ -474,30 +763,13 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هذه الأذكار مأخوذة من حصن المسلم. لم تُراجَع النصوص ومصادرها بعدُ على نسخة مطبوعة، والمرجع المذكور تحت كل ذكر ليتسنّى لك التحقق منه بنفسك."
+            "value": "النصوص هنا هي نص الكتاب بالعربية دون ترجمة، ولم تُراجَع بعدُ على نسخة مطبوعة. عناوين الأبواب بالإنجليزية وتقسيمها إلى مجموعات من عمل التطبيق لا من الكتاب."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "These adhkar follow Hisn al-Muslim. The text and its sources have not yet been checked against a printed copy — the reference under each dhikr is there so you can verify it yourself."
-          }
-        }
-      }
-    },
-    "adhkar_virtue_label": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الفضل"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Virtue"
+            "value": "The Arabic here is the book's own text, untranslated, and has not yet been checked against a printed copy. The English chapter titles and the grouping are this app's, not the book's."
           }
         }
       }
@@ -2083,36 +2355,19 @@
         }
       }
     },
-    "home_shortcut_evening_adhkar": {
+    "home_shortcut_morning_evening_adhkar": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أذكار المساء"
+            "value": "الصباح والمساء"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Evening adhkar"
-          }
-        }
-      }
-    },
-    "home_shortcut_morning_adhkar": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أذكار الصباح"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morning adhkar"
+            "value": "Morning & evening"
           }
         }
       }
@@ -5336,13 +5591,13 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "سين العربية — Morning-And-Evening-Adhkar-DB"
+            "value": "سعيد بن علي بن وهف القحطاني — ١٣٢ باباً، بالعربية"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seen Arabic — Morning-And-Evening-Adhkar-DB"
+            "value": "Sa‘id bin Ali bin Wahf al-Qahtani — 132 chapters, Arabic"
           }
         }
       }
@@ -5353,13 +5608,13 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لم تُراجَع بعد من قِبل أهل العلم."
+            "value": "لم تُراجَع بعد من قِبل أهل العلم. عناوين الأبواب بالإنجليزية وتقسيمها من عمل التطبيق لا من الكتاب."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not yet reviewed by a scholar."
+            "value": "Not yet reviewed by a scholar. The English chapter titles and the grouping are this app's, not the book's."
           }
         }
       }
@@ -5370,13 +5625,13 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أذكار الصباح والمساء"
+            "value": "حصن المسلم"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Morning & Evening Adhkar"
+            "value": "Hisn al-Muslim"
           }
         }
       }

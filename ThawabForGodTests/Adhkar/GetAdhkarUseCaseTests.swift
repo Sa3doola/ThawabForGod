@@ -13,33 +13,39 @@ import Testing
 struct GetAdhkarUseCaseTests {
 
     @Test func categoriesComeStraightFromTheRepository() async throws {
-        let useCase = GetAdhkarUseCase(
-            repository: StubAdhkarRepository(categories: .success([.evening]))
-        )
+        let expected = [AdhkarCategory.stub(id: "sleep"), .stub(id: "waking")]
+        let useCase = GetAdhkarUseCase(repository: StubAdhkarRepository(categories: .success(expected)))
 
-        #expect(try await useCase.categories() == [.evening])
+        #expect(try await useCase.categories() == expected)
     }
 
     @Test func adhkarComeStraightFromTheRepository() async throws {
         let expected = [Dhikr.stub(id: 1), Dhikr.stub(id: 2)]
-        let useCase = GetAdhkarUseCase(
-            repository: StubAdhkarRepository(adhkar: .success(expected))
-        )
+        let useCase = GetAdhkarUseCase(repository: StubAdhkarRepository(adhkar: .success(expected)))
 
-        #expect(try await useCase.adhkar(in: .morning, language: .english) == expected)
+        #expect(try await useCase.adhkar(in: .stub()) == expected)
     }
 
-    /// The two arguments are the whole interface. Swapping them, or dropping the language and
-    /// letting the repository pick one, would show up nowhere else until a reader saw English
-    /// text on an Arabic screen.
-    @Test func theCategoryAndLanguageAreForwardedAsGiven() async throws {
+    /// The chapter is the whole interface. Passing a different one, or letting the repository
+    /// pick, would show up nowhere else until a reader saw one chapter's adhkar under another's
+    /// title.
+    @Test func theChapterIsForwardedAsGiven() async throws {
         let repository = StubAdhkarRepository()
         let useCase = GetAdhkarUseCase(repository: repository)
+        let category = AdhkarCategory.stub(id: "travel", group: .travel)
 
-        _ = try await useCase.adhkar(in: .evening, language: .arabic)
+        _ = try await useCase.adhkar(in: category)
 
-        #expect(await repository.requestedCategories == [.evening])
-        #expect(await repository.requestedLanguages == [.arabic])
+        #expect(await repository.requestedCategories == [category])
+    }
+
+    @Test func aChapterIsLookedUpByTheSlugItWasAskedFor() async throws {
+        let repository = StubAdhkarRepository(categories: .success([.stub(id: "wind", group: .nature)]))
+        let useCase = GetAdhkarUseCase(repository: repository)
+
+        #expect(try await useCase.category(id: "wind")?.id == "wind")
+        #expect(try await useCase.category(id: "thunder") == nil)
+        #expect(await repository.requestedIDs == ["wind", "thunder"])
     }
 
     @Test func aFailureIsPropagatedRatherThanSwallowed() async {

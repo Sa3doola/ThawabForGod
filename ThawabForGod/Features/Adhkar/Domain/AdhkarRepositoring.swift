@@ -12,18 +12,24 @@ import Foundation
 /// write — the corpus is read-only, and a reader's progress through it is transient state the
 /// view model holds, not a row.
 ///
-/// - Note: `language` is a parameter rather than something the repository was built with,
-///   because the choice can change while the app is running. The reading screen re-fetches when
-///   it does, which is cheaper and far less error-prone than caching two languages' worth of
-///   text against a language nobody has selected yet.
+/// **No `language` parameter any more.** It used to take one, because the corpus stored an English
+/// translation of each dhikr and a row had to be resolved down to one language before it left the
+/// Data layer. Hisn al-Muslim's text is Arabic and only Arabic, and the one thing that does have
+/// two spellings — a chapter's title — is carried in both on `AdhkarCategory`, so a language
+/// change is a redraw rather than a re-fetch.
 nonisolated protocol AdhkarRepositoring: Sendable {
 
-    /// The categories the corpus actually contains, in reading order.
+    /// Every chapter the corpus holds, in the book's own order.
     ///
-    /// Read from the database rather than returned from `AdhkarCategory.allCases`, so a category
-    /// the app knows about but the bundled data has no rows for never reaches the screen.
+    /// All 132 in one read, deliberately: the whole list is a few kilobytes of title, the browse
+    /// screen groups and searches across all of them, and paging it would buy nothing but a
+    /// second failure mode.
     func categories() async throws -> [AdhkarCategory]
 
-    /// The adhkar in a category, in reading order, resolved to one language.
-    func adhkar(in category: AdhkarCategory, language: AppLanguage) async throws -> [Dhikr]
+    /// One chapter, by its slug — `nil` where this build knows a slug the corpus does not, which
+    /// is what a deep link saved by an older install can hand it.
+    func category(id: String) async throws -> AdhkarCategory?
+
+    /// The adhkar in a chapter, in reading order.
+    func adhkar(in category: AdhkarCategory) async throws -> [Dhikr]
 }

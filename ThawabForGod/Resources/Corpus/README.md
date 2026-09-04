@@ -49,55 +49,137 @@ What needs a pass, per dhikr:
 
 - the Arabic text, including its diacritics
 - the repeat count
-- the source citation — the book, and the hadith or page number within it
-- the grading of the narration, where the citation gives one
-- the English translation and transliteration
+- which chapter it is filed under
+
+And per chapter:
+
+- the Arabic title
+- **the English title, which this project wrote** — see below
 
 Until that has happened, the app must not present this content as verified, and
-this note must not be deleted. The citation is stored per dhikr and shown in the
-reading view precisely so a reader can check it themselves rather than take the
-app's word for it.
+this note must not be deleted. The reading list carries the attribution and this
+warning on screen, so a reader is told rather than left to assume.
 
 ### A best-effort spot-check (2026-08-18)
 
-Not the scholar pass above — this project has none of its own — but a sanity
-check worth recording rather than leaving unsaid. A sample of the 34 rows
-(the two ayat al-Kursi/last-two-ayat-of-al-Baqarah entries, the three
-Quls, and half a dozen of the hadith-based morning duas, chosen for being
-either the highest-stakes text or the easiest to get subtly wrong) was
-diffed character-by-character against
-[hisnmuslim.com](https://hisnmuslim.com/i/ar/1), the Arabic-original
-companion site for the same book this data set draws from. Every sampled row
-matched, with one cosmetic difference throughout: this corpus renders the
-peace-be-upon-him salutation as the single ﷺ ligature (`U+FDFA`) wherever
-hisnmuslim.com spells it out as `صلى الله عليه وسلم` — a font/encoding choice
-common to most digital Islamic apps, not a textual variant, and not something
-this note treats as a discrepancy.
+Recorded for what it covers, which is now a small fraction of the corpus. It was
+made against the **previous** 34-row data set, before the whole book replaced it
+— so it applies only to the morning-and-evening material and only where that
+material survived the swap.
 
-This is a spot-check of roughly a quarter of the rows, by an AI agent with no
-standing to certify religious text, not the line-by-line pass the warning
-above asks for — it narrows the risk on the sample it covers without
-discharging the warning for the rest. The two-line hadith citations were not
-independently checked against the named books at all; that still needs a
-reader with access to them.
+A sample of the 34 rows (the two ayat al-Kursi/last-two-ayat-of-al-Baqarah
+entries, the three Quls, and half a dozen of the hadith-based morning duas,
+chosen for being either the highest-stakes text or the easiest to get subtly
+wrong) was diffed character-by-character against
+[hisnmuslim.com](https://hisnmuslim.com/i/ar/1), the Arabic-original companion
+site for the same book. Every sampled row matched, with one cosmetic difference
+throughout: that corpus rendered the peace-be-upon-him salutation as the single
+ﷺ ligature (`U+FDFA`) wherever hisnmuslim.com spells it out as
+`صلى الله عليه وسلم` — a font/encoding choice common to most digital Islamic
+apps, not a textual variant.
+
+This was a spot-check of roughly a quarter of *those* rows, by an AI agent with
+no standing to certify religious text. It does not touch the 233 adhkar the
+current corpus added.
 
 ## Sources
 
 ### Adhkar
 
-[Seen-Arabic/Morning-And-Evening-Adhkar-DB](https://github.com/Seen-Arabic/Morning-And-Evening-Adhkar-DB),
-MIT licensed, © 2024 Seen Arabic. Arabic and English, 34 adhkar.
+**Hisn al-Muslim** (حصن المسلم) by Sa‘id bin Ali bin Wahf al-Qahtani, in the
+widely-circulated JSON transcription of the book — 132 chapters, 267 adhkar,
+Arabic only. Vendored at `Tools/CorpusBuilder/data/adhkar.json` and built by
+`build_corpus_db.py`.
 
-Its scope is exactly what its name says: morning and evening. The other
-categories one would expect in Hisn al-Muslim — after prayer, before sleep, on
-waking, entering and leaving the home, meals — are **not** in this data set, and
-so are not in the app. `AdhkarCategory` deliberately carries only the two
-categories that have rows behind them; a category with no adhkar in it is a row
-the user taps to reach an empty screen.
+It replaced [Seen-Arabic/Morning-And-Evening-Adhkar-DB](https://github.com/Seen-Arabic/Morning-And-Evening-Adhkar-DB)
+(MIT, © 2024 Seen Arabic), whose scope was exactly what its name said: 34 adhkar,
+morning and evening, and nothing else. **That swap traded verifiability for
+coverage, and the trade should be understood rather than discovered.** What was
+lost, per dhikr:
 
-Adding the rest is a data change, not a code change: add a row to `category`, add
-its adhkar, and add the `dhikr_category` rows joining them. `AdhkarCategory` gains
-a case with the matching raw value and the feature picks it up.
+| | before (34 rows) | now (267 rows) |
+| --- | --- | --- |
+| Arabic text | yes | yes |
+| repeat count | yes | yes |
+| English translation | yes | **no** |
+| transliteration | yes | **no** |
+| hadith citation | yes | **no** |
+| reported virtue (fadl) | sometimes | **no** |
+
+The citation is the one that matters. This file used to be able to say that a
+reader could check any dhikr against the book and number printed under it; now
+the attribution is the *book*, named once on the browse screen, and the chapter
+is as fine-grained as the reference gets. Restoring per-dhikr citations is a data
+problem — a transcription that carries them, licensed — not a code one.
+
+The licence position is **unsettled**, the same way the 99 names' is. The
+underlying text is the classical duas of the Quran and the hadith, arranged and
+selected by a modern author (d. 2018); this transcription is published without a
+licence statement, as most copies of it are. What ships is the Arabic text
+itself, without any of the compiler's own apparatus — no introductions, no
+footnotes, no gradings, no translations. That is a defensible position rather
+than a settled one, and it needs confirming before V1.
+
+**Arabic only, knowingly.** Every English translation of Hisn al-Muslim belongs
+to its modern translator, so an English-reading user gets Arabic text under an
+English chapter heading until that is resolved — the same wall the tafsir and
+hadith slices hit, and for the same reason.
+
+#### The chapter titles and grouping are this project's
+
+`Tools/CorpusBuilder/data/adhkar_categories.json` is **not** upstream data. It
+holds three things this project wrote, one row per chapter:
+
+- **`slug`** — the stable identifier the app keys on. Deliberately not the
+  chapter number, which is positional: a corrected order would silently make a
+  saved shortcut or an activity record name a different chapter. The same
+  argument `HadithID` makes.
+- **`title_en`** — an English rendering of the Arabic chapter title.
+  **Unverified.** These are labels, not scripture — "Supplication when entering
+  the market" — and rendering one is a much lower-stakes act than translating a
+  dua, which is why they are here and translations are not. They still need a
+  reader who knows both languages to go through them.
+- **`group`** — one of the twelve headings the browse screen cuts the list on.
+  Hisn al-Muslim has no such grouping; it is one flat sequence, which works bound
+  in the hand and does not work as 132 rows on a phone. The book's own order is
+  kept in `category.sort_order` and is what orders the chapters *inside* a group,
+  so nothing is lost — only added.
+
+#### What the build changes about the source text
+
+Three mechanical passes, each in `build_corpus_db.py` and each reversible by
+reading the script beside the vendored file. Nothing is hand-edited into either.
+
+1. **NFKC**, which folds the Arabic presentation forms the source carries in
+   three chapter titles — `اﻟﻤﺠلس` is written with initial/medial glyph
+   codepoints rather than letters, so it looks right on screen and matches
+   nothing a reader types. The ornate parentheses `﴿ ﴾` that mark Quranic
+   quotation have no NFKC mapping and survive intact.
+2. **A corrections table** for transcription damage from the source's PDF
+   origin: `نز` came out as `تر` under a legacy encoding, turning منزلا into the
+   non-word مترلا. Two entries today, both in chapter titles.
+3. **Whitespace**, collapsed to single spaces.
+
+And one substantive rule, which the build prints every application of:
+
+**Where a dhikr's own prose states a repeat count and the source's `count` field
+disagrees, the prose ships.** The prose is the book's words; the count field is
+somebody's metadata about them. It applies only when every count note in the
+text agrees on one number *and* the note is the last parenthesis in it — two
+conditions each earned by a case that breaks without them (`(عشرَ مرَّات) ، أَوْ
+(مرَّةً واحدةً عند الكسل)` is a choice the book offers, not a number to read off;
+the chapter on dreams puts `(three times)` on one step of a list of actions). It
+fires on three of the 267, all of them a `(سبع مرات)` or `(ثلاث مرات)` the
+`count` field recorded as 1:
+
+| chapter | dhikr | text says | field said |
+| --- | --- | --- | --- |
+| `morning-evening` | 9 — حَسْبِيَ اللَّهُ… | 7 | 1 |
+| `fear-of-ruler` | 2 — اللَّهُ أَكْبَرُ، اللَّهُ أَعَزُّ… | 3 | 1 |
+| `visiting-the-sick` | 2 — أَسْأَلُ اللَّهَ الْعَظيمَ… | 7 | 1 |
+
+These three are worth a second look by whoever does the scholar pass; the rest
+of the counts were taken from the source as given.
 
 ### The 99 names
 
@@ -454,43 +536,41 @@ on, and the script refuses to run without it.
 python3 Tools/CorpusBuilder/build_corpus_db.py
 ```
 
-That downloads the two upstream adhkar JSON files and regenerates the database in
-place, tasbih presets included.
-Pass `--source-dir path/to/checkout` to build from a local clone instead — which
-is also how to build from a pinned upstream revision rather than `HEAD`.
+Regenerates the database in place from the three vendored files in
+`Tools/CorpusBuilder/data/` — `adhkar.json`, `adhkar_categories.json` and
+`divine_names.json` — plus the tasbih presets written out in the script. It
+downloads nothing: everything it reads is checked in, which is what makes a
+correction a reviewable diff rather than a request to trust a re-fetch.
+
+It prints what it wrote, and it prints every repeat count it took from a dhikr's
+prose rather than from the source's `count` field. Three today; a fourth
+appearing is a signal to go and look, not a failure.
 
 The script is the only thing that writes this file. **Do not edit rows by hand**:
 a hand-edited database cannot be reproduced, and the next rebuild silently throws
-the edit away. Corrections belong either upstream or in the script.
-
-### Why we generate our own rather than ship theirs
-
-Upstream publishes one SQLite per language — `ar.sqlite` and `en.sqlite` — each a
-flat dump of its own JSON file. Two things make that the wrong shape for the app:
-
-- **One row per dhikr, not per language.** The Arabic text is shown to every
-  reader whatever their language; only the translation, transliteration, citation
-  and virtue differ. Two parallel databases would mean opening both and joining
-  them at runtime to render a single card.
-- **A dhikr can belong to more than one category.** Upstream encodes this as a
-  `type` integer (0 = both morning and evening, 1 = morning only, 2 = evening
-  only), which stops working the moment a third category exists. The build step
-  expands it into a `dhikr_category` join table, so 16 of the 34 adhkar simply
-  have two rows in it.
+the edit away. Corrections belong in a vendored JSON, or — where they are
+mechanical, like the NFKC fold — in the script.
 
 ### Schema
 
 | table            | holds                                                                |
 | ---------------- | -------------------------------------------------------------------- |
-| `category`       | `id` (matches `AdhkarCategory`'s raw value), `sort_order`             |
-| `dhikr`          | the Arabic text, both citations, both virtues, translation, transliteration, repeat count |
-| `dhikr_category` | which adhkar belong to which category, and in what order              |
+| `category_group` | the twelve headings the browse screen cuts on (matches `AdhkarGroup`'s raw values), and their order |
+| `category`       | one row per chapter: `id` (the stable slug), both titles, its group, and its chapter number in the book |
+| `dhikr`          | the Arabic text, which chapter it is in, its place in that chapter, and its repeat count |
 | `tasbih_preset`  | `id` (matches `TasbihDhikr`'s identifier), the Arabic phrase, translation, target count, order |
 | `divine_name`    | `id` 1–99 (the canonical order), the Arabic name, transliteration, English meaning, an empty explanation column, and Quran citations |
 
-`PRAGMA user_version` is the schema version, and is `3` (`1` was adhkar only,
-`2` added the tasbih presets). Bump it in the build script when the shape
+`PRAGMA user_version` is the schema version, and is `4` (`1` was adhkar only,
+`2` added the tasbih presets, `3` the divine names, `4` replaced the two-category
+adhkar tables with the whole book). Bump it in the build script when the shape
 changes, so a reader can tell two builds apart.
+
+**A `category.id` is load-bearing**, and so is `dhikr.id`. Home's shortcut circle
+and the `noor://adhkar?period=…` deep link both name `morning-evening` in Swift,
+and a recent-activity record stores whichever slug the reader was last in. The
+`dhikr.id` is derived from the source's own chapter and item numbers rather than
+from insertion order, so a rebuild cannot renumber one. Treat both as permanent.
 
 **A `tasbih_preset.id` is load-bearing.** The SwiftData progress store keys a
 user's saved count on it, so renaming one orphans whatever they had counted. Treat

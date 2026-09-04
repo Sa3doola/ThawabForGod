@@ -5,45 +5,63 @@
 
 import Foundation
 
-/// A heading in the adhkar corpus, and the unit the reading screen works through.
+/// One chapter of Hisn al-Muslim, and the unit the reading screen works through.
 ///
-/// The raw value is the `category.id` stored in the bundled database, which is what lets the
-/// repository turn a row into a case and back. That indirection is the point: **which**
-/// categories exist is data, and the bundled corpus today carries only the two below.
+/// **It used to be an enum of two cases and is now a value read from the corpus**, because the
+/// bundled data grew from the 34 morning-and-evening adhkar of one small upstream to the whole
+/// book: 132 chapters, 267 adhkar. An enum of 132 cases would be 132 hand-written places to keep
+/// in step with a file, and the compiler could check none of them.
 ///
-/// Hisn al-Muslim has many more — after prayer, before sleep, on waking, entering and leaving
-/// the home, meals — and none of them are in the upstream data set this ships with (see
-/// `Resources/Corpus/README.md`). They are absent here rather than listed and empty, because a
-/// category with no adhkar behind it is a row the reader taps to reach a blank screen. Adding
-/// one is a rebuild of the database plus a case here, in that order.
-nonisolated enum AdhkarCategory: String, CaseIterable, Identifiable, Sendable {
-    case morning
-    case evening
+/// So which chapters exist is data, and this is what one row of it looks like. The consequence
+/// worth naming: **nothing outside the corpus may hold an `AdhkarCategory` value and expect it to
+/// still exist.** What crosses that line is the `id` — a slug — and it is stable by construction:
+/// `Tools/CorpusBuilder/data/adhkar_categories.json` assigns it, and it is deliberately *not* the
+/// chapter number, which is positional and would come to name a different chapter the day the
+/// book's order is corrected. That is the same argument `HadithID` makes.
+///
+/// Both titles are carried rather than one resolved at fetch time, so a language change is a
+/// redraw rather than a re-fetch. The Arabic is the book's own chapter title; the English is
+/// **this project's rendering of it** and is not verified — see `Resources/Corpus/README.md`.
+nonisolated struct AdhkarCategory: Identifiable, Hashable, Sendable {
 
-    var id: String { rawValue }
+    /// The stable slug — `"morning-evening"`, `"entering-the-market"`. Safe to put in a deep
+    /// link, an activity record or a bookmark.
+    let id: String
 
-    /// The heading as a key, resolved to Arabic or English at display time — the same treatment
-    /// prayer names and Islamic events get. Only the *category* names are translated this way;
-    /// the adhkar themselves come out of the corpus, not the string catalog.
-    var titleKey: L10nKey {
-        switch self {
-        case .morning: .adhkarCategoryMorning
-        case .evening: .adhkarCategoryEvening
-        }
+    /// The chapter title as Hisn al-Muslim writes it.
+    let titleArabic: String
+
+    /// The chapter title in English, rendered by this project. Unverified.
+    let titleEnglish: String
+
+    let group: AdhkarGroup
+
+    /// The chapter's number in the book, which is the order the list draws them in. Kept even
+    /// though the group is what the list is cut on: the sequence is the book's, and losing it
+    /// would leave the chapters inside a group in an order nothing chose.
+    let sortOrder: Int
+
+    /// How many adhkar are in it. Counted by the query rather than stored on the row, so it
+    /// cannot disagree with what the reading screen will actually show.
+    let dhikrCount: Int
+
+    /// The title in one language.
+    ///
+    /// A method rather than two properties read at the call site, so a screen cannot accidentally
+    /// draw the Arabic title under an English heading. Anything that is not Arabic gets the
+    /// English, because English is what the metadata file holds — a third language would need a
+    /// column before it needed a branch.
+    func title(in language: AppLanguage) -> String {
+        language == .arabic ? titleArabic : titleEnglish
     }
 
-    /// A one-line note on when the category is read, shown under its title.
-    var subtitleKey: L10nKey {
-        switch self {
-        case .morning: .adhkarCategoryMorningSubtitle
-        case .evening: .adhkarCategoryEveningSubtitle
-        }
-    }
-
-    var symbolName: String {
-        switch self {
-        case .morning: "sunrise"
-        case .evening: "sunset"
-        }
-    }
+    /// أذكار الصباح والمساء — the one chapter named in code rather than only in data.
+    ///
+    /// It has to be, because two things outside the corpus point straight at it: Home's shortcut
+    /// circle and the `noor://adhkar?period=…` deep link, neither of which can ask a database
+    /// which chapter a reader meant. Naming it here rather than spelling the string at both call
+    /// sites means there is one place to look when the slug changes — and
+    /// `AdhkarRepositoryTests` asserts the shipped corpus still has it, so the day it does not
+    /// is a failing test rather than a shortcut that opens an empty screen.
+    static let morningAndEveningID = "morning-evening"
 }

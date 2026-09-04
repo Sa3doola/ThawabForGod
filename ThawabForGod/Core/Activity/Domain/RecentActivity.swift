@@ -91,7 +91,7 @@ nonisolated struct RecentActivity: Equatable, Sendable, Identifiable {
         case .quran:
             verseReference.map(AppRoute.quranVerse)
         case .adhkar:
-            adhkarCategory.map(AppRoute.adhkar)
+            adhkarCategoryID.map { AppRoute.adhkar(categoryID: $0) }
         case .tasbih:
             .tasbih
         }
@@ -129,23 +129,27 @@ nonisolated struct RecentActivity: Equatable, Sendable, Identifiable {
     // MARK: The adhkar
 
     static func adhkar(
-        _ category: AdhkarCategory,
+        categoryID: String,
         completed: Int,
         of total: Int,
         at date: Date
     ) -> RecentActivity {
         RecentActivity(
             kind: .adhkar,
-            subject: category.rawValue,
+            subject: categoryID,
             progressValue: completed,
             progressTotal: total,
             occurredAt: date
         )
     }
 
-    var adhkarCategory: AdhkarCategory? {
-        guard kind == .adhkar else { return nil }
-        return AdhkarCategory(rawValue: subject)
+    /// The slug of the chapter this refers to.
+    ///
+    /// The slug rather than the chapter: the chapters are corpus rows, so turning one back into a
+    /// value is a read, and this type is a stored record that must stay free of one. Whoever
+    /// wants the title looks it up — `HomeViewModel.subject(of:)` does.
+    var adhkarCategoryID: String? {
+        kind == .adhkar ? subject : nil
     }
 
     // MARK: The tasbih

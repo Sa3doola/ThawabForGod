@@ -41,15 +41,20 @@ struct RecentActivityTests {
 
     // MARK: The adhkar
 
-    @Test func acategoryRoundTripsThroughItsSubject() {
-        let activity = RecentActivity.adhkar(.morning, completed: 7, of: 28, at: when)
+    @Test func aChapterRoundTripsThroughItsSubject() {
+        let activity = RecentActivity.adhkar(categoryID: "morning-evening", completed: 7, of: 28, at: when)
 
-        #expect(activity.adhkarCategory == .morning)
-        #expect(activity.route == .adhkar(.morning))
+        #expect(activity.adhkarCategoryID == "morning-evening")
+        #expect(activity.route == .adhkar(categoryID: "morning-evening"))
         #expect(activity.fraction == 0.25)
     }
 
-    @Test func acategoryThisBuildNoLongerHasIsNotRouted() {
+    /// **A slug this build has never seen still routes**, and that is the change the full corpus
+    /// brought. When the chapters were a two-case enum, an unrecognised subject could not be
+    /// turned back into one and the chip was silently dropped. They are corpus rows now, so this
+    /// type has no way to know — and no business knowing — which slugs exist: it hands the slug
+    /// on, and the reading screen is where a chapter that is genuinely gone says so.
+    @Test func aChapterThisCorpusNoLongerCarriesStillRoutes() {
         let activity = RecentActivity(
             kind: .adhkar,
             subject: "after_prayer",
@@ -58,8 +63,8 @@ struct RecentActivityTests {
             occurredAt: when
         )
 
-        #expect(activity.adhkarCategory == nil)
-        #expect(activity.route == nil)
+        #expect(activity.adhkarCategoryID == "after_prayer")
+        #expect(activity.route == .adhkar(categoryID: "after_prayer"))
     }
 
     // MARK: The tasbih
@@ -101,7 +106,7 @@ struct RecentActivityTests {
     /// The identity that makes the store hold one row per kind.
     @Test func theKindIsTheIdentity() {
         #expect(RecentActivity.tasbih(dhikrID: "a", count: 1, of: 2, at: when).id == .tasbih)
-        #expect(RecentActivity.adhkar(.evening, completed: 1, of: 2, at: when).id == .adhkar)
+        #expect(RecentActivity.adhkar(categoryID: "sleep", completed: 1, of: 2, at: when).id == .adhkar)
     }
 }
 
@@ -152,7 +157,7 @@ struct RecentActivityRepositoryTests {
         let repository = try makeRepository()
 
         try await repository.record(.tasbih(dhikrID: "subhanallah", count: 1, of: 33, at: earlier))
-        try await repository.record(.adhkar(.morning, completed: 2, of: 28, at: later))
+        try await repository.record(.adhkar(categoryID: "morning-evening", completed: 2, of: 28, at: later))
         try await repository.record(
             .quran(VerseReference(surah: 2, verse: 142), of: 286, at: earlier)
         )
@@ -170,7 +175,7 @@ struct RecentActivityRepositoryTests {
         let persistence = try PersistenceController(inMemory: true)
         let repository = RecentActivityRepository(modelContainer: persistence.container)
 
-        try await repository.record(.adhkar(.morning, completed: 2, of: 28, at: earlier))
+        try await repository.record(.adhkar(categoryID: "morning-evening", completed: 2, of: 28, at: earlier))
 
         let context = ModelContext(persistence.container)
         context.insert(

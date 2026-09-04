@@ -42,6 +42,15 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case readerShowsVerseNumbers
     case readerKeepsScreenAwake
 
+    /// How large the adhkar are set. **Its own key rather than `readerTextSize`**, deliberately:
+    /// the Quran is read in long sittings on a page the reader chose a paper for, and a dhikr is
+    /// one short passage said several times over — the size that suits one is not the size that
+    /// suits the other, and a single key would have each screen silently overwrite the other's
+    /// answer. Unset until the reader moves the control. Sharing the Quran's whole
+    /// `ReaderSettings` across both tabs is a slice of its own; this is the one value the adhkar
+    /// screen actually needs.
+    case adhkarTextSize
+
     // One per obligatory prayer. Unset means on — a reminder the user has never opinionated
     // about should arrive, and writing `true` at first launch would breach the rule above.
     case reminderFajr

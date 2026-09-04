@@ -5,64 +5,59 @@
 
 import SwiftUI
 
-/// One dhikr, as it is read: which one it is, the Arabic first and largest, then whatever the
-/// reader has asked to see alongside it, then where it comes from.
+/// One dhikr, as it is read: which one it is, and then the words.
 ///
-/// **The counter is no longer in here.** It used to sit at the foot of every card in a scrolling
-/// column, which meant the control the reader taps a hundred times moved with the text — and on a
-/// long dhikr it was below the fold, so counting meant scrolling. The reading screen now shows one
-/// card at a time and pins the counter under it, so the thumb has one place to be for the whole
-/// category. See `AdhkarReadingView`.
+/// **It is almost entirely one paragraph of Arabic now**, and that is the corpus rather than a
+/// simplification. The 34 rows this feature began with carried an English translation, a
+/// transliteration, a reported virtue and a hadith citation; Hisn al-Muslim's own text carries
+/// none of those, so a card that kept their labelled blocks would draw four empty frames. What
+/// took their place is size: the text is set at a point size the reader chooses, on the reading
+/// font, because with nothing else on the card there is no reason for it to be small.
+///
+/// The card also stopped being the thing that reports completion. It used to take a green border
+/// when its counter finished, which on a pager is a border the reader sees for the half second
+/// before the card leaves the screen. The pips above and the counter below both say it, in places
+/// that stay put.
 ///
 /// Like `RepeatCounter`, it takes values rather than a view model — the reading screen owns the
 /// state, and this stays a thing that can be previewed in any of its shapes.
 struct DhikrCard: View {
     let dhikr: Dhikr
-    /// Its position in the category, for the kicker. `nil` where the card is shown out of any
-    /// sequence, which is every use but the reader.
+    /// Its position in the chapter, for the kicker. `nil` where the card is shown out of any
+    /// sequence, or in a chapter of one, where "dhikr 1 of 1" is a label about nothing.
     var position: Int?
-    let counted: Int
-    let showsTranslation: Bool
-    let showsTransliteration: Bool
+    /// The point size the reader has chosen. Dynamic Type still multiplies it — see
+    /// `ReadingFontModifier`.
+    var textSize: Double = ReaderTypography.fallback.textSize
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
 
-    private var isComplete: Bool { counted >= dhikr.repeatCount }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
             if let position {
                 kicker(position)
             }
 
             arabicText
 
-            if showsTransliteration, let transliteration = dhikr.transliteration {
-                secondaryText(transliteration, style: .callout, italic: true)
+            if dhikr.repeatCount > 1 {
+                repeatBadge
             }
-
-            if showsTranslation, let translation = dhikr.translation {
-                secondaryText(translation, style: .body, italic: false)
-            }
-
-            if let virtue = dhikr.virtue {
-                virtueBlock(virtue)
-            }
-
-            reference
         }
         .padding(AppSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .appCard()
-        .overlay {
-            RoundedRectangle(cornerRadius: AppRadius.lg)
-                .strokeBorder(isComplete ? theme.success : .clear, lineWidth: 1.5)
-        }
-        .animation(.snappy, value: isComplete)
+        // **No `.textSelection(.enabled)` here, and it is worth saying why so nobody adds it
+        // back.** Copying a dhikr into a message is an obvious thing to want, but a selectable
+        // `Text` reports its natural width instead of taking the one it is given — anywhere on
+        // this card, on the paragraph or on the stack around it — and inside the pager that
+        // collapses each page to about half the screen and clips the words at both edges.
+        // Verified on device both ways. If selection is wanted later it needs a different
+        // mechanism, not this modifier.
     }
 
-    /// `DHIKR 4` — which of the category's adhkar this is.
+    /// `DHIKR 4` — which of the chapter's adhkar this is.
     ///
     /// The screen's pips say the same thing as a shape and the toolbar says it as a fraction;
     /// this says it in words, which is the form that survives being read aloud by VoiceOver and
@@ -84,9 +79,11 @@ struct DhikrCard: View {
     /// Under this environment `.leading` resolves to the right in both interface languages.
     private var arabicText: some View {
         Text(dhikr.arabicText)
-            .appFont(.title3)
+            .readingFont(size: textSize)
             .foregroundStyle(theme.textPrimary)
-            .lineSpacing(10)
+            // Proportional to the size rather than a fixed ten points: Arabic carries diacritics
+            // above and below the line, and leading that is comfortable at 20pt collides at 40.
+            .lineSpacing(textSize * 0.55)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .environment(\.layoutDirection, .rightToLeft)
@@ -95,50 +92,18 @@ struct DhikrCard: View {
             .environment(\.locale, AppLanguage.arabic.locale)
     }
 
-    private func secondaryText(_ text: String, style: AppTextStyle, italic: Bool) -> some View {
-        Text(text)
-            .appFont(style)
-            .italic(italic)
-            .foregroundStyle(theme.textSecondary)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func virtueBlock(_ virtue: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l10n.string(.adhkarVirtueLabel))
-                .appFont(.caption, weight: .semibold)
-                .foregroundStyle(theme.accent)
-
-            Text(virtue)
-                .appFont(.footnote)
-                .foregroundStyle(theme.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(AppSpacing.md)
-        .background(theme.accent.opacity(0.08), in: .rect(cornerRadius: AppRadius.md))
-        .accessibilityElement(children: .combine)
-    }
-
-    /// Where the dhikr comes from, printed rather than summarised.
+    /// `× 100` — how many times the book says to say it.
     ///
-    /// This line is the whole reason the corpus stores a citation: the text has not been checked
-    /// against a printed Hisn al-Muslim yet (see `Resources/Corpus/README.md`), so a reader must
-    /// be able to go and look rather than take the app's word for it.
-    private var reference: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l10n.string(.adhkarSourceLabel))
-                .appFont(.caption, weight: .semibold)
-                .foregroundStyle(theme.textSecondary)
-
-            Text(dhikr.reference)
-                .appFont(.caption)
-                .foregroundStyle(theme.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
+    /// On the card as well as on the counter, because the two answer different questions. The
+    /// counter says how many are left *now*; this says what the dhikr asks for, which is the part
+    /// a reader wants to see before they start and again when they page back to it.
+    private var repeatBadge: some View {
+        Text(l10n.string(.adhkarOfTotal, l10n.string(dhikr.repeatCount, grouped: false)))
+            .appFont(.footnote, weight: .semibold)
+            .foregroundStyle(theme.accent)
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, AppSpacing.xs)
+            .background(theme.accent.opacity(0.12), in: .rect(cornerRadius: AppRadius.sm))
     }
 }
 
@@ -146,21 +111,28 @@ struct DhikrCard: View {
     let settingsStore = InMemorySettingsStore()
 
     ScrollView {
-        DhikrCard(
-            dhikr: Dhikr(
-                id: 1,
-                arabicText: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ",
-                translation: "Glory is to Allah and praise is to Him.",
-                transliteration: "Subḥāna-llāhi wa biḥamdih.",
-                reference: "Muslim 2692.",
-                virtue: "Whoever says this one hundred times in a day has his sins forgiven.",
-                repeatCount: 100
-            ),
-            position: 4,
-            counted: 3,
-            showsTranslation: true,
-            showsTransliteration: true
-        )
+        VStack(spacing: 16) {
+            DhikrCard(
+                dhikr: Dhikr(
+                    id: 1017,
+                    arabicText: "((سُبْحَانَ اللَّهِ وَبِحَمْدِهِ)) (مائة مرَّةٍ).",
+                    repeatCount: 100
+                ),
+                position: 17
+            )
+
+            DhikrCard(
+                dhikr: Dhikr(
+                    id: 98001,
+                    arabicText: """
+                        ((بِسْمِ اللَّهِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذِهِ السُّوقِ وَخَيْرَ مَا فِيهَا، \
+                        وَأَعُوذُ بِكَ مِنْ شَرِّهَا وَشَرِّ مَا فِيهَا)).
+                        """,
+                    repeatCount: 1
+                ),
+                textSize: 26
+            )
+        }
         .padding()
     }
     .themed(ThemeManager(settingsStore: settingsStore))

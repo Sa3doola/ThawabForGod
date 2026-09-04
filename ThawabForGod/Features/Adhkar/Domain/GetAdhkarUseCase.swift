@@ -5,7 +5,7 @@
 
 import Foundation
 
-/// What the adhkar screens ask for: the list of categories, and the adhkar in one of them.
+/// What the adhkar screens ask for: the chapters, one chapter by name, and what is inside one.
 ///
 /// A thin composition over the repository, and thin on purpose. It exists so the view model
 /// depends on the feature's own vocabulary rather than on a storage protocol, which is what lets
@@ -22,7 +22,11 @@ nonisolated struct GetAdhkarUseCase: Sendable {
         try await repository.categories()
     }
 
-    func adhkar(in category: AdhkarCategory, language: AppLanguage) async throws -> [Dhikr] {
-        try await repository.adhkar(in: category, language: language)
+    func category(id: String) async throws -> AdhkarCategory? {
+        try await repository.category(id: id)
+    }
+
+    func adhkar(in category: AdhkarCategory) async throws -> [Dhikr] {
+        try await repository.adhkar(in: category)
     }
 }

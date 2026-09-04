@@ -15,8 +15,15 @@ import Foundation
 /// declared before the screens they would open, so shipping either is a change to
 /// `isAvailable` and nothing else.
 nonisolated enum HomeShortcut: String, CaseIterable, Codable, Sendable {
-    case morningAdhkar
-    case eveningAdhkar
+    /// Straight into أذكار الصباح والمساء, the one chapter this shortcut has always meant.
+    ///
+    /// The raw value is still `morningAdhkar`, deliberately: it is what a user's stored
+    /// arrangement holds, and renaming the case without pinning it would move the circle back to
+    /// the end of everybody's grid. The `eveningAdhkar` case that stood beside it is **withdrawn**
+    /// — Hisn al-Muslim has one chapter for both times of day, not two, so the second circle would
+    /// have been a different label on the same destination. A stored preference naming it is
+    /// dropped by `HomeLayout.reconciled(_:)`, the same way a withdrawn section's is.
+    case morningEveningAdhkar = "morningAdhkar"
     case tasbih
     case qibla
     case namesOfAllah
@@ -27,7 +34,7 @@ nonisolated enum HomeShortcut: String, CaseIterable, Codable, Sendable {
     /// neither on Home nor in the editor.
     var isAvailable: Bool {
         switch self {
-        case .morningAdhkar, .eveningAdhkar, .tasbih, .qibla, .namesOfAllah:
+        case .morningEveningAdhkar, .tasbih, .qibla, .namesOfAllah:
             true
         case .islamicCalendar, .hadith:
             false
@@ -45,8 +52,7 @@ nonisolated enum HomeShortcut: String, CaseIterable, Codable, Sendable {
     /// unreachable in practice and stays honest on paper.
     var route: AppRoute? {
         switch self {
-        case .morningAdhkar: .adhkar(.morning)
-        case .eveningAdhkar: .adhkar(.evening)
+        case .morningEveningAdhkar: .adhkar(categoryID: AdhkarCategory.morningAndEveningID)
         case .tasbih: .tasbih
         case .qibla: .qibla
         case .namesOfAllah: .names
@@ -57,13 +63,12 @@ nonisolated enum HomeShortcut: String, CaseIterable, Codable, Sendable {
     /// The label under the circle.
     ///
     /// Reused from the screens themselves wherever those names already stand alone — the tasbih,
-    /// the Qibla, the 99 names. The two adhkar categories are the exception and get labels of
-    /// their own: on their own screen they sit under an "Adhkar" heading and "Morning" is enough,
-    /// but in a grid of unrelated circles "Morning" and "Evening" name nothing at all.
+    /// the Qibla, the 99 names. The adhkar chapter is the exception and gets a label of its own:
+    /// on its own screen it sits under an "Adhkar" heading, but in a grid of unrelated circles
+    /// the heading is not there to lean on, so the label says which adhkar.
     var labelKey: L10nKey {
         switch self {
-        case .morningAdhkar: .homeShortcutMorningAdhkar
-        case .eveningAdhkar: .homeShortcutEveningAdhkar
+        case .morningEveningAdhkar: .homeShortcutMorningEveningAdhkar
         case .tasbih: .tasbihTitle
         case .qibla: .qiblaTitle
         case .namesOfAllah: .namesTitle
@@ -76,8 +81,7 @@ nonisolated enum HomeShortcut: String, CaseIterable, Codable, Sendable {
     /// import — the same trade `Prayer.symbol` and `AppTab.symbol` make.
     var symbol: String {
         switch self {
-        case .morningAdhkar: "sunrise"
-        case .eveningAdhkar: "sunset"
+        case .morningEveningAdhkar: "sun.horizon"
         case .tasbih: "circle.hexagonpath"
         case .qibla: "location.north.line"
         case .namesOfAllah: "sparkles"

@@ -19,10 +19,10 @@ actor StubAdhkarRepository: AdhkarRepositoring {
     private let adhkarResult: Result<[Dhikr], AdhkarStubError>
 
     private(set) var requestedCategories: [AdhkarCategory] = []
-    private(set) var requestedLanguages: [AppLanguage] = []
+    private(set) var requestedIDs: [String] = []
 
     init(
-        categories: Result<[AdhkarCategory], AdhkarStubError> = .success([.morning, .evening]),
+        categories: Result<[AdhkarCategory], AdhkarStubError> = .success([.stub()]),
         adhkar: Result<[Dhikr], AdhkarStubError> = .success([])
     ) {
         self.categoriesResult = categories
@@ -33,33 +33,46 @@ actor StubAdhkarRepository: AdhkarRepositoring {
         try categoriesResult.get()
     }
 
-    func adhkar(in category: AdhkarCategory, language: AppLanguage) throws -> [Dhikr] {
+    func category(id: String) throws -> AdhkarCategory? {
+        requestedIDs.append(id)
+        return try categoriesResult.get().first { $0.id == id }
+    }
+
+    func adhkar(in category: AdhkarCategory) throws -> [Dhikr] {
         requestedCategories.append(category)
-        requestedLanguages.append(language)
         return try adhkarResult.get()
+    }
+}
+
+nonisolated extension AdhkarCategory {
+
+    /// A chapter with everything filled in, so a test only names the field it cares about.
+    static func stub(
+        id: String = "morning-evening",
+        titleArabic: String = "أذكار الصباح والمساء",
+        titleEnglish: String = "Morning & evening",
+        group: AdhkarGroup = .daily,
+        sortOrder: Int = 1,
+        dhikrCount: Int = 24
+    ) -> AdhkarCategory {
+        AdhkarCategory(
+            id: id,
+            titleArabic: titleArabic,
+            titleEnglish: titleEnglish,
+            group: group,
+            sortOrder: sortOrder,
+            dhikrCount: dhikrCount
+        )
     }
 }
 
 nonisolated extension Dhikr {
 
-    /// A dhikr with everything filled in, so a test only names the field it cares about.
     static func stub(
         id: Int = 1,
         arabicText: String = "سُبْحَانَ اللَّهِ",
-        translation: String? = "Glory is to Allah.",
-        transliteration: String? = "Subḥāna-llāh.",
-        reference: String = "Muslim 2692.",
-        virtue: String? = nil,
         repeatCount: Int = 3
     ) -> Dhikr {
-        Dhikr(
-            id: id,
-            arabicText: arabicText,
-            translation: translation,
-            transliteration: transliteration,
-            reference: reference,
-            virtue: virtue,
-            repeatCount: repeatCount
-        )
+        Dhikr(id: id, arabicText: arabicText, repeatCount: repeatCount)
     }
 }

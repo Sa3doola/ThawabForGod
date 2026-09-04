@@ -231,7 +231,7 @@ final class MenuBarController {
             rootView: MenuBarPanelView(
                 viewModel: viewModel,
                 open: { [weak self] link in self?.openInApp(link) },
-                openSettings: { [weak self] in self?.openSettings() },
+                dismissPanel: { [weak self] in self?.dismissPanel() },
                 quit: { NSApp.terminate(nil) }
             )
             .themed(themeManager)
@@ -265,23 +265,28 @@ final class MenuBarController {
         }
     }
 
-    /// The `Settings` scene, which has no public API to open.
+    /// Gets the panel out of the way of a window that is about to open, and brings the app
+    /// forward behind it.
     ///
-    /// Two selectors because Apple renamed the action: `showSettingsWindow:` from Ventura,
-    /// `showPreferencesWindow:` before it. Sent to `nil` so the responder chain finds whoever
-    /// implements it, and neither is a hard dependency — if a future release renames it again the
-    /// button does nothing rather than crashing, and ⌘, still works.
-    private func openSettings() {
+    /// **This is all that is left of what used to be `openSettings()`.** That method sent
+    /// `showSettingsWindow:` — and, failing that, Ventura's `showPreferencesWindow:` — down the
+    /// responder chain, which is the trick every Mac app used to reach a SwiftUI `Settings`
+    /// scene. Neither selector exists any more: `sendAction` returns `false` for both, the loop
+    /// falls through, and the row does nothing at all. The Settings scene is opened by
+    /// `SettingsLink` in `MenuBarPanelView` now, because it is a *view* rather than an action and
+    /// there is no version of it AppKit can call.
+    ///
+    /// What stays here is the half that is genuinely AppKit's. The activation is not optional
+    /// window-fussing: with the Dock icon hidden — which `MenuBarPreferences` lets a reader
+    /// choose — the app is an accessory, and a window it opens does not come to the front on its
+    /// own. It is deferred one hop so the link's own action runs first and the Settings window is
+    /// the frontmost thing there is to raise; activating before it exists would raise the main
+    /// window instead, which is the wrong window and the harder bug to see.
+    private func dismissPanel() {
         popover?.performClose(nil)
-        NSApp.activate(ignoringOtherApps: true)
 
-        let selectors = [
-            Selector(("showSettingsWindow:")),
-            Selector(("showPreferencesWindow:"))
-        ]
-
-        for selector in selectors where NSApp.sendAction(selector, to: nil, from: nil) {
-            return
+        Task { @MainActor in
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 }

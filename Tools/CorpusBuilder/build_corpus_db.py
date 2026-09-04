@@ -4,9 +4,9 @@
 Writes `ThawabForGod/Resources/Corpus/corpus.sqlite`, the app's read-only
 reference content. One file, one table set per feature:
 
-- `adhkar` / `dhikr_category` — the morning and evening adhkar, joined here
-  from the two per-language JSON files published by
-  Seen-Arabic/Morning-And-Evening-Adhkar-DB (MIT).
+- `category_group` / `category` / `dhikr` — Hisn al-Muslim, all 132 chapters,
+  read from `data/adhkar.json` (vendored) and `data/adhkar_categories.json`
+  (this project's own slugs, English chapter titles and grouping).
 - `tasbih_preset` — the five phrases the counter offers, written out below
   rather than sourced, because they are five short universally-known phrases
   and there is no upstream worth depending on for them.
@@ -18,42 +18,131 @@ Nothing is edited by hand. Re-running this script reproduces the database from
 scratch, which is what makes a correction reviewable.
 
 Usage:
-    python3 Tools/CorpusBuilder/build_corpus_db.py           # downloads upstream
-    python3 Tools/CorpusBuilder/build_corpus_db.py --source-dir path/to/checkout
+    python3 Tools/CorpusBuilder/build_corpus_db.py
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sqlite3
 import sys
-import urllib.request
+import unicodedata
 from pathlib import Path
 
-UPSTREAM = "https://raw.githubusercontent.com/Seen-Arabic/Morning-And-Evening-Adhkar-DB/HEAD/{}"
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA = Path(__file__).resolve().parent / "data"
 DEFAULT_OUTPUT = REPO_ROOT / "ThawabForGod" / "Resources" / "Corpus" / "corpus.sqlite"
-DIVINE_NAMES_FILE = Path(__file__).resolve().parent / "data" / "divine_names.json"
+
+ADHKAR_FILE = DATA / "adhkar.json"
+ADHKAR_CATEGORIES_FILE = DATA / "adhkar_categories.json"
+DIVINE_NAMES_FILE = DATA / "divine_names.json"
 
 # Bumped whenever the shape below changes, so a reader can tell two builds apart.
 # 1: adhkar only. 2: adds tasbih_preset. 3: adds divine_name.
-SCHEMA_VERSION = 3
+# 4: the adhkar become the whole of Hisn al-Muslim — 132 chapters, Arabic only,
+#    keyed on a slug rather than on a two-case enum, and grouped.
+SCHEMA_VERSION = 4
 
-# Upstream's `type` column: 0 = both morning and evening, 1 = morning only,
-# 2 = evening only. Expanded here into the category memberships our join table
-# stores, which is what lets a single dhikr appear under both headings.
-CATEGORIES_FOR_TYPE = {
-    0: ("morning", "evening"),
-    1: ("morning",),
-    2: ("evening",),
+# The groups the 132 chapters are gathered into, in the order the app lists them.
+#
+# This grouping is **this project's**, not the book's: Hisn al-Muslim is one flat
+# sequence of chapters, which is fine bound in the hand and unusable as 132 rows
+# on a phone. The sequence itself is not lost — `category.sort_order` is the
+# book's own order, and a group is only how the list is broken up. Which chapter
+# sits in which group is in `data/adhkar_categories.json` so it reads as a data
+# decision that can be argued with, rather than as a `switch` in a view.
+GROUPS = [
+    "daily",
+    "purification",
+    "prayer",
+    "home",
+    "food",
+    "travel",
+    "hajj",
+    "distress",
+    "illness",
+    "nature",
+    "social",
+    "praise",
+]
+
+# Corrections to the vendored text, applied at build time and listed here rather
+# than edited into `data/adhkar.json`, so that the vendored file stays byte-equal
+# to what was downloaded and every departure from it is reviewable as code.
+#
+# All of these are transcription damage from the upstream file's PDF origin, not
+# textual variants: `نز` came out as `تر` under a legacy encoding, which turns
+# منزلا into the non-word مترلا.
+CORRECTIONS = {
+    "مترلا": "منزلا",
+    "مترل": "منزل",
 }
 
-# `id` is the category's stable identifier and matches `AdhkarCategory`'s raw
-# value in Swift. Adding a category later means adding a row here and the rows
-# that belong to it — not editing the enum's storage.
-CATEGORIES = [("morning", 0), ("evening", 1)]
+# The written number that opens a `(… times)` note, and what it means. Used only
+# to *check* the `count` field against the chapter's own prose — nothing here is
+# ever written to the database.
+WRITTEN_COUNTS = {
+    "مرة": 1, "مرَّة": 1, "مرَّةً": 1, "مرةً": 1,
+    "مرتين": 2, "مرَّتين": 2,
+    "ثلاث": 3, "ثلاثَ": 3, "ثلاثا": 3, "ثلاثاً": 3,
+    "أربع": 4, "أربعَ": 4,
+    "خمس": 5, "خمسَ": 5,
+    "سبع": 7, "سبعَ": 7, "سبعاً": 7, "سبعا": 7,
+    "عشر": 10, "عشرَ": 10, "عشراً": 10, "عشرا": 10,
+    "مائة": 100, "مائةَ": 100, "مِائَةَ": 100, "مئة": 100,
+}
+
+SCHEMA = f"""
+PRAGMA user_version = {SCHEMA_VERSION};
+
+CREATE TABLE category_group (
+    id          TEXT PRIMARY KEY,
+    sort_order  INTEGER NOT NULL
+);
+
+CREATE TABLE category (
+    id          TEXT PRIMARY KEY,
+    title_ar    TEXT NOT NULL,
+    title_en    TEXT NOT NULL,
+    group_id    TEXT NOT NULL REFERENCES category_group(id),
+    sort_order  INTEGER NOT NULL
+);
+
+CREATE INDEX index_category_on_group ON category(group_id, sort_order);
+
+CREATE TABLE dhikr (
+    id            INTEGER PRIMARY KEY,
+    category_id   TEXT    NOT NULL REFERENCES category(id),
+    sort_order    INTEGER NOT NULL,
+    arabic_text   TEXT    NOT NULL,
+    repeat_count  INTEGER NOT NULL CHECK (repeat_count > 0)
+);
+
+CREATE INDEX index_dhikr_on_category ON dhikr(category_id, sort_order);
+
+CREATE TABLE tasbih_preset (
+    id              TEXT PRIMARY KEY,
+    arabic_text     TEXT NOT NULL,
+    translation_en  TEXT NOT NULL,
+    target_count    INTEGER NOT NULL CHECK (target_count > 0),
+    sort_order      INTEGER NOT NULL
+);
+
+CREATE TABLE divine_name (
+    id               INTEGER PRIMARY KEY CHECK (id BETWEEN 1 AND 99),
+    arabic           TEXT NOT NULL,
+    transliteration  TEXT NOT NULL,
+    meaning_en       TEXT NOT NULL,
+    -- Deliberately empty for now. Every freely-licensed set of explanations
+    -- found for these names was AI-generated; the column waits for a source
+    -- somebody has actually checked. See the README.
+    explanation_en   TEXT,
+    -- Where the name occurs in the Quran, as chapter:verse citations.
+    reference        TEXT
+);
+"""
 
 # The tasbih presets: id, Arabic, English, target, sort order.
 #
@@ -78,126 +167,156 @@ TASBIH_PRESETS = [
     ("astaghfirullah", "أَسْتَغْفِرُ اللَّهَ", "I seek forgiveness from Allah", 100, 4),
 ]
 
-SCHEMA = f"""
-PRAGMA user_version = {SCHEMA_VERSION};
 
-CREATE TABLE category (
-    id          TEXT PRIMARY KEY,
-    sort_order  INTEGER NOT NULL
-);
-
-CREATE TABLE dhikr (
-    id                  INTEGER PRIMARY KEY,
-    arabic_text         TEXT NOT NULL,
-    translation_en      TEXT NOT NULL,
-    transliteration_en  TEXT,
-    reference_ar        TEXT NOT NULL,
-    reference_en        TEXT NOT NULL,
-    virtue_ar           TEXT,
-    virtue_en           TEXT,
-    repeat_count        INTEGER NOT NULL
-);
-
-CREATE TABLE dhikr_category (
-    dhikr_id     INTEGER NOT NULL REFERENCES dhikr(id),
-    category_id  TEXT    NOT NULL REFERENCES category(id),
-    sort_order   INTEGER NOT NULL,
-    PRIMARY KEY (dhikr_id, category_id)
-);
-
-CREATE INDEX index_dhikr_category_on_category
-    ON dhikr_category(category_id, sort_order);
-
-CREATE TABLE tasbih_preset (
-    id              TEXT PRIMARY KEY,
-    arabic_text     TEXT NOT NULL,
-    translation_en  TEXT NOT NULL,
-    target_count    INTEGER NOT NULL CHECK (target_count > 0),
-    sort_order      INTEGER NOT NULL
-);
-
-CREATE TABLE divine_name (
-    id               INTEGER PRIMARY KEY CHECK (id BETWEEN 1 AND 99),
-    arabic           TEXT NOT NULL,
-    transliteration  TEXT NOT NULL,
-    meaning_en       TEXT NOT NULL,
-    -- Deliberately empty for now. Every freely-licensed set of explanations
-    -- found for these names was AI-generated; the column waits for a source
-    -- somebody has actually checked. See the README.
-    explanation_en   TEXT,
-    -- Where the name occurs in the Quran, as chapter:verse citations.
-    reference        TEXT
-);
-"""
+# MARK: Cleaning
 
 
-def load(name: str, source_dir: Path | None) -> list[dict]:
-    if source_dir is not None:
-        return json.loads((source_dir / name).read_text(encoding="utf-8"))
+def clean(text: str) -> str:
+    """Normalise what the upstream file spells oddly, and nothing else.
 
-    with urllib.request.urlopen(UPSTREAM.format(name), timeout=60) as response:
-        return json.loads(response.read().decode("utf-8"))
+    Three passes, each mechanical:
+
+    - **NFKC**, which folds the Arabic presentation forms the source carries in
+      three of its chapter titles — `اﻟﻤﺠلس` is written with initial/medial
+      glyph codepoints rather than with letters, so it fails every search and
+      every comparison while looking correct on screen. The ornate parentheses
+      `﴿ ﴾` that mark Quranic quotation have no NFKC mapping and survive intact,
+      which is what makes this safe to apply to the text and not only to titles.
+    - **The corrections table above**, which is transcription damage.
+    - **Whitespace**, collapsed to single spaces. The source has runs of two and
+      three where a line broke in the PDF it came from.
+    """
+    text = unicodedata.normalize("NFKC", text)
+    for wrong, right in CORRECTIONS.items():
+        text = text.replace(wrong, right)
+    return re.sub(r"\s+", " ", text).strip()
 
 
-def text_or_none(value: object) -> str | None:
-    """Upstream leaves an absent field as an empty string; SQL wants NULL."""
-    if not isinstance(value, str):
+def stated_count(text: str) -> int | None:
+    """The repeat count the dhikr's own prose gives, where it gives one unambiguously.
+
+    Hisn al-Muslim writes the number in words inside a trailing parenthesis —
+    `(ثلاثَ مرَّاتٍ)`, `(سَبْعَ مَرّاتٍ)`. The upstream file carries a `count`
+    field beside the text, and the two do not always agree; where the prose is
+    unambiguous it is the one that ships, because the prose is the book's own
+    words and the count field is somebody's metadata about them.
+
+    Two conditions, and both were earned by a case that breaks without them:
+
+    - **Every count note in the text must agree.** The morning dhikr `لا إله إلا
+      الله وحده...` is written `(عشرَ مرَّات) ، أَوْ (مرَّةً واحدةً عند الكسل)` —
+      ten times, or once when tired. That is a choice the book offers, not a
+      number to be read off, so it is reported and left alone.
+    - **The last parenthesis in the text must be the note.** The chapter on
+      dreams is a bracketed list of *actions* — spit to the left `(three times)`,
+      seek refuge `(three times)`, tell no one — where the number governs one
+      step rather than the whole. There the trailing parenthesis is prose, so
+      nothing is read.
+
+    Returns `None` where the text says nothing, which is most of them.
+    """
+    groups = re.findall(r"\(([^()]{1,60})\)", text)
+    if not groups:
         return None
-    stripped = value.strip()
-    return stripped or None
+
+    values = [value for value in map(count_note, groups) if value is not None]
+    if not values or len(set(values)) != 1:
+        return None
+
+    # The note that governs the whole dhikr is written at its end.
+    return values[0] if count_note(groups[-1]) is not None else None
 
 
-def required(value: object, field: str, order: object) -> str:
-    text = text_or_none(value)
-    if text is None:
-        raise SystemExit(f"dhikr {order}: required field '{field}' is empty upstream")
-    return text
+def count_note(group: str) -> int | None:
+    """`ثلاثَ مرَّاتٍ` → 3. `صلى الله عليه وسلم` → None."""
+    words = group.split()
+    # A note opens with the number and says مرة/مرات. Without the second half,
+    # `(ثلاثة أيام)` would be read as a repeat count.
+    if not words or not any(word.startswith(("مر", "مَر", "مِر")) for word in words):
+        return None
+
+    stripped = strip_diacritics(words[0])
+    for written, value in WRITTEN_COUNTS.items():
+        if strip_diacritics(written) == stripped:
+            return value
+    return None
 
 
-def insert_adhkar(connection: sqlite3.Connection, arabic: list[dict], english: list[dict]) -> None:
-    by_order_en = {row["order"]: row for row in english}
-    if {row["order"] for row in arabic} != set(by_order_en):
-        raise SystemExit("the two upstream files do not cover the same set of adhkar")
+def strip_diacritics(text: str) -> str:
+    return "".join(c for c in text if not ("ً" <= c <= "ْ"))
+
+
+# MARK: The adhkar
+
+
+def insert_adhkar(connection: sqlite3.Connection) -> list[str]:
+    """Loads Hisn al-Muslim into `category_group` / `category` / `dhikr`.
+
+    Returns the warnings worth printing — none of them fatal, because every one
+    of them is a question about the book rather than about the file.
+    """
+    chapters = json.loads(ADHKAR_FILE.read_text(encoding="utf-8"))
+    metadata = json.loads(ADHKAR_CATEGORIES_FILE.read_text(encoding="utf-8"))
+
+    by_source = {row["source_id"]: row for row in metadata}
+    if sorted(by_source) != sorted(chapter["id"] for chapter in chapters):
+        raise SystemExit("adhkar_categories.json does not cover the same chapters as adhkar.json")
+    if len({row["slug"] for row in metadata}) != len(metadata):
+        raise SystemExit("adhkar_categories.json has a duplicate slug")
+
+    unknown = {row["group"] for row in metadata} - set(GROUPS)
+    if unknown:
+        raise SystemExit(f"adhkar_categories.json names groups this build has no case for: {unknown}")
 
     connection.executemany(
-        "INSERT INTO category (id, sort_order) VALUES (?, ?)", CATEGORIES
+        "INSERT INTO category_group (id, sort_order) VALUES (?, ?)",
+        [(name, order) for order, name in enumerate(GROUPS)],
     )
 
-    for ar in sorted(arabic, key=lambda row: row["order"]):
-        order = ar["order"]
-        en = by_order_en[order]
+    warnings: list[str] = []
 
-        if ar["content"] != en["content"]:
-            raise SystemExit(f"dhikr {order}: Arabic text differs between the two files")
-        if ar["type"] != en["type"]:
-            raise SystemExit(f"dhikr {order}: category differs between the two files")
+    for chapter in sorted(chapters, key=lambda c: c["id"]):
+        row = by_source[chapter["id"]]
+        title = clean(chapter["category"])
+        if not title:
+            raise SystemExit(f"chapter {chapter['id']}: empty title")
 
         connection.execute(
-            """
-            INSERT INTO dhikr (
-                id, arabic_text, translation_en, transliteration_en,
-                reference_ar, reference_en, virtue_ar, virtue_en, repeat_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                order,
-                required(ar["content"], "content", order),
-                required(en.get("translation"), "translation", order),
-                text_or_none(en.get("transliteration")),
-                required(ar.get("source"), "source (ar)", order),
-                required(en.get("source"), "source (en)", order),
-                text_or_none(ar.get("fadl")),
-                text_or_none(en.get("fadl")),
-                int(ar["count"]),
-            ),
+            "INSERT INTO category (id, title_ar, title_en, group_id, sort_order)"
+            " VALUES (?, ?, ?, ?, ?)",
+            (row["slug"], title, row["title_en"].strip(), row["group"], chapter["id"]),
         )
 
-        for category in CATEGORIES_FOR_TYPE[ar["type"]]:
+        if not chapter["array"]:
+            raise SystemExit(f"chapter {chapter['id']}: no adhkar — it would be a row leading nowhere")
+
+        for order, item in enumerate(chapter["array"]):
+            text = clean(item["text"])
+            if not text:
+                raise SystemExit(f"chapter {chapter['id']}, dhikr {item['id']}: empty text")
+
+            count = int(item["count"])
+            if count < 1:
+                raise SystemExit(f"chapter {chapter['id']}, dhikr {item['id']}: count below one")
+
+            written = stated_count(text)
+            if written is not None and written != count:
+                warnings.append(
+                    f"{row['slug']} #{item['id']}: "
+                    f"the text says {written}, the count field said {count} — the text ships"
+                )
+                count = written
+
             connection.execute(
-                "INSERT INTO dhikr_category (dhikr_id, category_id, sort_order)"
-                " VALUES (?, ?, ?)",
-                (order, category, order),
+                "INSERT INTO dhikr (id, category_id, sort_order, arabic_text, repeat_count)"
+                " VALUES (?, ?, ?, ?, ?)",
+                # Derived from the source's own two ids rather than from insertion
+                # order, so a rebuild cannot silently renumber a dhikr that a
+                # bookmark or an activity record is keyed on.
+                (chapter["id"] * 1000 + item["id"], row["slug"], order, text, count),
             )
+
+    return warnings
 
 
 def insert_divine_names(connection: sqlite3.Connection) -> None:
@@ -225,8 +344,8 @@ def insert_divine_names(connection: sqlite3.Connection) -> None:
                 row["arabic"].strip(),
                 row["transliteration"].strip(),
                 row["meaning_en"].strip(),
-                text_or_none(row.get("explanation_en")),
-                text_or_none(row.get("reference")),
+                (row.get("explanation_en") or "").strip() or None,
+                (row.get("reference") or "").strip() or None,
             ),
         )
 
@@ -239,14 +358,14 @@ def insert_tasbih(connection: sqlite3.Connection) -> None:
     )
 
 
-def build(arabic: list[dict], english: list[dict], output: Path) -> None:
+def build(output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.unlink(missing_ok=True)
 
     connection = sqlite3.connect(output)
     try:
         connection.executescript(SCHEMA)
-        insert_adhkar(connection, arabic, english)
+        warnings = insert_adhkar(connection)
         insert_tasbih(connection)
         insert_divine_names(connection)
         connection.commit()
@@ -255,20 +374,24 @@ def build(arabic: list[dict], english: list[dict], output: Path) -> None:
         connection.execute("VACUUM")
         connection.commit()
 
-        report(connection, output)
+        report(connection, output, warnings)
     finally:
         connection.close()
 
 
-def report(connection: sqlite3.Connection, output: Path) -> None:
+def report(connection: sqlite3.Connection, output: Path, warnings: list[str]) -> None:
+    categories = connection.execute("SELECT count(*) FROM category").fetchone()[0]
     total = connection.execute("SELECT count(*) FROM dhikr").fetchone()[0]
     rows = connection.execute(
         """
-        SELECT category.id, count(dhikr_category.dhikr_id)
-        FROM category
-        LEFT JOIN dhikr_category ON dhikr_category.category_id = category.id
-        GROUP BY category.id
-        ORDER BY category.sort_order
+        SELECT category_group.id,
+               count(DISTINCT category.id),
+               count(dhikr.id)
+        FROM category_group
+        LEFT JOIN category ON category.group_id = category_group.id
+        LEFT JOIN dhikr ON dhikr.category_id = category.id
+        GROUP BY category_group.id
+        ORDER BY category_group.sort_order
         """
     ).fetchall()
     presets = connection.execute("SELECT count(*) FROM tasbih_preset").fetchone()[0]
@@ -276,28 +399,22 @@ def report(connection: sqlite3.Connection, output: Path) -> None:
 
     print(f"wrote {output.relative_to(REPO_ROOT)} ({output.stat().st_size} bytes)")
     print(f"  schema version {SCHEMA_VERSION}")
-    print(f"  {total} adhkar")
-    for name, count in rows:
-        print(f"    {name}: {count}")
+    print(f"  {categories} categories, {total} adhkar")
+    for name, chapters, adhkar in rows:
+        print(f"    {name}: {chapters} categories, {adhkar} adhkar")
     print(f"  {presets} tasbih presets")
     print(f"  {names} divine names")
+
+    if warnings:
+        print(f"\n  {len(warnings)} repeat counts taken from the text rather than the count field:")
+        for warning in warnings:
+            print(f"    {warning}")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--source-dir",
-        type=Path,
-        help="a local checkout of the adhkar repo; downloads from GitHub when omitted",
-    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    arguments = parser.parse_args()
-
-    build(
-        load("ar.json", arguments.source_dir),
-        load("en.json", arguments.source_dir),
-        arguments.output,
-    )
+    build(parser.parse_args().output)
     return 0
 
 

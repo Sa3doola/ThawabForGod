@@ -48,7 +48,7 @@ extension AppContainer {
             adhkarCoordinator.closeCategory()
 
         case .adhkarCategory(let period):
-            open(AppRoute.adhkar(AdhkarCategory(period)))
+            open(AppRoute.adhkar(categoryID: period.categoryID))
 
         case .quran:
             open(AppRoute.quran)
@@ -69,16 +69,18 @@ extension AppContainer {
     }
 }
 
-private nonisolated extension AdhkarCategory {
-    /// The link's vocabulary, resolved into the feature's.
+private nonisolated extension DeepLink.Period {
+    /// The link's vocabulary, resolved into the corpus's.
     ///
-    /// Total by construction — every `DeepLink.Period` names a category that exists — which is
-    /// what lets `open(_:)` above stay free of optionals. The day the corpus grows a category,
-    /// this is where the two lists are reconciled and the compiler names the file.
-    init(_ period: DeepLink.Period) {
-        switch period {
-        case .morning: self = .morning
-        case .evening: self = .evening
-        }
-    }
+    /// **Both periods land on the same chapter, and that is the corpus telling the truth.** The
+    /// link was written when the bundled data was one small set split into a morning list and an
+    /// evening one. Hisn al-Muslim does not make that split: it has a single chapter,
+    /// أذكار الصباح والمساء, whose adhkar carry their own "and in the evening say…" notes, and
+    /// splitting it in two would mean editing the book's text.
+    ///
+    /// The link keeps both cases anyway, because it is a *promise* — iOS caches shortcut items
+    /// and widget URLs across builds, so `noor://adhkar?period=evening` is out in the world and
+    /// has to keep landing somewhere right. This is the one place the two vocabularies are
+    /// reconciled, which is exactly what `AppContainer.open(_:)` exists for.
+    var categoryID: String { AdhkarCategory.morningAndEveningID }
 }

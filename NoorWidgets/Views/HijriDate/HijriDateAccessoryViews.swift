@@ -31,12 +31,7 @@ struct HijriDateAccessoryInlineView: View {
     private var l10n: WidgetLocalization { WidgetLocalization(entry.style) }
 
     var body: some View {
-        Text(
-            HijriDateText.combined(
-                hijri: l10n.hijri(entry.hijri),
-                gregorian: l10n.shortDate(entry.date)
-            )
-        )
+        Text(l10n.hijri(entry.hijri))
     }
 }
 
@@ -92,8 +87,6 @@ struct HijriDateAccessoryCircularView: View {
         .lineLimit(1)
         .minimumScaleFactor(0.5)
         .padding(2)
-        .background { AccessoryWidgetBackground() }
-        .clipShape(.circle)
         // "10, Muharram" one after the other is not a sentence, and the whole date is what a
         // reader asked for when they put a date on their Lock Screen.
         .accessibilityElement(children: .ignore)

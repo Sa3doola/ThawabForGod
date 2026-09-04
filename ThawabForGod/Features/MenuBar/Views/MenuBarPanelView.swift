@@ -20,7 +20,12 @@ struct MenuBarPanelView: View {
     /// Everything that leaves the panel. Supplied by `MenuBarController`, because activating the
     /// app and ordering a window forward is AppKit's business and not a view's.
     let open: (DeepLink) -> Void
-    let openSettings: () -> Void
+
+    /// Closes the popover and brings the app forward. **Not** an "open settings" closure: the
+    /// Settings scene is opened by `SettingsLink` in the row itself, because SwiftUI owns that
+    /// scene and gives AppKit no supported way in — see `settingsRow`.
+    let dismissPanel: () -> Void
+
     let quit: () -> Void
 
     @Environment(LocalizationManager.self) private var l10n
@@ -188,7 +193,7 @@ struct MenuBarPanelView: View {
                 open(.quran)
             }
 
-            actionRow(label: l10n.string(.settingsTitle), symbol: "gearshape", shortcut: ",", modifiers: .command, action: openSettings)
+            settingsRow
 
             actionRow(label: l10n.string(.menuBarQuit), symbol: "power", shortcut: "Q", modifiers: .command, action: quit)
         }
@@ -212,31 +217,76 @@ struct MenuBarPanelView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            HStack(spacing: AppSpacing.sm) {
-                Image(systemName: symbol)
-                    .appFont(.footnote)
-                    .foregroundStyle(tint ?? theme.textSecondary)
-                    .frame(width: 16)
-
-                Text(label)
-                    .appFont(.callout)
-                    .foregroundStyle(theme.textPrimary)
-                    .lineLimit(1)
-
-                Spacer(minLength: AppSpacing.sm)
-
-                Text(hint(shortcut, modifiers))
-                    .appFont(.caption)
-                    .foregroundStyle(theme.textSecondary)
-            }
-            .padding(.horizontal, AppSpacing.sm)
-            .padding(.vertical, AppSpacing.xs)
-            .contentShape(.rect(cornerRadius: AppRadius.sm))
+            rowLabel(label: label, symbol: symbol, tint: tint, shortcut: shortcut, modifiers: modifiers)
         }
         .buttonStyle(.plain)
         .keyboardShortcut(shortcut, modifiers: modifiers)
         .appHover(radius: AppRadius.sm)
         .accessibilityLabel(label)
+    }
+
+    /// The Settings row, and **the one row that is not a `Button`.**
+    ///
+    /// The Settings scene belongs to SwiftUI and has no AppKit door. This row used to send
+    /// `showSettingsWindow:` down the responder chain — the trick every Mac app used before
+    /// Sonoma — and it now does nothing at all: the selector is gone, `sendAction` returns
+    /// `false`, and the loop that tried both spellings fell through in silence. Xcode says so as
+    /// a warning on the call, which is the only reason a button that quietly stopped working
+    /// would ever be noticed.
+    ///
+    /// `SettingsLink` is the replacement, and it is a *view* rather than an action — so this has
+    /// to be built here in SwiftUI rather than handed to `MenuBarController` as a closure. What
+    /// the controller still owns is the part that is genuinely AppKit's: closing the popover and
+    /// bringing the app forward, which is `dismissPanel`.
+    ///
+    /// The dismissal rides a `simultaneousGesture` rather than replacing the link's own action,
+    /// because `SettingsLink` does not expose one. It fires alongside, not instead.
+    private var settingsRow: some View {
+        SettingsLink {
+            rowLabel(
+                label: l10n.string(.settingsTitle),
+                symbol: "gearshape",
+                tint: nil,
+                shortcut: ",",
+                modifiers: .command
+            )
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(",", modifiers: .command)
+        .appHover(radius: AppRadius.sm)
+        .accessibilityLabel(l10n.string(.settingsTitle))
+        .simultaneousGesture(TapGesture().onEnded { dismissPanel() })
+    }
+
+    /// The inside of a row, shared by the buttons and by `SettingsLink` — which needs the same
+    /// thing drawn in a view it builds itself.
+    private func rowLabel(
+        label: String,
+        symbol: String,
+        tint: Color?,
+        shortcut: KeyEquivalent,
+        modifiers: EventModifiers
+    ) -> some View {
+        HStack(spacing: AppSpacing.sm) {
+            Image(systemName: symbol)
+                .appFont(.footnote)
+                .foregroundStyle(tint ?? theme.textSecondary)
+                .frame(width: 16)
+
+            Text(label)
+                .appFont(.callout)
+                .foregroundStyle(theme.textPrimary)
+                .lineLimit(1)
+
+            Spacer(minLength: AppSpacing.sm)
+
+            Text(hint(shortcut, modifiers))
+                .appFont(.caption)
+                .foregroundStyle(theme.textSecondary)
+        }
+        .padding(.horizontal, AppSpacing.sm)
+        .padding(.vertical, AppSpacing.xs)
+        .contentShape(.rect(cornerRadius: AppRadius.sm))
     }
 
     /// `⌘K` — built from the same two values the binding uses, so the hint cannot drift from what

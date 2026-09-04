@@ -47,8 +47,9 @@ final class HomeViewModel {
     ///
     /// The name is resolved *here* rather than stored with the activity, because storing it would
     /// freeze the language and the digit system at the moment of writing — and both are choices
-    /// the user makes later and changes freely. `nil` where the kind's own title already says
-    /// everything: an adhkar category names itself through a localization key.
+    /// the user makes later and changes freely. `nil` where the corpus could not answer — a
+    /// verse, chapter or preset that is no longer in it — and the chip falls back to the
+    /// numbers alone rather than to a blank.
     struct RecentActivityItem: Equatable, Identifiable {
         let activity: RecentActivity
         let subject: String?
@@ -135,6 +136,7 @@ final class HomeViewModel {
     @ObservationIgnored private let quranProgress: QuranProgressUseCase?
     @ObservationIgnored private let quran: GetQuranUseCase?
     @ObservationIgnored private let tasbih: TasbihUseCase?
+    @ObservationIgnored private let adhkar: GetAdhkarUseCase?
     @ObservationIgnored private let recentActivity: RecentActivityUseCase?
     @ObservationIgnored private let tracker: PrayerTrackerUseCase?
     /// Where the times are being computed for — the seeded point until a live fix replaces it.
@@ -198,6 +200,7 @@ final class HomeViewModel {
         quranProgress: QuranProgressUseCase? = nil,
         quran: GetQuranUseCase? = nil,
         tasbih: TasbihUseCase? = nil,
+        adhkar: GetAdhkarUseCase? = nil,
         recentActivity: RecentActivityUseCase? = nil,
         tracker: PrayerTrackerUseCase? = nil,
         clock: any ClockService = SystemClockService(),
@@ -208,6 +211,7 @@ final class HomeViewModel {
         self.quranProgress = quranProgress
         self.quran = quran
         self.tasbih = tasbih
+        self.adhkar = adhkar
         self.recentActivity = recentActivity
         self.tracker = tracker
         self.coordinates = coordinates
@@ -384,9 +388,11 @@ final class HomeViewModel {
             return try? await quran.surah(reference.surah)?.arabicName
 
         case .adhkar:
-            // The category names itself through a localization key, which the chip resolves in
-            // the language it is being drawn in rather than the one it was recorded in.
-            return nil
+            // The chapter titles now live in the corpus rather than in the string catalog, so
+            // the chip's name is a read like the Quran's and the tasbih's. In the language the
+            // chip is being drawn in, not the one the activity was recorded in.
+            guard let adhkar, let id = activity.adhkarCategoryID else { return nil }
+            return try? await adhkar.category(id: id)?.title(in: .current())
 
         case .tasbih:
             guard let tasbih, let id = activity.tasbihDhikrID else { return nil }

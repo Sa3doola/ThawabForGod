@@ -1,0 +1,794 @@
+[
+ {
+  "source_id": 1,
+  "slug": "morning-evening",
+  "title_en": "Morning & evening",
+  "group": "daily"
+ },
+ {
+  "source_id": 2,
+  "slug": "sleep",
+  "title_en": "Before sleeping",
+  "group": "daily"
+ },
+ {
+  "source_id": 3,
+  "slug": "waking",
+  "title_en": "On waking",
+  "group": "daily"
+ },
+ {
+  "source_id": 4,
+  "slug": "toilet-entering",
+  "title_en": "Entering the toilet",
+  "group": "purification"
+ },
+ {
+  "source_id": 5,
+  "slug": "toilet-leaving",
+  "title_en": "Leaving the toilet",
+  "group": "purification"
+ },
+ {
+  "source_id": 6,
+  "slug": "wudu-before",
+  "title_en": "Before ablution",
+  "group": "purification"
+ },
+ {
+  "source_id": 7,
+  "slug": "wudu-after",
+  "title_en": "After ablution",
+  "group": "purification"
+ },
+ {
+  "source_id": 8,
+  "slug": "home-leaving",
+  "title_en": "Leaving the home",
+  "group": "home"
+ },
+ {
+  "source_id": 9,
+  "slug": "home-entering",
+  "title_en": "Entering the home",
+  "group": "home"
+ },
+ {
+  "source_id": 10,
+  "slug": "mosque-going",
+  "title_en": "Going to the mosque",
+  "group": "prayer"
+ },
+ {
+  "source_id": 11,
+  "slug": "mosque-entering",
+  "title_en": "Entering the mosque",
+  "group": "prayer"
+ },
+ {
+  "source_id": 12,
+  "slug": "mosque-leaving",
+  "title_en": "Leaving the mosque",
+  "group": "prayer"
+ },
+ {
+  "source_id": 13,
+  "slug": "adhan",
+  "title_en": "The call to prayer",
+  "group": "prayer"
+ },
+ {
+  "source_id": 14,
+  "slug": "clothing-wearing",
+  "title_en": "Putting on a garment",
+  "group": "home"
+ },
+ {
+  "source_id": 15,
+  "slug": "clothing-new",
+  "title_en": "Putting on a new garment",
+  "group": "home"
+ },
+ {
+  "source_id": 16,
+  "slug": "clothing-new-for-another",
+  "title_en": "For someone wearing a new garment",
+  "group": "home"
+ },
+ {
+  "source_id": 17,
+  "slug": "clothing-removing",
+  "title_en": "Taking off a garment",
+  "group": "home"
+ },
+ {
+  "source_id": 18,
+  "slug": "prayer-opening",
+  "title_en": "Opening the prayer",
+  "group": "prayer"
+ },
+ {
+  "source_id": 19,
+  "slug": "prayer-ruku",
+  "title_en": "In bowing",
+  "group": "prayer"
+ },
+ {
+  "source_id": 20,
+  "slug": "prayer-rising-from-ruku",
+  "title_en": "Rising from bowing",
+  "group": "prayer"
+ },
+ {
+  "source_id": 21,
+  "slug": "prayer-sujud",
+  "title_en": "In prostration",
+  "group": "prayer"
+ },
+ {
+  "source_id": 22,
+  "slug": "prayer-between-prostrations",
+  "title_en": "Between the two prostrations",
+  "group": "prayer"
+ },
+ {
+  "source_id": 23,
+  "slug": "prayer-sujud-tilawah",
+  "title_en": "The prostration of recitation",
+  "group": "prayer"
+ },
+ {
+  "source_id": 24,
+  "slug": "prayer-tashahhud",
+  "title_en": "The tashahhud",
+  "group": "prayer"
+ },
+ {
+  "source_id": 25,
+  "slug": "prayer-salawat",
+  "title_en": "Blessings on the Prophet after the tashahhud",
+  "group": "prayer"
+ },
+ {
+  "source_id": 26,
+  "slug": "prayer-before-salam",
+  "title_en": "After the final tashahhud, before the salam",
+  "group": "prayer"
+ },
+ {
+  "source_id": 27,
+  "slug": "prayer-after-salam",
+  "title_en": "After the prayer",
+  "group": "prayer"
+ },
+ {
+  "source_id": 28,
+  "slug": "istikhara",
+  "title_en": "The prayer of guidance (istikhara)",
+  "group": "prayer"
+ },
+ {
+  "source_id": 29,
+  "slug": "night-turning",
+  "title_en": "Turning over during the night",
+  "group": "daily"
+ },
+ {
+  "source_id": 30,
+  "slug": "night-fright",
+  "title_en": "Fright in sleep, and loneliness",
+  "group": "daily"
+ },
+ {
+  "source_id": 31,
+  "slug": "dreams",
+  "title_en": "On seeing a dream",
+  "group": "daily"
+ },
+ {
+  "source_id": 32,
+  "slug": "witr-qunut",
+  "title_en": "The qunut of witr",
+  "group": "prayer"
+ },
+ {
+  "source_id": 33,
+  "slug": "witr-after",
+  "title_en": "After the witr prayer",
+  "group": "prayer"
+ },
+ {
+  "source_id": 34,
+  "slug": "anxiety-grief",
+  "title_en": "Anxiety and grief",
+  "group": "distress"
+ },
+ {
+  "source_id": 35,
+  "slug": "distress-severe",
+  "title_en": "Severe distress",
+  "group": "distress"
+ },
+ {
+  "source_id": 36,
+  "slug": "meeting-enemy",
+  "title_en": "Meeting an enemy or a ruler",
+  "group": "distress"
+ },
+ {
+  "source_id": 37,
+  "slug": "fear-of-ruler",
+  "title_en": "Fearing a ruler's injustice",
+  "group": "distress"
+ },
+ {
+  "source_id": 38,
+  "slug": "against-an-enemy",
+  "title_en": "Against an enemy",
+  "group": "distress"
+ },
+ {
+  "source_id": 39,
+  "slug": "fear-of-people",
+  "title_en": "Fearing a people",
+  "group": "distress"
+ },
+ {
+  "source_id": 40,
+  "slug": "doubt-in-faith",
+  "title_en": "Doubt in faith",
+  "group": "distress"
+ },
+ {
+  "source_id": 41,
+  "slug": "settling-debt",
+  "title_en": "Settling a debt",
+  "group": "distress"
+ },
+ {
+  "source_id": 42,
+  "slug": "whispering-in-prayer",
+  "title_en": "Whispering during prayer and recitation",
+  "group": "distress"
+ },
+ {
+  "source_id": 43,
+  "slug": "difficult-matter",
+  "title_en": "When a matter becomes difficult",
+  "group": "distress"
+ },
+ {
+  "source_id": 44,
+  "slug": "after-a-sin",
+  "title_en": "After committing a sin",
+  "group": "distress"
+ },
+ {
+  "source_id": 45,
+  "slug": "repelling-satan",
+  "title_en": "Repelling Satan and his whisperings",
+  "group": "distress"
+ },
+ {
+  "source_id": 46,
+  "slug": "unwanted-outcome",
+  "title_en": "When something unwanted happens",
+  "group": "distress"
+ },
+ {
+  "source_id": 47,
+  "slug": "newborn-congratulation",
+  "title_en": "Congratulating a new parent, and the reply",
+  "group": "social"
+ },
+ {
+  "source_id": 48,
+  "slug": "protecting-children",
+  "title_en": "Seeking protection for children",
+  "group": "social"
+ },
+ {
+  "source_id": 49,
+  "slug": "visiting-the-sick",
+  "title_en": "For the sick, when visiting them",
+  "group": "illness"
+ },
+ {
+  "source_id": 50,
+  "slug": "visiting-the-sick-virtue",
+  "title_en": "The merit of visiting the sick",
+  "group": "illness"
+ },
+ {
+  "source_id": 51,
+  "slug": "despairing-of-life",
+  "title_en": "The sick who despair of life",
+  "group": "illness"
+ },
+ {
+  "source_id": 52,
+  "slug": "the-dying",
+  "title_en": "Prompting the dying",
+  "group": "illness"
+ },
+ {
+  "source_id": 53,
+  "slug": "calamity",
+  "title_en": "On being struck by a calamity",
+  "group": "illness"
+ },
+ {
+  "source_id": 54,
+  "slug": "closing-the-eyes",
+  "title_en": "Closing the eyes of the deceased",
+  "group": "illness"
+ },
+ {
+  "source_id": 55,
+  "slug": "funeral-prayer",
+  "title_en": "For the deceased in the funeral prayer",
+  "group": "illness"
+ },
+ {
+  "source_id": 56,
+  "slug": "funeral-prayer-child",
+  "title_en": "For a child in the funeral prayer",
+  "group": "illness"
+ },
+ {
+  "source_id": 57,
+  "slug": "condolence",
+  "title_en": "Offering condolence",
+  "group": "illness"
+ },
+ {
+  "source_id": 58,
+  "slug": "placing-in-grave",
+  "title_en": "Placing the deceased in the grave",
+  "group": "illness"
+ },
+ {
+  "source_id": 59,
+  "slug": "after-burial",
+  "title_en": "After the burial",
+  "group": "illness"
+ },
+ {
+  "source_id": 60,
+  "slug": "visiting-graves",
+  "title_en": "Visiting graves",
+  "group": "illness"
+ },
+ {
+  "source_id": 61,
+  "slug": "wind",
+  "title_en": "The wind",
+  "group": "nature"
+ },
+ {
+  "source_id": 62,
+  "slug": "thunder",
+  "title_en": "Thunder",
+  "group": "nature"
+ },
+ {
+  "source_id": 63,
+  "slug": "seeking-rain",
+  "title_en": "Seeking rain",
+  "group": "nature"
+ },
+ {
+  "source_id": 64,
+  "slug": "rain-falling",
+  "title_en": "When the rain falls",
+  "group": "nature"
+ },
+ {
+  "source_id": 65,
+  "slug": "rain-after",
+  "title_en": "After the rain",
+  "group": "nature"
+ },
+ {
+  "source_id": 66,
+  "slug": "seeking-clear-weather",
+  "title_en": "Asking for the rain to stop",
+  "group": "nature"
+ },
+ {
+  "source_id": 67,
+  "slug": "new-moon",
+  "title_en": "Sighting the new moon",
+  "group": "nature"
+ },
+ {
+  "source_id": 68,
+  "slug": "breaking-fast",
+  "title_en": "Breaking the fast",
+  "group": "food"
+ },
+ {
+  "source_id": 69,
+  "slug": "before-eating",
+  "title_en": "Before eating",
+  "group": "food"
+ },
+ {
+  "source_id": 70,
+  "slug": "after-eating",
+  "title_en": "After eating",
+  "group": "food"
+ },
+ {
+  "source_id": 71,
+  "slug": "guest-for-host",
+  "title_en": "A guest's supplication for the host",
+  "group": "food"
+ },
+ {
+  "source_id": 72,
+  "slug": "hinting-for-food",
+  "title_en": "Hinting for food or drink",
+  "group": "food"
+ },
+ {
+  "source_id": 73,
+  "slug": "breaking-fast-as-guest",
+  "title_en": "Breaking the fast in someone's home",
+  "group": "food"
+ },
+ {
+  "source_id": 74,
+  "slug": "fasting-at-a-meal",
+  "title_en": "Fasting when food is served",
+  "group": "food"
+ },
+ {
+  "source_id": 75,
+  "slug": "fasting-when-insulted",
+  "title_en": "The fasting person, when insulted",
+  "group": "food"
+ },
+ {
+  "source_id": 76,
+  "slug": "first-fruit",
+  "title_en": "Seeing the season's first fruit",
+  "group": "food"
+ },
+ {
+  "source_id": 77,
+  "slug": "sneezing",
+  "title_en": "Sneezing",
+  "group": "social"
+ },
+ {
+  "source_id": 78,
+  "slug": "sneezing-non-muslim",
+  "title_en": "Replying to a non-Muslim who sneezes",
+  "group": "social"
+ },
+ {
+  "source_id": 79,
+  "slug": "newly-married",
+  "title_en": "For someone newly married",
+  "group": "social"
+ },
+ {
+  "source_id": 80,
+  "slug": "marriage-and-purchase",
+  "title_en": "On marrying, and on buying an animal",
+  "group": "social"
+ },
+ {
+  "source_id": 81,
+  "slug": "before-intimacy",
+  "title_en": "Before intimacy",
+  "group": "social"
+ },
+ {
+  "source_id": 82,
+  "slug": "anger",
+  "title_en": "Anger",
+  "group": "distress"
+ },
+ {
+  "source_id": 83,
+  "slug": "seeing-the-afflicted",
+  "title_en": "Seeing someone afflicted",
+  "group": "social"
+ },
+ {
+  "source_id": 84,
+  "slug": "in-a-gathering",
+  "title_en": "In a gathering",
+  "group": "social"
+ },
+ {
+  "source_id": 85,
+  "slug": "gathering-expiation",
+  "title_en": "The expiation of a gathering",
+  "group": "social"
+ },
+ {
+  "source_id": 86,
+  "slug": "reply-forgiveness",
+  "title_en": "Replying to “may Allah forgive you”",
+  "group": "social"
+ },
+ {
+  "source_id": 87,
+  "slug": "reply-kindness",
+  "title_en": "For someone who does you a kindness",
+  "group": "social"
+ },
+ {
+  "source_id": 88,
+  "slug": "protection-from-dajjal",
+  "title_en": "Protection from the Dajjal",
+  "group": "distress"
+ },
+ {
+  "source_id": 89,
+  "slug": "reply-love",
+  "title_en": "Replying to “I love you for Allah’s sake”",
+  "group": "social"
+ },
+ {
+  "source_id": 90,
+  "slug": "reply-offered-wealth",
+  "title_en": "For someone who offers you their wealth",
+  "group": "social"
+ },
+ {
+  "source_id": 91,
+  "slug": "repaying-a-loan",
+  "title_en": "For a lender, when repaying",
+  "group": "social"
+ },
+ {
+  "source_id": 92,
+  "slug": "fear-of-shirk",
+  "title_en": "Fearing shirk",
+  "group": "distress"
+ },
+ {
+  "source_id": 93,
+  "slug": "reply-blessing",
+  "title_en": "Replying to “may Allah bless you”",
+  "group": "social"
+ },
+ {
+  "source_id": 94,
+  "slug": "ill-omens",
+  "title_en": "Disliking bad omens",
+  "group": "distress"
+ },
+ {
+  "source_id": 95,
+  "slug": "mounting",
+  "title_en": "Mounting a ride",
+  "group": "travel"
+ },
+ {
+  "source_id": 96,
+  "slug": "travel",
+  "title_en": "Travelling",
+  "group": "travel"
+ },
+ {
+  "source_id": 97,
+  "slug": "entering-a-town",
+  "title_en": "Entering a town or village",
+  "group": "travel"
+ },
+ {
+  "source_id": 98,
+  "slug": "entering-the-market",
+  "title_en": "Entering the market",
+  "group": "travel"
+ },
+ {
+  "source_id": 99,
+  "slug": "mount-stumbles",
+  "title_en": "When the mount stumbles",
+  "group": "travel"
+ },
+ {
+  "source_id": 100,
+  "slug": "traveller-for-resident",
+  "title_en": "A traveller’s supplication for those staying",
+  "group": "travel"
+ },
+ {
+  "source_id": 101,
+  "slug": "resident-for-traveller",
+  "title_en": "For someone setting out",
+  "group": "travel"
+ },
+ {
+  "source_id": 102,
+  "slug": "travel-takbir",
+  "title_en": "Takbir and tasbih along the way",
+  "group": "travel"
+ },
+ {
+  "source_id": 103,
+  "slug": "traveller-at-dawn",
+  "title_en": "The traveller at dawn",
+  "group": "travel"
+ },
+ {
+  "source_id": 104,
+  "slug": "stopping-somewhere",
+  "title_en": "Stopping at a place, travelling or not",
+  "group": "travel"
+ },
+ {
+  "source_id": 105,
+  "slug": "returning-from-travel",
+  "title_en": "Returning from a journey",
+  "group": "travel"
+ },
+ {
+  "source_id": 106,
+  "slug": "good-or-bad-news",
+  "title_en": "On news that pleases or displeases",
+  "group": "social"
+ },
+ {
+  "source_id": 107,
+  "slug": "salawat-virtue",
+  "title_en": "The merit of blessings on the Prophet",
+  "group": "praise"
+ },
+ {
+  "source_id": 108,
+  "slug": "spreading-salam",
+  "title_en": "Spreading the greeting of peace",
+  "group": "social"
+ },
+ {
+  "source_id": 109,
+  "slug": "salam-non-muslim",
+  "title_en": "Returning a non-Muslim’s greeting",
+  "group": "social"
+ },
+ {
+  "source_id": 110,
+  "slug": "cockerel-and-donkey",
+  "title_en": "Hearing a cockerel or a donkey",
+  "group": "nature"
+ },
+ {
+  "source_id": 111,
+  "slug": "dogs-at-night",
+  "title_en": "Dogs barking at night",
+  "group": "nature"
+ },
+ {
+  "source_id": 112,
+  "slug": "someone-you-insulted",
+  "title_en": "For someone you have insulted",
+  "group": "social"
+ },
+ {
+  "source_id": 113,
+  "slug": "praising-someone",
+  "title_en": "When praising another",
+  "group": "social"
+ },
+ {
+  "source_id": 114,
+  "slug": "when-praised",
+  "title_en": "When you are praised",
+  "group": "social"
+ },
+ {
+  "source_id": 115,
+  "slug": "talbiyah",
+  "title_en": "The talbiyah in hajj and umrah",
+  "group": "hajj"
+ },
+ {
+  "source_id": 116,
+  "slug": "black-stone-takbir",
+  "title_en": "Takbir at the Black Stone",
+  "group": "hajj"
+ },
+ {
+  "source_id": 117,
+  "slug": "between-the-two-corners",
+  "title_en": "Between the Yamani corner and the Black Stone",
+  "group": "hajj"
+ },
+ {
+  "source_id": 118,
+  "slug": "safa-and-marwah",
+  "title_en": "Standing on Safa and Marwah",
+  "group": "hajj"
+ },
+ {
+  "source_id": 119,
+  "slug": "day-of-arafah",
+  "title_en": "The Day of Arafah",
+  "group": "hajj"
+ },
+ {
+  "source_id": 120,
+  "slug": "mashar-al-haram",
+  "title_en": "At the Sacred Monument",
+  "group": "hajj"
+ },
+ {
+  "source_id": 121,
+  "slug": "stoning-the-jamarat",
+  "title_en": "Stoning the jamarat",
+  "group": "hajj"
+ },
+ {
+  "source_id": 122,
+  "slug": "wonder-and-delight",
+  "title_en": "Wonder, and welcome news",
+  "group": "social"
+ },
+ {
+  "source_id": 123,
+  "slug": "on-glad-news",
+  "title_en": "On something that gladdens you",
+  "group": "social"
+ },
+ {
+  "source_id": 124,
+  "slug": "bodily-pain",
+  "title_en": "Feeling pain in the body",
+  "group": "illness"
+ },
+ {
+  "source_id": 125,
+  "slug": "fear-of-evil-eye",
+  "title_en": "Fearing one’s own evil eye",
+  "group": "distress"
+ },
+ {
+  "source_id": 126,
+  "slug": "sudden-fright",
+  "title_en": "Sudden fright",
+  "group": "distress"
+ },
+ {
+  "source_id": 127,
+  "slug": "slaughtering",
+  "title_en": "When slaughtering",
+  "group": "food"
+ },
+ {
+  "source_id": 128,
+  "slug": "repelling-devils",
+  "title_en": "Repelling the plots of devils",
+  "group": "distress"
+ },
+ {
+  "source_id": 129,
+  "slug": "repentance",
+  "title_en": "Seeking forgiveness and repentance",
+  "group": "praise"
+ },
+ {
+  "source_id": 130,
+  "slug": "tasbih-virtue",
+  "title_en": "The merit of tasbih, tahmid, tahlil and takbir",
+  "group": "praise"
+ },
+ {
+  "source_id": 131,
+  "slug": "how-the-prophet-made-tasbih",
+  "title_en": "How the Prophet made tasbih",
+  "group": "praise"
+ },
+ {
+  "source_id": 132,
+  "slug": "good-manners",
+  "title_en": "Kinds of good, and comprehensive manners",
+  "group": "praise"
+ }
+]

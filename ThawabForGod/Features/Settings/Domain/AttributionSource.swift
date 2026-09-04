@@ -7,7 +7,7 @@ import Foundation
 
 /// One bundled data set or dependency, and where it came from.
 ///
-/// The app ships other people's work — an MIT-licensed adhkar collection, two libraries, a list
+/// The app ships other people's work — a transcription of Hisn al-Muslim, two libraries, a list
 /// of the divine names compiled from public sources — and saying so in the app rather than only
 /// in a repository README is part of using it. This is that list, as data.
 ///
@@ -64,9 +64,13 @@ nonisolated extension AttributionSource {
             id: "adhkar",
             titleKey: .sourceAdhkarTitle,
             attributionKey: .sourceAdhkarAttribution,
-            licenceKey: .licenceMIT,
+            // Unsettled rather than MIT, and that is a downgrade worth noticing. The MIT-licensed
+            // 34-row data set this replaced granted redistribution outright; the transcription of
+            // the whole book that ships now is published without a licence statement, as most
+            // copies of it are. See `Resources/Corpus/README.md` — it needs settling before V1.
+            licenceKey: .licenceUnsettled,
             noteKey: .sourceAdhkarNote,
-            url: URL(string: "https://github.com/Seen-Arabic/Morning-And-Evening-Adhkar-DB")!
+            url: URL(string: "https://hisnmuslim.com")!
         ),
         AttributionSource(
             id: "names",

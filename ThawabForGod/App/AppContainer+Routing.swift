@@ -31,9 +31,9 @@ extension AppContainer {
             router.selectedTab = .home
             homeCoordinator.show(.names)
 
-        case .adhkar(let category):
+        case .adhkar(let categoryID):
             router.selectedTab = .adhkar
-            adhkarCoordinator.open(category)
+            adhkarCoordinator.open(categoryID: categoryID)
 
         case .quran:
             router.selectedTab = .quran

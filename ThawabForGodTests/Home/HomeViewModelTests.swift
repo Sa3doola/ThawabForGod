@@ -720,12 +720,16 @@ struct HomeViewModelTests {
         #expect(viewModel.recentActivities.first?.subject == "البقرة")
     }
 
-    /// An adhkar category names itself through a localization key, so the chip needs nothing
-    /// resolved for it — and must not invent something.
+    /// The chapter titles live in the corpus now rather than in the string catalog, so the chip
+    /// resolves one the way the Quran's and the tasbih's do — and gets `nil` rather than an
+    /// invented name when the view model was built without the adhkar use case, which is how it
+    /// is built here.
     @Test(.timeLimit(.minutes(1)))
-    func anAdhkarChipCarriesNoResolvedName() async {
+    func anAdhkarChipCarriesTheSlugItWasRecordedWith() async {
         let repository = SpyRecentActivityRepository()
-        try? await repository.record(.adhkar(.morning, completed: 7, of: 28, at: Date()))
+        try? await repository.record(
+            .adhkar(categoryID: "morning-evening", completed: 7, of: 28, at: Date())
+        )
 
         let (viewModel, _) = makeViewModel(
             at: PrayerTimeFixtures.instant(today, hour: 13),
@@ -740,7 +744,7 @@ struct HomeViewModelTests {
         await task.value
 
         #expect(viewModel.recentActivities.first?.subject == nil)
-        #expect(viewModel.recentActivities.first?.activity.adhkarCategory == .morning)
+        #expect(viewModel.recentActivities.first?.activity.adhkarCategoryID == "morning-evening")
     }
 
     /// Nothing done means no chips, which is what the section is hidden on.
@@ -762,13 +766,19 @@ struct HomeViewModelTests {
     }
 
     /// A chip with nowhere to go is dropped rather than offered as a tap that does nothing.
+    ///
+    /// A malformed verse reference is what that looks like now. It used to be an adhkar chapter
+    /// this build had no case for — but the chapters are corpus rows keyed on an opaque slug, so
+    /// `RecentActivity` has no way to tell a withdrawn one from a current one and routes them all.
+    /// The Quran's subject is still a *parsed* `surah:verse`, so it still has a shape that can be
+    /// wrong.
     @Test(.timeLimit(.minutes(1)))
     func anUnroutableActivityIsNotShown() async {
         let repository = SpyRecentActivityRepository()
         try? await repository.record(
             RecentActivity(
-                kind: .adhkar,
-                subject: "after_prayer",
+                kind: .quran,
+                subject: "not-a-verse-reference",
                 progressValue: 1,
                 progressTotal: 3,
                 occurredAt: Date()

@@ -87,14 +87,19 @@ struct DeepLinkRoutingTests {
         #expect(container.homeCoordinator.isShowingPrayerTimes)
     }
 
-    @Test func anAdhkarCategoryOpensThatCategory() throws {
+    /// **Both periods open the same chapter**, and that is the corpus telling the truth rather
+    /// than the link being sloppy. Hisn al-Muslim has one chapter for both times of day; the link
+    /// keeps two cases because it is a promise iOS caches across builds, and this is the one place
+    /// the two vocabularies are reconciled.
+    @Test func eitherAdhkarPeriodOpensTheMorningAndEveningChapter() throws {
         let container = try makeContainer()
 
-        container.open(DeepLink.adhkarCategory(.morning))
-        #expect(container.adhkarCoordinator.openCategory == .morning)
+        for period in DeepLink.Period.allCases {
+            container.adhkarCoordinator.closeCategory()
+            container.open(DeepLink.adhkarCategory(period))
 
-        container.open(DeepLink.adhkarCategory(.evening))
-        #expect(container.adhkarCoordinator.openCategory == .evening)
+            #expect(container.adhkarCoordinator.openCategoryID == AdhkarCategory.morningAndEveningID)
+        }
     }
 
     /// The bare link is the list, and it has to *close* whatever category was open — otherwise
@@ -105,7 +110,7 @@ struct DeepLinkRoutingTests {
 
         container.open(DeepLink.adhkar)
 
-        #expect(container.adhkarCoordinator.openCategory == nil)
+        #expect(container.adhkarCoordinator.openCategoryID == nil)
     }
 
     @Test func hadithReturnsToItsCollections() throws {

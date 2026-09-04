@@ -581,9 +581,11 @@ final class AppContainer {
             quranProgress: quranProgress,
             quran: getQuran,
             // Two more of somebody else's use cases, for the same reason: the chips name a
-            // chapter and a dhikr, and resolving those names anywhere but through the feature
-            // that owns them would be a second copy of the corpus's vocabulary.
+            // chapter, an adhkar chapter and a dhikr, and resolving those names anywhere but
+            // through the feature that owns them would be a second copy of the corpus's
+            // vocabulary.
             tasbih: tasbihUseCase,
+            adhkar: getAdhkar,
             recentActivity: recentActivity,
             tracker: prayerTracker,
             clock: clock
@@ -763,7 +765,11 @@ final class AppContainer {
             return cachedAdhkarViewModel
         }
 
-        let viewModel = AdhkarViewModel(useCase: getAdhkar, activity: activityRecorder)
+        let viewModel = AdhkarViewModel(
+            useCase: getAdhkar,
+            settingsStore: settingsStore,
+            activity: activityRecorder
+        )
         cachedAdhkarViewModel = viewModel
         return viewModel
     }

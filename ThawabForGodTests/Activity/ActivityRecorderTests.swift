@@ -78,7 +78,7 @@ struct ActivityRecorderTests {
     func onePendingWritePerKind() async {
         let (recorder, repository) = makeRecorder(delay: .milliseconds(60))
 
-        recorder.record(.adhkar(.morning, completed: 7, of: 28, at: when))
+        recorder.record(.adhkar(categoryID: "morning-evening", completed: 7, of: 28, at: when))
         recorder.record(.tasbih(dhikrID: "subhanallah", count: 33, of: 33, at: when))
 
         await recorder.flush()
@@ -91,7 +91,7 @@ struct ActivityRecorderTests {
     func flushingWritesWhatIsStillWaiting() async {
         let (recorder, repository) = makeRecorder(delay: .seconds(30))
 
-        recorder.record(.adhkar(.evening, completed: 3, of: 28, at: when))
+        recorder.record(.adhkar(categoryID: "sleep", completed: 3, of: 28, at: when))
         #expect(repository.writes.isEmpty)
 
         await recorder.flush()

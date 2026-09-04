@@ -311,10 +311,10 @@ struct HomeLayoutTests {
     @Test func shortcutsReorderIndependentlyOfSections() {
         var layout = HomeLayout.default
 
-        layout.moveShortcuts(from: IndexSet(integer: 3), to: 0)
+        layout.moveShortcuts(from: IndexSet(integer: 2), to: 0)
 
         #expect(
-            layout.visibleShortcuts == [.qibla, .morningAdhkar, .eveningAdhkar, .tasbih, .namesOfAllah]
+            layout.visibleShortcuts == [.qibla, .morningEveningAdhkar, .tasbih, .namesOfAllah]
         )
         #expect(layout.visibleSections == HomeLayout.default.visibleSections)
     }

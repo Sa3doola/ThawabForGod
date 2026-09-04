@@ -103,8 +103,8 @@ private struct RecentActivityChip: View {
             return "\(subject) — \(verse)"
 
         case .adhkar:
-            guard let category = item.activity.adhkarCategory else { return counted }
-            return "\(l10n.string(category.titleKey)) — \(counted)"
+            guard let subject = item.subject else { return counted }
+            return "\(subject) — \(counted)"
 
         case .tasbih:
             guard let subject = item.subject else { return counted }

@@ -21,7 +21,12 @@ nonisolated enum AppRoute: Hashable, Sendable {
     case tasbih
     case names
 
-    case adhkar(AdhkarCategory)
+    /// One chapter of the adhkar, by slug.
+    ///
+    /// A `String` rather than an `AdhkarCategory`, because the chapters are corpus rows now and
+    /// every route into that screen — a Home shortcut, a deep link, a recent-activity chip —
+    /// carries an identifier rather than a fetched value. See `AdhkarCoordinator`.
+    case adhkar(categoryID: String)
 
     /// The Quran tab, at its list.
     case quran

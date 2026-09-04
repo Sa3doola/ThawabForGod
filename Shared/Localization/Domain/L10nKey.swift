@@ -115,8 +115,7 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case homeSectionHadithOfDay = "home_section_hadith_of_day"
     case homeSectionDuaOfDay = "home_section_dua_of_day"
 
-    case homeShortcutMorningAdhkar = "home_shortcut_morning_adhkar"
-    case homeShortcutEveningAdhkar = "home_shortcut_evening_adhkar"
+    case homeShortcutMorningEveningAdhkar = "home_shortcut_morning_evening_adhkar"
 
     /// A count against a target — `7 / 28`. Both parts arrive already in the user's digits.
     case activityProgress = "activity_progress"
@@ -325,17 +324,37 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: Adhkar
 
     case adhkarTitle = "adhkar_title"
-    case adhkarCategoryMorning = "adhkar_category_morning"
-    case adhkarCategoryMorningSubtitle = "adhkar_category_morning_subtitle"
-    case adhkarCategoryEvening = "adhkar_category_evening"
-    case adhkarCategoryEveningSubtitle = "adhkar_category_evening_subtitle"
     case adhkarLoading = "adhkar_loading"
     case adhkarUnavailable = "adhkar_unavailable"
     case adhkarEmpty = "adhkar_empty"
-    case adhkarSourceLabel = "adhkar_source_label"
-    case adhkarVirtueLabel = "adhkar_virtue_label"
-    case adhkarShowTranslation = "adhkar_show_translation"
-    case adhkarShowTransliteration = "adhkar_show_transliteration"
+    case adhkarSearchPrompt = "adhkar_search_prompt"
+    case adhkarNoResults = "adhkar_no_results"
+    case adhkarCategoryCount = "adhkar_category_count"
+    case adhkarSourceAttribution = "adhkar_source_attribution"
+    case adhkarChapterComplete = "adhkar_chapter_complete"
+    case adhkarMarkRead = "adhkar_mark_read"
+    case adhkarMarkedRead = "adhkar_marked_read"
+    case adhkarNext = "adhkar_next"
+    case adhkarPrevious = "adhkar_previous"
+    case adhkarTextSize = "adhkar_text_size"
+    case adhkarTextLarger = "adhkar_text_larger"
+    case adhkarTextSmaller = "adhkar_text_smaller"
+
+    /// The twelve headings the 132 chapters are gathered under. This project's grouping, not the
+    /// book's — see `AdhkarGroup`.
+    case adhkarGroupDaily = "adhkar_group_daily"
+    case adhkarGroupPurification = "adhkar_group_purification"
+    case adhkarGroupPrayer = "adhkar_group_prayer"
+    case adhkarGroupHome = "adhkar_group_home"
+    case adhkarGroupFood = "adhkar_group_food"
+    case adhkarGroupTravel = "adhkar_group_travel"
+    case adhkarGroupHajj = "adhkar_group_hajj"
+    case adhkarGroupDistress = "adhkar_group_distress"
+    case adhkarGroupIllness = "adhkar_group_illness"
+    case adhkarGroupNature = "adhkar_group_nature"
+    case adhkarGroupSocial = "adhkar_group_social"
+    case adhkarGroupPraise = "adhkar_group_praise"
+
     case adhkarProgressLabel = "adhkar_progress_label"
     case adhkarRepeatLabel = "adhkar_repeat_label"
     case adhkarCountHint = "adhkar_count_hint"
