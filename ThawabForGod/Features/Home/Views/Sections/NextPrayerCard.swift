@@ -43,10 +43,11 @@ struct NextPrayerCard: View {
     }
 
     private var hero: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
                 NextPrayerHeadline(state: state, placeName: viewModel.placeName)
                 NextPrayerCountdown(viewModel: viewModel, state: state)
+                NextPrayerRail(viewModel: viewModel, state: state)
             }
             // The words keep the card's own margin; the strip below does not, and that is the
             // whole reason the padding is per-block rather than on the card. Six columns inside
@@ -66,7 +67,7 @@ struct NextPrayerCard: View {
         // The rail is the progress bar, drawn as the card's own bottom edge rather than as a
         // control inside it — a `ProgressView` on this ground would be a second, differently
         // shaped thing saying what the countdown above it already says.
-        .overlay(alignment: .bottom) { NextPrayerRail(viewModel: viewModel, state: state) }
+//        .overlay(alignment: .bottom) { NextPrayerRail(viewModel: viewModel, state: state) }
         .clipShape(.rect(cornerRadius: AppRadius.lg))
         .appElevation(.card)
         // Everything inside the hero goes on reading `theme.textPrimary` and friends; what
@@ -90,17 +91,8 @@ private struct DayPrayerStrip: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(spacing: AppSpacing.sm) {
-            Divider()
-                .overlay(theme.separator)
-                // Inset from the card's edge rather than bleeding to it: a rule that runs the
-                // full width would cut the card in two, which is the reading this merge exists
-                // to undo.
-                .padding(.horizontal, AppSpacing.lg)
-
-            DayPrayerRow(state: state)
-                .padding(.horizontal, AppSpacing.sm)
-        }
+        DayPrayerRow(state: state)
+            .padding(.horizontal, AppSpacing.sm)
     }
 }
 
@@ -176,28 +168,18 @@ private struct NextPrayerHeadline: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text(l10n.string(.nextPrayerLabel))
-                .appFont(.caption, weight: .bold)
-                .tracking(1.6)
-                .textCase(.uppercase)
-                .foregroundStyle(theme.textSecondary)
-
-            // The name and the time share a line until they cannot. At an accessibility size
-            // "المغرب" and "٥:٤٢ م" together are wider than a phone, and the pair on one line
-            // truncates the *prayer's name* — which is the one word on this screen that has to
-            // be readable. Stacking is what a reader at that size is already expecting.
-            if typeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    name
-                    time
-                }
-            } else {
-                HStack(alignment: .firstTextBaseline) {
-                    name
-                    Spacer(minLength: AppSpacing.md)
-                    time
-                }
+            HStack(spacing: AppSpacing.xs) {
+                Image(systemName: state.upcoming.prayer.symbol)
+                    .imageScale(.medium)
+                    .foregroundStyle(theme.textPrimary)
+                Text(l10n.string(.nextPrayerLabel))
+                    .appFont(.caption, weight: .bold)
+                    .tracking(1.6)
+                    .textCase(.uppercase)
+                    .foregroundStyle(theme.textSecondary)
             }
+         
+            name
 
             if state.upcoming.isTomorrow {
                 Text(l10n.string(.tomorrowLabel))
@@ -207,18 +189,18 @@ private struct NextPrayerHeadline: View {
 
             // Absent rather than empty when there is no name: the coordinates work offline, the
             // name does not, and a placeholder would advertise a failure nobody can act on.
-            if let placeName {
-                Label(placeName, systemImage: "location.fill")
-                    .appFont(.footnote, weight: .medium)
-                    .foregroundStyle(theme.textSecondary)
-            }
+//            if let placeName {
+//                Label(placeName, systemImage: "location.fill")
+//                    .appFont(.footnote, weight: .medium)
+//                    .foregroundStyle(theme.textSecondary)
+//            }
         }
         .accessibilityElement(children: .combine)
     }
 
     private var name: some View {
         Text(l10n.string(state.upcoming.prayer.labelKey))
-            .appFont(.title, weight: .bold)
+            .appFont(.title2, weight: .bold)
             .foregroundStyle(theme.textPrimary)
     }
 
@@ -243,21 +225,20 @@ private struct NextPrayerCountdown: View {
     @Environment(\.theme) private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+        HStack(spacing: AppSpacing.sm) {
+            time
             Text(l10n.countdownString(viewModel.countdown))
-                .appFont(.largeTitle, weight: .bold)
+                .appFont(.headline, weight: .bold)
                 .foregroundStyle(theme.textPrimary)
                 // Digits vary in width as they tick; a monospaced set stops the label jittering.
                 .monospacedDigit()
                 // Read as a sentence rather than as six digits and two colons. VoiceOver would
                 // otherwise say "two colon five seven colon zero three" every second.
                 .accessibilityLabel(spokenRemaining)
+                .contentTransition(.numericText())
                 .accessibilityAddTraits(.updatesFrequently)
-
-            Text(l10n.string(.timeRemainingLabel))
-                .appFont(.footnote, weight: .medium)
-                .foregroundStyle(theme.textSecondary)
-                .accessibilityHidden(true)
+                .animation(.snappy, value: viewModel.countdown)
+          
         }
     }
 
@@ -279,6 +260,13 @@ private struct NextPrayerCountdown: View {
             remaining,
             l10n.string(state.upcoming.prayer.labelKey)
         )
+    }
+    
+    private var time: some View {
+        Text(l10n.timeString(state.upcoming.date))
+            .appFont(.headline, weight: .semibold)
+            .foregroundStyle(theme.textSecondary)
+            .monospacedDigit()
     }
 }
 

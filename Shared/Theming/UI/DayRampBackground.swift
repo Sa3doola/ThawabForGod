@@ -45,11 +45,6 @@ struct DayRampBackground: View {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
-        .overlay {
-            GirihLattice(spacing: latticeSpacing)
-                .stroke(DayRamp.Ink.lattice.color, lineWidth: 1)
-                .opacity(stop.latticeOpacity)
-        }
         .overlay(alignment: .topTrailing) {
             sun
         }
@@ -58,15 +53,9 @@ struct DayRampBackground: View {
         .clipped()
     }
 
-    private var mirror: CGFloat { layoutDirection == .rightToLeft ? -1 : 1 }
 
     private var sun: some View {
         ZStack(alignment: .topTrailing) {
-            Circle()
-                .strokeBorder(DayRamp.Ink.lattice.color.opacity(0.34), lineWidth: 1.5)
-                .frame(width: 210, height: 210)
-                .offset(x: 56 * mirror, y: -46)
-
             Circle()
                 .fill(
                     RadialGradient(
@@ -77,7 +66,6 @@ struct DayRampBackground: View {
                     )
                 )
                 .frame(width: 110, height: 110)
-                .offset(x: 6 * mirror, y: 2)
         }
         .allowsHitTesting(false)
     }
@@ -95,6 +83,7 @@ struct DayRampBackground: View {
                         .foregroundStyle(DayRamp.Ink.primary.color)
                         .padding(AppSpacing.md)
                 }
+                
         }
     }
     .padding()

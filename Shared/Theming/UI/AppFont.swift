@@ -19,7 +19,7 @@ nonisolated protocol AppFontProviding: Sendable {
     /// so that the bespoke Uthmani face this protocol exists to allow can override *this* without
     /// touching the ten steps above it: a Quranic face is a different design at a different
     /// optical size, and the reader is the only screen that would want it.
-    func readingFont(size: Double) -> Font
+    func readingFont(font: QuranAppFont, size: Double) -> Font
 }
 
 nonisolated extension AppFontProviding {
@@ -30,8 +30,8 @@ nonisolated extension AppFontProviding {
     /// Takes a size that has *already* been scaled for Dynamic Type — see `ReadingFontModifier`,
     /// which is where that happens and why it has to. A conforming provider should treat this
     /// argument as final and not scale it a second time.
-    func readingFont(size: Double) -> Font {
-        .system(size: size)
+    func readingFont(font: QuranAppFont, size: Double) -> Font {
+        .custom(font.rawValue, size: size)
     }
 }
 
@@ -41,6 +41,15 @@ nonisolated struct SystemAppFont: AppFontProviding {
     func font(_ style: AppTextStyle, weight: Font.Weight) -> Font {
         .system(style.textStyle, design: .default).weight(weight)
     }
+}
+
+nonisolated enum QuranAppFont: String {
+    case alMajeedQuranicFont = "AlMajeedQuranicFont"
+    case alMushafQuran = "AlMushafQuran"
+    case alQuranAli = "AlQuranAli-L3A83"
+    case amiriQuran = "AmiriQuran-Regular"
+    case hafsUthmanicScriptRegular = "HafsUthmanicScriptRegular"
+    case quranKarim114 = "QuranKarim114"
 }
 
 // Extensions pick up the module's `MainActor` default isolation, so this one opts out —
@@ -128,6 +137,6 @@ private struct ReadingFontModifier: ViewModifier {
     let size: Double
 
     func body(content: Content) -> some View {
-        content.font(provider.readingFont(size: size * Double(typeScale)))
+        content.font(provider.readingFont(font: .alQuranAli, size: size * Double(typeScale)))
     }
 }

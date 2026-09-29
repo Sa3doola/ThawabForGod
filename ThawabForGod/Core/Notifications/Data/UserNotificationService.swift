@@ -134,6 +134,7 @@ final class UserNotificationService: NotificationService {
         notification.subtitle = text.subtitle
         notification.body = text.body
         notification.sound = .default
+        notification.interruptionLevel = .active
 
         // What routes a delivered notification to the content extension, which declares the same
         // identifier in its `Info.plist`.
