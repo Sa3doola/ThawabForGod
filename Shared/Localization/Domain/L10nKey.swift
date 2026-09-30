@@ -32,6 +32,13 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case accentSapphire = "accent_sapphire"
     case accentRose = "accent_rose"
 
+    case appIconLabel = "app_icon_label"
+    case appIconDefault = "app_icon_default"
+    case appIconGreen = "app_icon_green"
+    case appIconNight = "app_icon_night"
+    case appIconSand = "app_icon_sand"
+    case appIconChangeFailed = "app_icon_change_failed"
+
     case numbersLabel = "numbers_label"
     case numbersArabicIndic = "numbers_arabic_indic"
     case numbersLatin = "numbers_latin"

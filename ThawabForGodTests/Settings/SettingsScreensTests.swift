@@ -65,7 +65,7 @@ struct SettingsScreensTests {
                 repository: HomeLayoutRepository(settingsStore: store)
             )
         )
-        let appearance = AppearanceSettingsViewModel(theme: theme)
+        let appearance = AppearanceSettingsViewModel(theme: theme, appIcons: nil)
         let languageAndFormat = LanguageFormatSettingsViewModel(
             localization: localization,
             now: { Self.fixedNow }

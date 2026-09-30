@@ -27,6 +27,7 @@ nonisolated extension NumberSystem: SettingsChoice {}
 nonisolated extension ClockFormat: SettingsChoice {}
 nonisolated extension PrayerCalculationMethod: SettingsChoice {}
 nonisolated extension AsrMadhab: SettingsChoice {}
+nonisolated extension AppIconChoice: SettingsChoice {}
 
 // Compiled into the iOS build too, though only the Mac has a picker for it — the same trade
 // `MenuBarPanelViewModel` makes, and for the same reason: gating it would compile it out of the

@@ -504,7 +504,15 @@ final class AppContainer {
         // Named first, because `#if` is not allowed inside an argument list and the alternative
         // is two near-identical calls to the same initializer.
         let homeCustomization = homeCustomizationViewModel()
-        let appearance = AppearanceSettingsViewModel(theme: themeManager)
+        #if os(iOS)
+        let appearance = AppearanceSettingsViewModel(
+            theme: themeManager,
+            appIcons: UIApplicationIconSwitcher()
+        )
+        #else
+        // The Mac has no alternate icons, so the Appearance screen draws no section for them.
+        let appearance = AppearanceSettingsViewModel(theme: themeManager, appIcons: nil)
+        #endif
         let languageAndFormat = LanguageFormatSettingsViewModel(localization: localizationManager)
         let prayerCalculation = PrayerCalculationSettingsViewModel(calculation: calculationSettings())
         let reminders = RemindersSettingsViewModel(

@@ -90,6 +90,78 @@ struct AccentSwatchRow: View {
     }
 }
 
+/// The Home Screen icon, as the icons themselves.
+///
+/// The same argument `AccentSwatchRow` makes, only more so: "Night" and "Sand" say far less about
+/// an icon than the icon does. Each tile carries its name as well, because unlike a colour
+/// swatch an icon is something a reader will want to talk about.
+///
+/// An adaptive grid rather than an `HStack`, so at an accessibility text size the names under the
+/// tiles wrap the row onto a second line instead of squeezing four icons into truncation.
+struct AppIconPickerRow: View {
+    let choices: [AppIconChoice]
+    let selection: AppIconChoice
+    let isDisabled: Bool
+    let onSelect: (AppIconChoice) -> Void
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+
+    /// The Home Screen's own icon size on an iPhone, so a preview is the icon at the size it is
+    /// seen rather than a thumbnail of it.
+    private let tileSize: CGFloat = 60
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: tileSize + 16), spacing: 12)], spacing: 16) {
+            ForEach(choices) { choice in
+                tile(choice)
+            }
+        }
+        .padding(.vertical, 8)
+        .disabled(isDisabled)
+    }
+
+    private func tile(_ choice: AppIconChoice) -> some View {
+        let isSelected = selection == choice
+        let shape = RoundedRectangle(cornerRadius: tileSize * 0.225, style: .continuous)
+
+        return Button {
+            onSelect(choice)
+        } label: {
+            VStack(spacing: 8) {
+                // The exported previews carry the icon's own mask, so this clip only matters to
+                // the ring: it is what the stroke below follows.
+                Image(choice.previewAssetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: tileSize, height: tileSize)
+                    .clipShape(shape)
+                    .overlay {
+                        // A ring rather than a size change, so choosing one does not reflow the grid.
+                        shape
+                            .strokeBorder(theme.textPrimary, lineWidth: isSelected ? 2 : 0)
+                            .padding(-4)
+                    }
+
+                Text(l10n.string(choice.labelKey))
+                    .appFont(.caption, weight: isSelected ? .semibold : .regular)
+                    .foregroundStyle(isSelected ? theme.textPrimary : theme.textSecondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(.rect)
+        }
+        // Plain, or the button style would tint the name with the accent on every tile.
+        .buttonStyle(.plain)
+        // One element per icon: the picture is decoration once the name is read out, and
+        // `.isSelected` is what tells the reader which one is on the Home Screen.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(l10n.string(choice.labelKey))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
 /// A read-only line: a label, and a value the settings above it change.
 ///
 /// `LabeledContent` rather than an `HStack` with a `Spacer`, so the pairing follows the platform's
