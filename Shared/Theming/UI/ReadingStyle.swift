@@ -30,11 +30,20 @@ nonisolated struct ReadingPalette: Equatable, Sendable {
 nonisolated struct ReadingStyle: Equatable, Sendable {
     var palette: ReadingPalette
     var typography: ReaderTypography
+    var font: ReaderFont = .fallback
+    var markerStyle: AyahMarkerStyle = .fallback
 
     /// What a view drawn outside the reader gets — a preview, or a `VerseRow` reused somewhere
-    /// that has not resolved a paper. The app's own colours at the app's own size.
+    /// that has not resolved a paper. The app's own colours at the app's own size, in the
+    /// default face.
     static let fallback = ReadingStyle(
         palette: Theme.fallback.reading(.system),
         typography: .fallback
     )
+
+    /// The leading between two wrapped lines of verse at a size that is already final: the face's
+    /// floor, and the reader's own addition on top of it.
+    func lineSpacing(atScaledSize size: Double) -> Double {
+        font.lineSpacing(for: size) + typography.lineSpacing
+    }
 }

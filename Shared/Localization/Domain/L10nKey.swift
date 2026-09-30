@@ -81,6 +81,20 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case sourceAdhanAttribution = "source_adhan_attribution"
     case sourceGRDBTitle = "source_grdb_title"
     case sourceGRDBAttribution = "source_grdb_attribution"
+    case sourcePlexTitle = "source_plex_title"
+    case sourcePlexAttribution = "source_plex_attribution"
+    case sourceAmiriTitle = "source_amiri_title"
+    case sourceAmiriAttribution = "source_amiri_attribution"
+    case sourceKFGQPCTitle = "source_kfgqpc_title"
+    case sourceKFGQPCAttribution = "source_kfgqpc_attribution"
+    case sourceSurahNamesFontTitle = "source_surah_names_font_title"
+    case sourceSurahNamesFontAttribution = "source_surah_names_font_attribution"
+    case sourceAyahMarkerFontTitle = "source_ayah_marker_font_title"
+    case sourceAyahMarkerFontAttribution = "source_ayah_marker_font_attribution"
+    /// The standing caveat on the two faces whose redistribution terms are unconfirmed.
+    case sourceFontTermsNote = "source_font_terms_note"
+    /// What a row with a bundled licence file offers to open.
+    case sourceReadLicence = "source_read_licence"
 
     // MARK: Reminders
 
@@ -95,6 +109,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case licencePublicDomain = "licence_public_domain"
     case licenceUnsettled = "licence_unsettled"
     case licenceNone = "licence_none"
+    case licenceOFL = "licence_ofl"
+    case licenceKFGQPC = "licence_kfgqpc"
 
     // MARK: Prayer times
 
@@ -264,6 +280,13 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case readerTextSize = "reader_text_size"
     case readerLineSpacing = "reader_line_spacing"
     case readerReset = "reader_reset"
+    case readerPreviewSection = "reader_preview_section"
+    case readerFontSection = "reader_font_section"
+    case readerFontKFGQPC = "reader_font_kfgqpc"
+    case readerFontAmiri = "reader_font_amiri"
+    case readerMarkerSection = "reader_marker_section"
+    /// Precedes a number — "Style 3" — for VoiceOver on each medallion in the picker.
+    case readerMarkerStyleLabel = "reader_marker_style_label"
     case readerDone = "reader_done"
 
     // MARK: Hadith

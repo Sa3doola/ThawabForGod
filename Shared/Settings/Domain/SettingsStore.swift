@@ -41,6 +41,10 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case readerLineSpacing
     case readerShowsVerseNumbers
     case readerKeepsScreenAwake
+    // A `ReaderFont` raw value, and an `AyahMarkerStyle` raw value stored as its decimal string —
+    // the store carries strings, bools and doubles, and a style is a name, not a quantity.
+    case readerFont
+    case readerAyahMarkerStyle
 
     /// How large the adhkar are set. **Its own key rather than `readerTextSize`**, deliberately:
     /// the Quran is read in long sittings on a page the reader chose a paper for, and a dhikr is

@@ -33,6 +33,11 @@ nonisolated struct AttributionSource: Identifiable, Sendable {
 
     /// Where it can be read in full. Optional because the tasbih presets have no upstream.
     let url: URL?
+
+    /// The name of a licence text bundled under `Resources/Licenses`, without its `.txt`, for a
+    /// source whose licence has to travel with it — every font does. `nil` where the licence is
+    /// a standard one the row's name is enough to find, or where there is none.
+    var licenceFile: String? = nil
 }
 
 nonisolated extension AttributionSource {
@@ -99,6 +104,55 @@ nonisolated extension AttributionSource {
             licenceKey: .licenceNone,
             noteKey: nil,
             url: nil
+        ),
+        // The faces. Each carries its licence text, because the OFL and the KFGQPC terms both
+        // require the licence to accompany the font — and a row naming a licence the reader
+        // cannot open does not meet that.
+        AttributionSource(
+            id: "font-kfgqpc",
+            titleKey: .sourceKFGQPCTitle,
+            attributionKey: .sourceKFGQPCAttribution,
+            licenceKey: .licenceKFGQPC,
+            noteKey: nil,
+            url: URL(string: "https://qurancomplex.gov.sa")!,
+            licenceFile: "KFGQPC-EULA"
+        ),
+        AttributionSource(
+            id: "font-amiri",
+            titleKey: .sourceAmiriTitle,
+            attributionKey: .sourceAmiriAttribution,
+            licenceKey: .licenceOFL,
+            noteKey: nil,
+            url: URL(string: "https://github.com/aliftype/amiri")!,
+            licenceFile: "AmiriQuran-OFL"
+        ),
+        AttributionSource(
+            id: "font-plex",
+            titleKey: .sourcePlexTitle,
+            attributionKey: .sourcePlexAttribution,
+            licenceKey: .licenceOFL,
+            noteKey: nil,
+            url: URL(string: "https://github.com/IBM/plex")!,
+            licenceFile: "IBMPlexSansArabic-OFL"
+        ),
+        // TODO(license): confirm redistribution rights before App Store release — for this row
+        // and the next. Both are listed with the note that says so, which is the honest version
+        // of shipping them until it is settled.
+        AttributionSource(
+            id: "font-surah-names",
+            titleKey: .sourceSurahNamesFontTitle,
+            attributionKey: .sourceSurahNamesFontAttribution,
+            licenceKey: .licenceUnsettled,
+            noteKey: .sourceFontTermsNote,
+            url: URL(string: "https://www.elharrakfonts.com")!
+        ),
+        AttributionSource(
+            id: "font-ayah-markers",
+            titleKey: .sourceAyahMarkerFontTitle,
+            attributionKey: .sourceAyahMarkerFontAttribution,
+            licenceKey: .licenceUnsettled,
+            noteKey: .sourceFontTermsNote,
+            url: URL(string: "https://quranb1og.blogspot.com")!
         ),
         AttributionSource(
             id: "adhan",

@@ -7,10 +7,16 @@ import SwiftUI
 
 /// One verse, as it is read.
 ///
-/// The number is set *inside the text* between ornate parentheses — `﴿٢٥٥﴾` — rather than beside
-/// it in a badge, because that is where the mushaf puts it and because a marker that flows with
-/// the paragraph keeps its place when the text wraps. `Text` concatenation is what makes that a
-/// single laid-out paragraph rather than two views that only look like one.
+/// The number is set *inside the text* as a medallion, rather than beside it in a badge, because
+/// that is where the mushaf puts it and because a marker that flows with the paragraph keeps its
+/// place when the text wraps. `AyahTextBuilder` makes it one attributed paragraph rather than two
+/// views that only look like one.
+///
+/// **One row per verse, not a continuous page.** A mushaf runs the verses together, but here each
+/// verse is a lazy child of the reader's `LazyVStack` — which is what keeps Al-Baqara from being
+/// built all at once, what a bookmark scrolls to, what `onAppear` reports as the reading position,
+/// and what carries its own bookmark and tafsir buttons. A single flowing `Text` would have none
+/// of those, and a tap on it could not say which verse it landed on.
 struct VerseRow: View {
     let verse: Verse
     let isBookmarked: Bool
@@ -28,6 +34,9 @@ struct VerseRow: View {
     /// the app's colours at the app's size — so this row still draws correctly in a preview or
     /// anywhere else it is reused.
     @Environment(\.readingStyle) private var style
+    /// The same multiplier `readingFont(size:)` applies to the words, so the medallion grows with
+    /// Dynamic Type in step with the verse it numbers.
+    @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -62,22 +71,26 @@ struct VerseRow: View {
     }
 
     private var text: some View {
-        // Concatenated `Text` rather than an `HStack`, so the marker is part of the paragraph and
-        // wraps with it — which is what a mushaf does and what a separate view could not. The
-        // accessibility label names the verse either way, so hiding the marker takes nothing away
-        // from a reader using VoiceOver.
-        (showsNumber
-            ? Text(verse.text)
-                + Text(verbatim: " ﴿")
-                + Text(l10n.string(verse.number, grouped: false))
-                + Text(verbatim: "﴾")
-            : Text(verse.text))
-        .readingFont(size: style.typography.textSize)
+        // One paragraph rather than an `HStack`, so the marker wraps with the words — which is
+        // what a mushaf does and what a separate view could not. The accessibility label names
+        // the verse either way, so hiding the marker takes nothing away from a reader using
+        // VoiceOver.
+        Text(AyahTextBuilder.text(
+            verse.text,
+            number: showsNumber ? verse.number : nil,
+            markerFont: style.markerStyle.font(size: markerSize)
+        ))
+        .readingFont(size: style.typography.textSize, extraLineSpacing: style.typography.lineSpacing)
         .foregroundStyle(style.palette.textPrimary)
-        .lineSpacing(style.typography.lineSpacing)
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityLabel(accessibilityLabel)
+    }
+
+    /// The medallion's size, final — scaled for Dynamic Type here because the marker face is named
+    /// inside the attributed string, where `readingFont(size:)` cannot reach it.
+    private var markerSize: Double {
+        style.typography.textSize * Double(typeScale) * AyahMarkerStyle.scale
     }
 
     /// Keeps or forgets this verse.

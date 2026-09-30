@@ -80,6 +80,79 @@ struct ReaderSettingsTests {
         #expect(settings.typography == ReaderTypography(textSize: 26, lineSpacing: 4))
     }
 
+    // MARK: Face and medallion
+
+    @Test func defaultsToTheMadinahFaceAndTheFirstMedallion() {
+        let settings = ReaderSettings(settingsStore: InMemorySettingsStore())
+
+        #expect(settings.font == .kfgqpcHafs)
+        #expect(settings.markerStyle == .style1)
+    }
+
+    /// Chosen, stored, and read back by a fresh instance — which is what a relaunch is.
+    @Test func faceAndMedallionSurviveARelaunch() {
+        let store = InMemorySettingsStore()
+        let settings = ReaderSettings(settingsStore: store)
+
+        settings.select(font: .amiriQuran)
+        settings.select(markerStyle: .style9)
+
+        let relaunched = ReaderSettings(settingsStore: store)
+        #expect(relaunched.font == .amiriQuran)
+        #expect(relaunched.markerStyle == .style9)
+        #expect(relaunched.hasChoices)
+    }
+
+    /// A face an older build shipped — or anything else the store might hold — is the default
+    /// face, not a trap and not a name CoreText would quietly substitute.
+    @Test(arguments: ["indoPak", "naskh", "", "KFGQPC"])
+    func anUnknownFaceFallsBackToTheDefault(stored: String) {
+        let store = InMemorySettingsStore(strings: [.readerFont: stored])
+
+        #expect(ReaderSettings(settingsStore: store).font == .kfgqpcHafs)
+    }
+
+    @Test(arguments: ["0", "13", "style2", "-1"])
+    func anUnknownMedallionFallsBackToTheFirst(stored: String) {
+        let store = InMemorySettingsStore(strings: [.readerAyahMarkerStyle: stored])
+
+        #expect(ReaderSettings(settingsStore: store).markerStyle == .style1)
+    }
+
+    @Test func choosingAFaceWritesOnlyThatKey() {
+        let store = InMemorySettingsStore()
+        let settings = ReaderSettings(settingsStore: store)
+
+        settings.select(font: .amiriQuran)
+
+        #expect(store.string(for: .readerFont) == ReaderFont.amiriQuran.rawValue)
+        #expect(store.string(for: .readerAyahMarkerStyle) == nil)
+        #expect(store.string(for: .readerPaper) == nil)
+    }
+
+    @Test func theResolvedStyleCarriesTheFaceAndMedallion() {
+        let store = InMemorySettingsStore()
+        let settings = ReaderSettings(settingsStore: store)
+        settings.select(font: .amiriQuran)
+        settings.select(markerStyle: .style4)
+
+        let style = settings.style(on: Theme())
+
+        #expect(style.font == .amiriQuran)
+        #expect(style.markerStyle == .style4)
+    }
+
+    /// Amiri's marks stack higher and deeper than KFGQPC's, so its floor is the larger one at
+    /// every size — the reason the leading is per face at all.
+    @Test(arguments: Array(stride(
+        from: ReaderTypography.textSizeRange.lowerBound,
+        through: ReaderTypography.textSizeRange.upperBound,
+        by: ReaderTypography.textSizeStep
+    )))
+    func amiriAlwaysGetsMoreLeadingThanKFGQPC(size: Double) {
+        #expect(ReaderFont.amiriQuran.lineSpacing(for: size) > ReaderFont.kfgqpcHafs.lineSpacing(for: size))
+    }
+
     // MARK: Reset
 
     /// Back to *unset*, not back to the defaults written down. A stored value outranks the
@@ -92,14 +165,20 @@ struct ReaderSettingsTests {
         settings.select(paper: .night)
         settings.select(textSize: 34)
         settings.select(lineSpacing: 2)
+        settings.select(font: .amiriQuran)
+        settings.select(markerStyle: .style12)
         settings.reset()
 
         #expect(store.string(for: .readerPaper) == nil)
         #expect(store.double(for: .readerTextSize) == nil)
         #expect(store.double(for: .readerLineSpacing) == nil)
+        #expect(store.string(for: .readerFont) == nil)
+        #expect(store.string(for: .readerAyahMarkerStyle) == nil)
 
         #expect(settings.paper == .system)
         #expect(settings.typography == .fallback)
+        #expect(settings.font == .kfgqpcHafs)
+        #expect(settings.markerStyle == .style1)
         #expect(settings.hasChoices == false)
     }
 

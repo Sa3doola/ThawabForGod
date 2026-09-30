@@ -24,13 +24,23 @@ struct ThawabForGodApp: App {
     @NSApplicationDelegateAdaptor(MacAppDelegate.self) private var appDelegate
     #endif
 
+    /// The bundled faces are registered before anything can ask for one: the scene's body has not
+    /// been evaluated yet, so no `Font.custom` has had the chance to resolve against a name
+    /// CoreText does not know and quietly substitute the system face.
+    init() {
+        FontRegistrar.registerBundledFonts()
+        #if os(iOS)
+        ChromeTypography.apply()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView(container: container)
                 #if os(macOS)
                 .frame(minWidth: 720, minHeight: 480)
                 #endif
-                .themed(container.themeManager)
+                .themed(container.themeManager, fonts: PlexAppFont())
                 .localized(container.localizationManager)
         }
         .modelContainer(container.persistence.container)
@@ -63,7 +73,7 @@ struct ThawabForGodApp: App {
             // The tabbed window sizes itself — see `SettingsView.presentation` — so this only
             // has to stop the scene squeezing it.
             .frame(minWidth: 720, minHeight: 540)
-            .themed(container.themeManager)
+            .themed(container.themeManager, fonts: PlexAppFont())
             .localized(container.localizationManager)
         }
         #endif

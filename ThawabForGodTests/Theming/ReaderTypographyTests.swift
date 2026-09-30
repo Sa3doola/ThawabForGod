@@ -13,9 +13,11 @@ import Testing
 /// edited by hand in a plist, or a `0` that came from a key that was never really set.
 struct ReaderTypographyTests {
 
+    /// The spacing default is zero because it is an *addition* to the face's own leading, and
+    /// the face's tuning is the only value right for every face at once.
     @Test func defaultsMatchTheSizeTheReaderStartedFrom() {
         #expect(ReaderTypography.fallback.textSize == 20)
-        #expect(ReaderTypography.fallback.lineSpacing == 14)
+        #expect(ReaderTypography.fallback.lineSpacing == 0)
     }
 
     @Test func keepsValuesInsideTheRange() {

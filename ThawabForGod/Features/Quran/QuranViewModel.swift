@@ -106,14 +106,8 @@ final class QuranViewModel {
         /// The whole span as one flat list — headings and basmalas in place, verses in order.
         var items: [Item] {
             var items: [Item] = []
-            let order = surahOrder
-            // Named only when the span covers more than one chapter: reading a single chapter,
-            // the navigation title already says which, and a heading under it would be the name
-            // twice on one screen.
-            let namesChapters = order.count > 1
-
-            for number in order {
-                if namesChapters, surahs[number] != nil {
+            for number in surahOrder {
+                if showsHeading(forSurah: number) {
                     items.append(.heading(number))
                 }
                 if showsBismillah(forSurah: number) {
@@ -122,6 +116,18 @@ final class QuranViewModel {
                 items.append(contentsOf: verses(inSurah: number).map(Item.verse))
             }
             return items
+        }
+
+        /// Whether the chapter's drawn title belongs above it here.
+        ///
+        /// Wherever the span holds the chapter's first verse, and only there — including when the
+        /// span is that one chapter. It used to be left off a single chapter, since the
+        /// navigation title already names it, but it is the "سورة …" cartouche now: the mushaf's
+        /// own opening to a chapter rather than a second copy of a label. And it is never drawn
+        /// mid-chapter — juz 3 opens at 2:253, and a cartouche there would tell the reader
+        /// Al-Baqara begins on that page. The printed mushaf leaves it off too.
+        func showsHeading(forSurah number: Int) -> Bool {
+            surahs[number] != nil && verses(inSurah: number).first?.number == 1
         }
 
         /// Whether the chapter's basmala heading belongs above it here.

@@ -24,10 +24,15 @@ final class ReachabilityMonitor {
         guard !isRunning else { return }
         isRunning = true
 
-        monitor.pathUpdateHandler = { path in
+        // Weak at the outer closure, which is the one the monitor keeps — capturing weakly only
+        // in the inner `Task` still left this handler holding `self` strongly. Rebound to a `let`
+        // because a weak capture is a `var`, which a concurrently-running `Task` may not share;
+        // the task holds it only until its one assignment is done.
+        monitor.pathUpdateHandler = { [weak self] path in
             let isSatisfied = path.status == .satisfied
-            Task { @MainActor [weak self] in
-                self?.isOnline = isSatisfied
+            let owner = self
+            Task { @MainActor in
+                owner?.isOnline = isSatisfied
             }
         }
         monitor.start(queue: queue)

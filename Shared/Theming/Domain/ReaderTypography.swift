@@ -21,7 +21,9 @@ nonisolated struct ReaderTypography: Equatable, Sendable {
     /// The verse text's size at the default Dynamic Type setting.
     let textSize: Double
 
-    /// Space added between the wrapped lines of one verse.
+    /// Space the reader adds between the wrapped lines of one verse, *on top of* the leading the
+    /// chosen face already needs — see `ReaderFont.lineSpacing(for:)`. Zero is the face's own
+    /// setting, not lines touching.
     let lineSpacing: Double
 
     /// Roughly "comfortably readable" at the bottom and "one word a line" at the top. Wider than
@@ -37,8 +39,10 @@ nonisolated struct ReaderTypography: Equatable, Sendable {
     static let lineSpacingStep: Double = 2
 
     /// What the reader gets before choosing anything: the size `.title3` resolves to on iOS, and
-    /// the leading `VerseRow` was drawn with before this was configurable.
-    static let fallback = ReaderTypography(textSize: 20, lineSpacing: 14)
+    /// no leading beyond what the face was tuned for. That tuning is the default because it is
+    /// the only number that is right for both faces at once — a fixed 14 points was loose for
+    /// KFGQPC and still collided for Amiri.
+    static let fallback = ReaderTypography(textSize: 20, lineSpacing: 0)
 
     init(textSize: Double, lineSpacing: Double) {
         self.textSize = Self.clamp(textSize, to: Self.textSizeRange)

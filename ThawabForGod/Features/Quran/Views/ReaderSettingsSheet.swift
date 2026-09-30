@@ -5,13 +5,16 @@
 
 import SwiftUI
 
-/// The reading panel: the page's colour, the size of the text, the space between its lines.
+/// The reading panel: the page's colour, the face, the verse-number medallion, the size of the
+/// text and the space between its lines.
 ///
-/// **There is no preview of the result in here, on purpose.** The panel opens at half height over
-/// the page it is changing, and background interaction stays enabled — so the reader's own verses,
-/// at their own size, are the preview, and they can go on scrolling them while they adjust. A
-/// canned sample verse in a box would be a worse likeness of the thing sitting right above it, and
-/// it would have meant a line of scripture hardcoded in a view.
+/// **It opens on a preview, which it used to refuse.** The argument against was that the reader's
+/// own verses behind the half-height sheet are a better likeness than any sample — and for paper
+/// and size they still are. But a *face* and a *medallion* are chosen by comparing shapes, and at
+/// `.large`, on a Mac where the panel covers the page, or with the verse behind scrolled to the
+/// middle of a long line, there is nothing of either in view. One short verse and its number, drawn
+/// with everything the panel controls, is the one place all of it can be seen at once. The verse
+/// is 112:1, the shortest complete statement in the mushaf, so it fits a line at every size.
 ///
 /// Each control writes straight through to `ReaderSettings`, which persists as it goes. Nothing
 /// here is staged and applied on Done — there is no Cancel, because there is nothing to cancel:
@@ -26,7 +29,10 @@ struct ReaderSettingsSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                previewSection
                 paperSection
+                fontSection
+                markerSection
                 textSection
                 pageSection
                 resetSection
@@ -47,6 +53,18 @@ struct ReaderSettingsSheet: View {
         // where the sheet is a panel and the window behind it is visible anyway.
         .presentationDetents([.medium, .large])
         .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+    }
+
+    // MARK: Preview
+
+    /// The live sample — see the note at the top on why it exists.
+    private var previewSection: some View {
+        Section {
+            VerseSample(showsNumber: settings.showsVerseNumbers)
+                .environment(\.readingStyle, settings.style(on: theme))
+        } header: {
+            Text(l10n.string(.readerPreviewSection))
+        }
     }
 
     // MARK: Paper
@@ -116,6 +134,55 @@ struct ReaderSettingsSheet: View {
         // whichever language the interface is in.
         .environment(\.layoutDirection, .rightToLeft)
         .accessibilityHidden(true)
+    }
+
+    // MARK: Font
+
+    /// The two faces side by side, each setting the basmala in itself.
+    ///
+    /// Cards rather than a picker of names for `AccentSwatchRow`'s reason: "Madinah Mushaf" and
+    /// "Amiri" ask the reader to already know what the faces look like, and the difference between
+    /// them — the weight of the stroke, how high the marks stack — is only visible in the letters.
+    private var fontSection: some View {
+        Section {
+            HStack(spacing: AppSpacing.md) {
+                ForEach(ReaderFont.allCases) { face in
+                    FontCard(
+                        face: face,
+                        isSelected: settings.font == face,
+                        select: { settings.select(font: face) }
+                    )
+                }
+            }
+            .padding(.vertical, AppSpacing.xs)
+        } header: {
+            Text(l10n.string(.readerFontSection))
+        }
+    }
+
+    // MARK: Verse numbers
+
+    /// All twelve medallions in a row, each drawing the same number so only the ornament differs.
+    private var markerSection: some View {
+        Section {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: AppSpacing.sm) {
+                    ForEach(AyahMarkerStyle.allCases) { style in
+                        MarkerSwatch(
+                            style: style,
+                            isSelected: settings.markerStyle == style,
+                            select: { settings.select(markerStyle: style) }
+                        )
+                    }
+                }
+                .padding(.vertical, AppSpacing.xs)
+            }
+            // Right to left like the page, so the first style sits where a reader of the verses
+            // starts looking.
+            .environment(\.layoutDirection, .rightToLeft)
+        } header: {
+            Text(l10n.string(.readerMarkerSection))
+        }
     }
 
     // MARK: Text
@@ -242,8 +309,123 @@ struct ReaderSettingsSheet: View {
     }
 }
 
+/// One verse, drawn exactly as `VerseRow` draws it: the reading face, the medallion, the paper.
+private struct VerseSample: View {
+    let showsNumber: Bool
+
+    @Environment(\.readingStyle) private var style
+    @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
+
+    /// 112:1, verbatim from the corpus's Uthmani text. Hardcoded because the panel has no
+    /// repository to read it through and does not need one for a single line.
+    private static let words = "قُلْ هُوَ ٱللَّهُ أَحَدٌ"
+
+    var body: some View {
+        Text(AyahTextBuilder.text(
+            Self.words,
+            number: showsNumber ? 1 : nil,
+            markerFont: style.markerStyle.font(
+                size: style.typography.textSize * Double(typeScale) * AyahMarkerStyle.scale
+            )
+        ))
+        .readingFont(size: style.typography.textSize, extraLineSpacing: style.typography.lineSpacing)
+        .foregroundStyle(style.palette.textPrimary)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppSpacing.md)
+        .listRowBackground(style.palette.background)
+        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.locale, AppLanguage.arabic.locale)
+    }
+}
+
+/// One face, shown by setting the basmala in it.
+private struct FontCard: View {
+    let face: ReaderFont
+    let isSelected: Bool
+    let select: () -> Void
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+
+    private static let basmala = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+
+    var body: some View {
+        Button(action: select) {
+            VStack(spacing: AppSpacing.sm) {
+                Text(verbatim: Self.basmala)
+                    .font(face.font(size: 20))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .foregroundStyle(theme.textPrimary)
+                    .environment(\.layoutDirection, .rightToLeft)
+                    .accessibilityHidden(true)
+
+                Text(l10n.string(face.labelKey))
+                    .appFont(.caption, weight: isSelected ? .semibold : .regular)
+                    .foregroundStyle(isSelected ? theme.accent : theme.textSecondary)
+            }
+            .padding(AppSpacing.md)
+            .frame(maxWidth: .infinity)
+            .background(
+                isSelected ? theme.accent.opacity(0.1) : .clear,
+                in: .rect(cornerRadius: AppRadius.md)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.md)
+                    .strokeBorder(
+                        isSelected ? theme.accent : theme.separator,
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            }
+            .contentShape(.rect)
+        }
+        // Plain, or the whole card would be tinted with the accent and the two faces would stop
+        // being comparable.
+        .buttonStyle(.plain)
+        .accessibilityLabel(l10n.string(face.labelKey))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+/// One medallion style, drawn around the same number as all the others.
+private struct MarkerSwatch: View {
+    let style: AyahMarkerStyle
+    let isSelected: Bool
+    let select: () -> Void
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        Button(action: select) {
+            // ASCII "7" because the face draws the medallion by a ligature over ASCII digits —
+            // see `AyahTextBuilder`, which carries the same exception to the numbers rule.
+            Text(verbatim: "7")
+                .font(style.font(size: 30))
+                .foregroundStyle(theme.textPrimary)
+                .frame(width: 52, height: 52)
+                .background(
+                    isSelected ? theme.accent.opacity(0.12) : .clear,
+                    in: .circle
+                )
+                .overlay {
+                    Circle().strokeBorder(
+                        isSelected ? theme.accent : .clear,
+                        lineWidth: 2
+                    )
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(
+            "\(l10n.string(.readerMarkerStyleLabel)) \(l10n.string(style.rawValue, grouped: false))"
+        )
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
 #Preview {
     let settingsStore = InMemorySettingsStore()
+    FontRegistrar.registerBundledFonts()
 
     return ReaderSettingsSheet(
         settings: ReaderSettings(settingsStore: settingsStore),

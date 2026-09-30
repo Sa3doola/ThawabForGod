@@ -27,6 +27,12 @@ final class ReaderSettings {
     private(set) var paper: ReaderPaper
     private(set) var typography: ReaderTypography
 
+    /// The face the verses are set in. See `ReaderFont` for why there are two.
+    private(set) var font: ReaderFont
+
+    /// Which of the twelve medallions the verse numbers are drawn in.
+    private(set) var markerStyle: AyahMarkerStyle
+
     /// Whether the ayah marker is drawn beside each verse.
     ///
     /// On unless turned off. A verse without its number is a verse nobody can cite, and citing is
@@ -49,6 +55,8 @@ final class ReaderSettings {
         self.settingsStore = settingsStore
         self.paper = Self.storedPaper(in: settingsStore)
         self.typography = Self.storedTypography(in: settingsStore)
+        self.font = Self.storedFont(in: settingsStore)
+        self.markerStyle = Self.storedMarkerStyle(in: settingsStore)
         self.showsVerseNumbers = settingsStore.bool(for: .readerShowsVerseNumbers) ?? true
         self.keepsScreenAwake = settingsStore.bool(for: .readerKeepsScreenAwake) ?? false
     }
@@ -59,7 +67,12 @@ final class ReaderSettings {
     /// `Theme` that this type has no business holding — the view has one in its environment, so
     /// it passes it in and gets a finished value back.
     func style(on theme: Theme) -> ReadingStyle {
-        ReadingStyle(palette: theme.reading(paper), typography: typography)
+        ReadingStyle(
+            palette: theme.reading(paper),
+            typography: typography,
+            font: font,
+            markerStyle: markerStyle
+        )
     }
 
     func select(paper: ReaderPaper) {
@@ -79,6 +92,16 @@ final class ReaderSettings {
         settingsStore.set(typography.lineSpacing, for: .readerLineSpacing)
     }
 
+    func select(font: ReaderFont) {
+        self.font = font
+        settingsStore.set(font.rawValue, for: .readerFont)
+    }
+
+    func select(markerStyle: AyahMarkerStyle) {
+        self.markerStyle = markerStyle
+        settingsStore.set(String(markerStyle.rawValue), for: .readerAyahMarkerStyle)
+    }
+
     func select(showsVerseNumbers: Bool) {
         self.showsVerseNumbers = showsVerseNumbers
         settingsStore.set(showsVerseNumbers, for: .readerShowsVerseNumbers)
@@ -95,18 +118,27 @@ final class ReaderSettings {
         settingsStore.set(nil as String?, for: .readerPaper)
         settingsStore.set(nil as Double?, for: .readerTextSize)
         settingsStore.set(nil as Double?, for: .readerLineSpacing)
+        settingsStore.set(nil as String?, for: .readerFont)
+        settingsStore.set(nil as String?, for: .readerAyahMarkerStyle)
         settingsStore.set(nil as Bool?, for: .readerShowsVerseNumbers)
         settingsStore.set(nil as Bool?, for: .readerKeepsScreenAwake)
 
         paper = Self.storedPaper(in: settingsStore)
         typography = Self.storedTypography(in: settingsStore)
+        font = .fallback
+        markerStyle = .fallback
         showsVerseNumbers = true
         keepsScreenAwake = false
     }
 
     /// Whether anything here has been chosen — what the reset control is enabled by.
     var hasChoices: Bool {
-        paper != .fallback || typography != .fallback || !showsVerseNumbers || keepsScreenAwake
+        paper != .fallback
+            || typography != .fallback
+            || font != .fallback
+            || markerStyle != .fallback
+            || !showsVerseNumbers
+            || keepsScreenAwake
     }
 
     // MARK: Reading the store
@@ -114,6 +146,18 @@ final class ReaderSettings {
     private static func storedPaper(in store: any SettingsStore) -> ReaderPaper {
         // An unset or unrecognised value falls back rather than trapping, as `ThemeManager` does.
         store.string(for: .readerPaper).flatMap(ReaderPaper.init(rawValue:)) ?? .fallback
+    }
+
+    /// A face a later build withdrew, or a value nobody recognises, is the default face — see
+    /// `ReaderFont` on why that beats trusting CoreText with an unknown name.
+    private static func storedFont(in store: any SettingsStore) -> ReaderFont {
+        store.string(for: .readerFont).flatMap(ReaderFont.init(rawValue:)) ?? .fallback
+    }
+
+    private static func storedMarkerStyle(in store: any SettingsStore) -> AyahMarkerStyle {
+        store.string(for: .readerAyahMarkerStyle)
+            .flatMap(Int.init)
+            .flatMap(AyahMarkerStyle.init(rawValue:)) ?? .fallback
     }
 
     private static func storedTypography(in store: any SettingsStore) -> ReaderTypography {

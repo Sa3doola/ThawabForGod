@@ -385,8 +385,8 @@ struct ReadingLayoutTests {
 
     // MARK: The flattened rows
 
-    /// A single chapter draws no heading — the navigation title already names it. Taken from the
-    /// middle of one, where there is no basmala either, the rows are the verses and nothing else.
+    /// Taken from the middle of a chapter there is no title and no basmala — both belong above
+    /// verse 1 — so the rows are the verses and nothing else.
     @Test func oneChapterFlattensToItsVersesAlone() {
         let loaded = reading([.stub(surah: 2, number: 142), .stub(surah: 2, number: 143)])
 
@@ -394,20 +394,20 @@ struct ReadingLayoutTests {
         #expect(loaded.items.allSatisfy { if case .verse = $0 { true } else { false } })
     }
 
-    /// Opening a chapter at its first verse still draws the basmala above it, heading or no
-    /// heading — the two are separate questions.
-    @Test func aChapterOpenedAtItsStartKeepsItsBasmala() {
+    /// A chapter opened at its first verse is headed even when it is the whole span — the title
+    /// is the mushaf's cartouche, not a repeat of the navigation title — and the basmala follows.
+    @Test func aChapterOpenedAtItsStartIsHeadedThenBasmala() {
         let loaded = reading([.stub(surah: 2, number: 1), .stub(surah: 2, number: 2)])
 
-        #expect(loaded.items.first == .bismillah(2))
-        #expect(!loaded.items.contains(.heading(2)))
+        #expect(Array(loaded.items.prefix(2)) == [.heading(2), .bismillah(2)])
     }
 
-    /// A part crosses chapters, so each one is named where it starts.
-    @Test func aSpanAcrossChaptersNamesEachOne() {
+    /// A part crosses chapters, so each one is named where it *starts* — and a chapter the span
+    /// joins mid-way is not, or its cartouche would claim it begins on this page.
+    @Test func aSpanAcrossChaptersNamesEachOneWhereItStarts() {
         let loaded = reading([.stub(surah: 1, number: 7), .stub(surah: 2, number: 1)])
 
-        #expect(loaded.items.first == .heading(1))
+        #expect(!loaded.items.contains(.heading(1)))
         #expect(loaded.items.contains(.heading(2)))
     }
 

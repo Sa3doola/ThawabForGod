@@ -224,51 +224,11 @@ struct ReaderView: View {
         }
     }
 
-    /// Where one chapter ends and the next begins.
-    ///
-    /// A rule broken by the girih star, and the name centred under it — the mushaf's own way of
-    /// marking a sura, and the one place in the reader the app's motif is drawn rather than
-    /// implied. Centred rather than flush left because a heading that hangs off the same edge as
-    /// the verses reads as another verse; a span that crosses a chapter boundary has to make that
-    /// boundary unmistakable, since it is the only thing telling the reader the words changed
-    /// book.
-    ///
-    /// The ornament is tinted from the *paper's* accent, not the app's: on parchment the app's
-    /// amber washes out, which is the whole reason a named paper carries an accent of its own.
+    /// The chapter's drawn title — see `SurahHeaderView`. Extra room above it, which the
+    /// per-chapter stack used to give a new chapter before the span was flattened.
     private func chapterHeading(_ surah: Surah) -> some View {
-        VStack(spacing: AppSpacing.sm) {
-            HStack(spacing: AppSpacing.md) {
-                rule
-                SurahHeaderView(surahName: l10n.language == .arabic ? surah.arabicName : surah.englishName)
-//                GirihStar(inset: 3)
-//                    .stroke(style.palette.accent, lineWidth: 1.4)
-//                    .frame(width: 34, height: 34)
-//                    .opacity(0.5)
-                rule
-            }
-            .accessibilityHidden(true)
-//
-//            Text(surah.arabicName)
-//                .appFont(.title3, weight: .semibold)
-//                .foregroundStyle(style.palette.textPrimary)
-//                .environment(\.locale, AppLanguage.arabic.locale)
-//
-//            Text(l10n.language == .arabic ? surah.transliteration : surah.englishName)
-//                .appFont(.caption)
-                .foregroundStyle(style.palette.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .multilineTextAlignment(.center)
-        // Extra breathing room above a new chapter, which the per-chapter stack used to give it
-        // before the span was flattened.
-        .padding(.top, AppSpacing.lg)
-        .accessibilityElement(children: .combine)
-    }
-
-    private var rule: some View {
-        Rectangle()
-            .fill(style.palette.textSecondary.opacity(0.3))
-            .frame(height: 1)
+        SurahHeaderView(surah: surah)
+            .padding(.top, AppSpacing.lg)
     }
 
     /// The chapter's Arabic name, or the part's number.

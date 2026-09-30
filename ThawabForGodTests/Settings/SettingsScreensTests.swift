@@ -379,7 +379,12 @@ struct SettingsScreensTests {
         let context = makeContext()
         let noted = context.screens.about.sources.filter { $0.noteKey != nil }.map(\.id)
 
-        #expect(noted.sorted() == ["adhkar", "hadith", "names"])
+        // The two fonts whose redistribution terms are unconfirmed carry the caveat too, until
+        // that is settled — see `AttributionSource.all`.
+        #expect(
+            noted.sorted()
+                == ["adhkar", "font-ayah-markers", "font-surah-names", "hadith", "names"]
+        )
     }
 
     // MARK: Restoring the calculation defaults

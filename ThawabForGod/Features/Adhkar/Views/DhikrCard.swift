@@ -79,11 +79,13 @@ struct DhikrCard: View {
     /// Under this environment `.leading` resolves to the right in both interface languages.
     private var arabicText: some View {
         Text(dhikr.arabicText)
-            .readingFont(size: textSize)
+            // Amiri, pinned, whatever face the Quran reader chose. The book is in modern spelling
+            // with modern punctuation — آ, ﴿ ﴾, commas and full stops — and the KFGQPC face is
+            // encoded for the Uthmani text alone, with no glyph for any of those. The leading
+            // comes with the face and is proportional to the size, since Arabic's marks that are
+            // comfortable at 20pt collide at 40.
+            .readingFont(size: textSize, face: .amiriQuran)
             .foregroundStyle(theme.textPrimary)
-            // Proportional to the size rather than a fixed ten points: Arabic carries diacritics
-            // above and below the line, and leading that is comfortable at 20pt collides at 40.
-            .lineSpacing(textSize * 0.55)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .environment(\.layoutDirection, .rightToLeft)

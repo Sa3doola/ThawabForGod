@@ -19,14 +19,5 @@
 			</array>
 		</dict>
 	</array>
-	<key>UIAppFonts</key>
-	<array>
-		<string>AlMajeedQuranicFont.ttf</string>
-		<string>AlMushafQuran.ttf</string>
-		<string>AlQuranAli-L3A83.ttf</string>
-		<string>AmiriQuran-Regular.ttf</string>
-		<string>HafsUthmanicScriptRegular.ttf</string>
-		<string>QuranKarim114.ttf</string>
-	</array>
 </dict>
 </plist>
