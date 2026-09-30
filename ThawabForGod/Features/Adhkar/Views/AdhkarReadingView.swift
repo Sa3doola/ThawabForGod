@@ -33,6 +33,9 @@ struct AdhkarReadingView: View {
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     /// Which dhikr is on screen. The id rather than an index, because the array is re-fetched
     /// whenever the task re-runs and an index into the old one would be a different dhikr.
@@ -102,27 +105,86 @@ struct AdhkarReadingView: View {
     // MARK: The reader
 
     private func reader(_ adhkar: [Dhikr]) -> some View {
+        arrangement(adhkar)
+            // The selection has to exist before the pager is laid out or it opens on nothing.
+            // First dhikr rather than the first *incomplete* one: a reader opening a chapter means
+            // to say it, not to resume a tally.
+            .task(id: adhkar.first?.id) { current = adhkar.first?.id }
+    }
+
+    /// The words and the counter, as one column or as two regions.
+    ///
+    /// **Two regions at regular width, and iPhone Duo's inner display is why.** Its fold runs down
+    /// the middle of the screen, and the column this screen draws is centred — so opened flat, the
+    /// dhikr and the counter both straddled the crease, and in a book-like pose each was bent
+    /// across it. `ArrangementView` is the system's container for exactly this shape of screen:
+    /// two peers, neither on top of the other, and it keeps the split clear of the fold rather than
+    /// this screen having to find it. The axes are left free, so wherever the words and counter
+    /// fit better one above the other, they go one above the other.
+    ///
+    /// The branch is on the size class, not on the device: the same regular width on an iPad gets
+    /// the same two regions. Everything that must survive the switch — which dhikr is on screen,
+    /// the counts — is owned above it, so unfolding the phone rebuilds the regions without moving
+    /// the reader.
+    @ViewBuilder
+    private func arrangement(_ adhkar: [Dhikr]) -> some View {
+        #if os(iOS)
+        if #available(iOS 27.1, *), horizontalSizeClass == .regular {
+            // The counter leads and the words trail, which reads backwards and is not. With the
+            // sidebar showing, the leading half of the screen is mostly sidebar — the words in it
+            // were measured on the device at three to a line, with the pips squeezed out of
+            // existence — while the trailing half is a whole half. And the trailing half is the
+            // one Apple's guidance gives continuity to: it is what stays in front of the reader as
+            // a book-like pose closes toward the outer display.
+            ArrangementView {
+                // At the foot of its region: that is where a thumb already is, and in a
+                // table-like pose it is the half lying flat on the table.
+                counter(adhkar, resetPlacement: .vertical)
+                    .padding(AppSpacing.xl)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+            } secondary: {
+                VStack(spacing: AppSpacing.lg) {
+                    header(adhkar)
+                    pager(adhkar)
+                }
+                .padding(AppSpacing.xl)
+                .frame(maxWidth: AppBreakpoint.readingMeasure)
+                .frame(maxWidth: .infinity)
+                // The words before the control that counts them, whatever side each is drawn on.
+                .accessibilitySortPriority(1)
+            }
+            .arrangementViewStyle(.split)
+        } else {
+            column(adhkar)
+        }
+        #else
+        column(adhkar)
+        #endif
+    }
+
+    /// Words above, counter under them — the compact layout, and every OS before 27.1.
+    private func column(_ adhkar: [Dhikr]) -> some View {
         VStack(spacing: AppSpacing.lg) {
             header(adhkar)
-
             pager(adhkar)
-
-            if let dhikr = currentDhikr(in: adhkar) {
-                RepeatCounter(
-                    counted: viewModel.repeats(of: dhikr),
-                    target: dhikr.repeatCount,
-                    onCount: { count(dhikr, in: adhkar) },
-                    onReset: { viewModel.resetRepeats(of: dhikr) }
-                )
-            }
+            counter(adhkar)
         }
         .padding(AppSpacing.xl)
         .frame(maxWidth: AppBreakpoint.readingMeasure)
         .frame(maxWidth: .infinity, alignment: .center)
-        // The selection has to exist before the pager is laid out or it opens on nothing. First
-        // dhikr rather than the first *incomplete* one: a reader opening a chapter means to say
-        // it, not to resume a tally.
-        .task(id: adhkar.first?.id) { current = adhkar.first?.id }
+    }
+
+    @ViewBuilder
+    private func counter(_ adhkar: [Dhikr], resetPlacement: Axis = .horizontal) -> some View {
+        if let dhikr = currentDhikr(in: adhkar) {
+            RepeatCounter(
+                counted: viewModel.repeats(of: dhikr),
+                target: dhikr.repeatCount,
+                onCount: { count(dhikr, in: adhkar) },
+                onReset: { viewModel.resetRepeats(of: dhikr) },
+                resetPlacement: resetPlacement
+            )
+        }
     }
 
     /// The strip above the card: where the reader is, or that they are finished.

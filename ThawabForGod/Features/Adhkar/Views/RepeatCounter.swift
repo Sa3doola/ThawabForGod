@@ -63,18 +63,35 @@ struct RepeatCounter: View {
     /// around it, and the two must not drift apart.
     static let height: CGFloat = 96
 
-    var body: some View {
-        HStack(spacing: AppSpacing.lg) {
-            // Drawn only once there is something to undo, and always in the same place, so the
-            // count button never changes width under a thumb that is mid-hundred.
-            resetButton
-                .opacity(counted > 0 ? 1 : 0)
-                .disabled(counted == 0)
-                .accessibilityHidden(counted == 0)
+    /// Where the reset button sits: beside the count button, or above it.
+    ///
+    /// Above is for a narrow region — iPhone Duo's inner display gives this control the half
+    /// beside the sidebar, about 170 points, where the reset slot left the count button 64 and it
+    /// drew its circle with the words squeezed out. The caller chooses rather than the control
+    /// measuring itself, because what this control would measure is its label, and the label
+    /// changes as it is counted: `ViewThatFits` here could flip between the two arrangements
+    /// between one tap and the next, under a thumb that is mid-hundred.
+    var resetPlacement: Axis = .horizontal
 
+    var body: some View {
+        let layout = resetPlacement == .horizontal
+            ? AnyLayout(HStackLayout(spacing: AppSpacing.lg))
+            : AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.md))
+
+        layout {
+            resetSlot
             countButton
         }
         .animation(.snappy, value: counted)
+    }
+
+    /// Drawn only once there is something to undo, and always in the same place, so the count
+    /// button never changes width under a thumb that is mid-hundred.
+    private var resetSlot: some View {
+        resetButton
+            .opacity(counted > 0 ? 1 : 0)
+            .disabled(counted == 0)
+            .accessibilityHidden(counted == 0)
     }
 
     private var countButton: some View {
@@ -188,6 +205,25 @@ struct RepeatCounter: View {
         RepeatCounter(counted: 0, target: 1, onCount: {}, onReset: {})
         RepeatCounter(counted: 1, target: 1, onCount: {}, onReset: {})
     }
+    .padding()
+    .themed(ThemeManager(settingsStore: settingsStore))
+    .localized(
+        LocalizationManager(
+            settingsStore: settingsStore,
+            numberFormatting: LocaleNumberFormattingService(),
+            timeFormatting: LocaleTimeFormattingService()
+        )
+    )
+}
+
+#Preview("Reset above — a narrow region") {
+    let settingsStore = InMemorySettingsStore()
+
+    HStack(alignment: .bottom, spacing: 20) {
+        RepeatCounter(counted: 0, target: 1, onCount: {}, onReset: {}, resetPlacement: .vertical)
+        RepeatCounter(counted: 67, target: 100, onCount: {}, onReset: {}, resetPlacement: .vertical)
+    }
+    .frame(width: 280)
     .padding()
     .themed(ThemeManager(settingsStore: settingsStore))
     .localized(
