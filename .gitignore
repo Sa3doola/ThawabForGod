@@ -58,3 +58,22 @@ Dependencies/
 # Injection / profiling
 iOSInjectionProject/
 *.trace
+
+# Quran migration: QUL-derived data. QUL publishes no license and this repo is
+# public, so the raw downloads and everything built from them stay local. The
+# public build uses Tools/QuranBuilder's `tanzil` profile instead (see
+# QURAN_MIGRATION_PLAN.md, D1 and T4). QuranData/SOURCES.md and
+# fonts-v2.sha256 are hashes and notes only, and are committed.
+QuranData/raw/
+QuranData/out/
+# Full-data outputs of the `qul` profile, wherever they land.
+quran-mushaf.sqlite
+translation-en-sahih-international.sqlite
+tafsir-ar-muyassar.sqlite
+tafsir-en-mukhtasar.sqlite
+surah-info-*.sqlite
+# QUL fonts: the 604 QPC V2 page fonts, and the header, name and common faces.
+madaniV2/
+surah-header.ttf
+surah-name-v2.ttf
+quran-common.ttf
