@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37AFE5F570AF447B3620D50D /* ArabicText in Frameworks */ = {isa = PBXBuildFile; productRef = C8E6AA6A8AFE6A8912F4E051 /* ArabicText */; };
 		6908DA1F1AC183258DCC507E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B1FCD3CF11B5758AB16D4C8C /* Foundation.framework */; };
 		9874BDE495B39D7438121460 /* NoorNotificationContent.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0CDEE2184FC589A9820F1B0A /* NoorNotificationContent.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9D2E1FF5303A5C2800BDF1BE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D2E1FD8303A5B7D00BDF1BE /* WidgetKit.framework */; };
@@ -119,16 +120,22 @@
 		};
 		9D285A32302A054500164D4C /* ThawabForGodTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ThawabForGodTests;
 			sourceTree = "<group>";
 		};
 		9D285A3C302A054500164D4C /* ThawabForGodUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ThawabForGodUITests;
 			sourceTree = "<group>";
 		};
 		9D2E1F9E303A5AF900BDF1BE /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
@@ -158,6 +165,7 @@
 			files = (
 				D10419A6F6B6EB503A4D7E06 /* Adhan in Frameworks */,
 				CD1E732091901126F8E740AA /* GRDB in Frameworks */,
+				37AFE5F570AF447B3620D50D /* ArabicText in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -283,6 +291,7 @@
 			packageProductDependencies = (
 				F589A7CDDE099DD57049EF07 /* Adhan */,
 				2C71CE3FCDE2C2F4A4C3B29E /* GRDB */,
+				C8E6AA6A8AFE6A8912F4E051 /* ArabicText */,
 			);
 			productName = ThawabForGod;
 			productReference = 9D285A20302A054500164D4C /* ThawabForGod.app */;
@@ -391,7 +400,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0DD56495FC908CFB1C802C0F /* XCRemoteSwiftPackageReference "adhan-swift" */,
-				154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */,
+				154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+				2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "ArabicText" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9D285A21302A054500164D4C /* Products */;
@@ -1093,6 +1103,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "ArabicText" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/ArabicText;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		0DD56495FC908CFB1C802C0F /* XCRemoteSwiftPackageReference "adhan-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1102,7 +1119,7 @@
 				minimumVersion = 1.5.0;
 			};
 		};
-		154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+		154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift";
 			requirement = {
@@ -1115,13 +1132,18 @@
 /* Begin XCSwiftPackageProductDependency section */
 		2C71CE3FCDE2C2F4A4C3B29E /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */;
+			package = 154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		9D2E200A303A5C4300BDF1BE /* Adhan */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 0DD56495FC908CFB1C802C0F /* XCRemoteSwiftPackageReference "adhan-swift" */;
 			productName = Adhan;
+		};
+		C8E6AA6A8AFE6A8912F4E051 /* ArabicText */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "ArabicText" */;
+			productName = ArabicText;
 		};
 		DD936F943D1B7087D5370BD1 /* Adhan */ = {
 			isa = XCSwiftPackageProductDependency;

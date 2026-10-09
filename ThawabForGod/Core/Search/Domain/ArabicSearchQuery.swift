@@ -3,27 +3,28 @@
 //  ThawabForGod
 //
 
+import ArabicText
 import Foundation
 
 /// What a reader typed, folded into the form the corpora are indexed in.
 ///
-/// **The folding here must stay identical to the one in the build scripts** —
-/// `Tools/CorpusBuilder/build_quran_db.py` and `build_hadith_db.py`, whose `normalize` is the
-/// other half of the same rule. A corpus is folded once at build time, a query is folded once per
-/// search, and a match is only possible where the two agree. A change to either without the other
-/// silently stops finding things, which is why the rule is stated once per side and tested against
-/// the shipped corpora rather than against a fixture.
+/// **The folding is `ArabicNormalizer`'s, in `Packages/ArabicText`**, and this type only gives it a
+/// shape the repositories can ask for. The rule is stated once there because three things fold with
+/// it and a match is only possible where they agree: `Tools/QuranBuilder` folds the Quran's index,
+/// this folds every query, and the hadith index — still built by
+/// `Tools/CorpusBuilder/build_hadith_db.py` — folds with a Python `normalize()` that the package's
+/// `HadithParityTests` holds to the Swift one. A change on one side without the others does not
+/// fail; it silently stops finding things.
 ///
-/// It is in `Core` rather than in a feature because there are now two of those corpora and the
-/// rule is the same for both. It was the Quran's alone at first, and the argument for moving it is
-/// the one the Quran's own documentation makes: two copies of a folding rule are two things to
+/// It is in `Core` rather than in a feature because two corpora ask the same question of it — the
+/// argument the Quran's own documentation makes: two copies of a folding rule are two things to
 /// keep in step, and the failure when they drift is silence rather than an error.
 ///
 /// **It is not a folding of any particular script's orthography.** The mushaf spells ٱلسَّمَٰوَٰتِ,
-/// whose letters alone are `السموت` — a word no reader will ever type — so `quran.sqlite` indexes
-/// Tanzil's Simple Clean text instead, in the modern spelling readers actually use. The hadith
-/// need no such second text, being printed in ordinary vowelled Arabic. Either way, what arrives
-/// here is what a reader types, and this folds it the same way.
+/// whose letters alone are `السموت` — a word no reader will ever type — so the Quran's index is
+/// built over Tanzil's Simple Clean text instead, in the modern spelling readers actually use. The
+/// hadith need no such second text, being printed in ordinary vowelled Arabic. Either way, what
+/// arrives here is what a reader types, and this folds it the same way.
 nonisolated struct ArabicSearchQuery: Hashable, Sendable {
 
     /// The query as a list of folded words, in the order they were typed.
@@ -36,55 +37,9 @@ nonisolated struct ArabicSearchQuery: Hashable, Sendable {
     let tokens: [String]
 
     init(_ raw: String) {
-        tokens = Self.fold(raw)
+        tokens = ArabicNormalizer.words(in: raw)
     }
 
     /// Whether there is anything to search for. True for whitespace, and for punctuation alone.
     var isEmpty: Bool { tokens.isEmpty }
-
-    // MARK: The folding
-
-    /// The letters that survive but are written more than one way. Mirrors `LETTER_FOLDING`.
-    private static let letterFolding: [Unicode.Scalar: Unicode.Scalar] = [
-        "أ": "ا", "إ": "ا", "آ": "ا", "ٱ": "ا",   // every hamza-bearing alef
-        "ة": "ه",                                  // ta marbuta, which readers type as ha
-        "ى": "ي",                                  // alef maqsura
-        "ؤ": "و",
-        "ئ": "ي",
-    ]
-
-    /// The tatweel — a typographic stretch, not a letter, though Unicode files it as one.
-    ///
-    /// Dropped rather than treated as a separator, which is the difference between `الرحـــمن`
-    /// folding to `الرحمن` and folding to two words that match nothing. Its own constant because
-    /// it is the one character that is neither folded nor a boundary.
-    private static let tatweel: Unicode.Scalar = "ـ"
-
-    /// Every combining mark dropped, the ambiguous letters folded together, the rest split into
-    /// words. Mirrors `normalize()` in the build scripts — see the note on this type.
-    private static func fold(_ raw: String) -> [String] {
-        var tokens: [String] = []
-        var token = ""
-
-        for scalar in raw.unicodeScalars {
-            // Every Arabic diacritic. The same test the build scripts make with
-            // `unicodedata.combining`, which is this property under another name.
-            guard scalar.properties.canonicalCombiningClass.rawValue == 0 else { continue }
-            guard scalar != tatweel else { continue }
-
-            let folded = letterFolding[scalar] ?? scalar
-
-            if CharacterSet.alphanumerics.contains(folded) {
-                token.unicodeScalars.append(folded)
-            } else if !token.isEmpty {
-                // Anything else ends the word — whitespace, punctuation, the tatweel, and every
-                // character FTS5 would otherwise have read as an operator.
-                tokens.append(token)
-                token = ""
-            }
-        }
-
-        if !token.isEmpty { tokens.append(token) }
-        return tokens
-    }
 }

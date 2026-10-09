@@ -1,0 +1,152 @@
+{"input": "\u062d\u064e\u062f\u064e\u0651\u062b\u064e\u0646\u064e\u0627 \u0627\u0644\u0652\u062d\u064f\u0645\u064e\u064a\u0652\u062f\u0650\u064a\u064f\u0651 \u0639\u064e\u0628\u0652\u062f\u064f \u0627\u0644\u0644\u064e\u0651\u0647\u0650 \u0628\u0652\u0646\u064f \u0627\u0644\u0632\u064f\u0651\u0628\u064e\u064a\u0652\u0631\u0650 \u060c \u0642\u064e\u0627\u0644\u064e : \u062d\u064e\u062f\u064e\u0651\u062b\u064e\u0646\u064e\u0627 \u0633\u064f\u0641\u0652\u064a\u064e\u0627\u0646\u064f", "python": "\u062d\u062f\u062b\u0646\u0627 \u0627\u0644\u062d\u0645\u064a\u062f\u064a \u0639\u0628\u062f \u0627\u0644\u0644\u0647 \u0628\u0646 \u0627\u0644\u0632\u0628\u064a\u0631 \u0642\u0627\u0644 \u062d\u062f\u062b\u0646\u0627 \u0633\u0641\u064a\u0627\u0646", "quranOnly": false}
+{"input": "\u0648\u064e\u062d\u064e\u062f\u064e\u0651\u062b\u064e\u0646\u064e\u0627\u0647\u064f \u0625\u0650\u0633\u0652\u062d\u064e\u0627\u0642\u064f \u0628\u0652\u0646\u064f \u0625\u0650\u0628\u0652\u0631\u064e\u0627\u0647\u0650\u064a\u0645\u064e\u060c \u0648\u064e\u0627\u0628\u0652\u0646\u064f \u0623\u064e\u0628\u0650\u064a \u0639\u064f\u0645\u064e\u0631\u064e\u060c \u062c\u064e\u0645\u0650\u064a\u0639\u064b\u0627 \u0639\u064e\u0646\u0650 \u0627\u0628\u0652\u0646\u0650 \u0639\u064f\u064a\u064e\u064a\u0652\u0646\u064e\u0629\u064e", "python": "\u0648\u062d\u062f\u062b\u0646\u0627\u0647 \u0627\u0633\u062d\u0627\u0642 \u0628\u0646 \u0627\u0628\u0631\u0627\u0647\u064a\u0645 \u0648\u0627\u0628\u0646 \u0627\u0628\u064a \u0639\u0645\u0631 \u062c\u0645\u064a\u0639\u0627 \u0639\u0646 \u0627\u0628\u0646 \u0639\u064a\u064a\u0646\u0647", "quranOnly": false}
+{"input": "\u00ab\u0625\u0650\u0646\u064e\u0651\u0645\u064e\u0627 \u0627\u0644\u0623\u064e\u0639\u0652\u0645\u064e\u0627\u0644\u064f \u0628\u0650\u0627\u0644\u0646\u0650\u0651\u064a\u064e\u0651\u0627\u062a\u0650\u00bb", "python": "\u0627\u0646\u0645\u0627 \u0627\u0644\u0627\u0639\u0645\u0627\u0644 \u0628\u0627\u0644\u0646\u064a\u0627\u062a", "quranOnly": false}
+{"input": "\u0642\u064e\u0627\u0644\u064e: (\u064a\u064e\u0627 \u0623\u064e\u064a\u064f\u0651\u0647\u064e\u0627 \u0627\u0644\u0646\u064e\u0651\u0627\u0633\u064f) - \u0641\u064e\u0630\u064e\u0643\u064e\u0631\u064e\u0647\u064f\u061f", "python": "\u0642\u0627\u0644 \u064a\u0627 \u0627\u064a\u0647\u0627 \u0627\u0644\u0646\u0627\u0633 \u0641\u0630\u0643\u0631\u0647", "quranOnly": false}
+{"input": "\u0639\u064e\u0646\u0652 \u0639\u064f\u0645\u064e\u0631\u064e \u0628\u0652\u0646\u0650 \u0627\u0644\u0652\u062e\u064e\u0637\u064e\u0651\u0627\u0628\u0650 \u0631\u064e\u0636\u0650\u064a\u064e \u0627\u0644\u0644\u064e\u0651\u0647\u064f \u0639\u064e\u0646\u0652\u0647\u064f\u200f.\u200f", "python": "\u0639\u0646 \u0639\u0645\u0631 \u0628\u0646 \u0627\u0644\u062e\u0637\u0627\u0628 \u0631\u0636\u064a \u0627\u0644\u0644\u0647 \u0639\u0646\u0647", "quranOnly": false}
+{"input": "\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u064e\u0651\u0647\u0650 \u0671\u0644\u0631\u064e\u0651\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u064e\u0651\u062d\u0650\u064a\u0645\u0650", "python": "\u0628\u0633\u0645 \u0627\u0644\u0644\u0647 \u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0631\u062d\u064a\u0645", "quranOnly": false}
+{"input": "\u0671\u0644\u0644\u064e\u0651\u0647\u064f \u0644\u064e\u0622 \u0625\u0650\u0644\u064e\u0670\u0647\u064e \u0625\u0650\u0644\u064e\u0651\u0627 \u0647\u064f\u0648\u064e \u0671\u0644\u0652\u062d\u064e\u0649\u064f\u0651 \u0671\u0644\u0652\u0642\u064e\u064a\u064f\u0651\u0648\u0645\u064f \u0644\u064e\u0627 \u062a\u064e\u0623\u0652\u062e\u064f\u0630\u064f\u0647\u064f\u06e5 \u0633\u0650\u0646\u064e\u0629\u064c \u0648\u064e\u0644\u064e\u0627 \u0646\u064e\u0648\u0652\u0645\u064c \u0644\u064e\u0651\u0647\u064f\u06e5 \u0645\u064e\u0627 \u0641\u0650\u0649 \u0671\u0644\u0633\u064e\u0651\u0645\u064e\u0670\u0648\u064e\u0670\u062a\u0650", "python": "\u0627\u0644\u0644\u0647 \u0644\u0627 \u0627\u0644\u0647 \u0627\u0644\u0627 \u0647\u0648 \u0627\u0644\u062d\u064a \u0627\u0644\u0642\u064a\u0648\u0645 \u0644\u0627 \u062a\u0627\u062e\u0630\u0647\u06e5 \u0633\u0646\u0647 \u0648\u0644\u0627 \u0646\u0648\u0645 \u0644\u0647\u06e5 \u0645\u0627 \u0641\u064a \u0627\u0644\u0633\u0645\u0648\u062a", "quranOnly": true}
+{"input": "\u0625\u0650\u0646\u064e\u0651\u0645\u064e\u0622 \u0623\u064e\u0645\u0652\u0631\u064f\u0647\u064f\u06e5\u0653 \u0625\u0650\u0630\u064e\u0622 \u0623\u064e\u0631\u064e\u0627\u062f\u064e \u0634\u064e\u064a\u0652\u0640\u064b\u0654\u0627 \u0623\u064e\u0646 \u064a\u064e\u0642\u064f\u0648\u0644\u064e \u0644\u064e\u0647\u064f\u06e5 \u0643\u064f\u0646 \u0641\u064e\u064a\u064e\u0643\u064f\u0648\u0646\u064f", "python": "\u0627\u0646\u0645\u0627 \u0627\u0645\u0631\u0647\u06e5 \u0627\u0630\u0627 \u0627\u0631\u0627\u062f \u0634\u064a\u0627 \u0627\u0646 \u064a\u0642\u0648\u0644 \u0644\u0647\u06e5 \u0643\u0646 \u0641\u064a\u0643\u0648\u0646", "quranOnly": true}
+{"input": "\u0648\u064e\u0644\u064e\u0627 \u064a\u064e\u0640\u064f\u0654\u0648\u062f\u064f\u0647\u064f\u06e5 \u062d\u0650\u0641\u0652\u0638\u064f\u0647\u064f\u0645\u064e\u0627", "python": "\u0648\u0644\u0627 \u064a\u0648\u062f\u0647\u06e5 \u062d\u0641\u0638\u0647\u0645\u0627", "quranOnly": true}
+{"input": "\u0627\u0644\u0653\u0645\u0653", "python": "\u0627\u0644\u0645", "quranOnly": false}
+{"input": "\u0628\u0650\u0625\u0650\u0630\u0652\u0646\u0650\u0647\u0650\u06e6", "python": "\u0628\u0627\u0630\u0646\u0647\u06e6", "quranOnly": true}
+{"input": "\u0671\u0644\u06e1\u062d\u064e\u0645\u06e1\u062f\u064f \u0644\u0650\u0644\u064e\u0651\u0647\u0650 \u0631\u064e\u0628\u0650\u0651 \u0671\u0644\u06e1\u0639\u064e\u0670\u0644\u064e\u0645\u0650\u064a\u0646\u064e", "python": "\u0627\u0644\u062d\u0645\u062f \u0644\u0644\u0647 \u0631\u0628 \u0627\u0644\u0639\u0644\u0645\u064a\u0646", "quranOnly": false}
+{"input": "\u06de \u0648\u064e\u0625\u0650\u0630\u064e\u0627", "python": "\u0648\u0627\u0630\u0627", "quranOnly": false}
+{"input": "\u064a\u064e\u0633\u06e1\u062c\u064f\u062f\u064f\u0648\u0646\u064e\u06e4\u06e9", "python": "\u064a\u0633\u062c\u062f\u0648\u0646", "quranOnly": false}
+{"input": "\u0648\u064e\u0623\u064e\u0646\u064e\u0627\u0628\u064e \u06e9", "python": "\u0648\u0627\u0646\u0627\u0628", "quranOnly": false}
+{"input": "\u0642\u064f\u0631\u06e1\u0621\u064e\u0627\u0646\u0657\u0627", "python": "\u0642\u0631\u0621\u0627\u0646\u0627", "quranOnly": false}
+{"input": "\u0645\u064e\u0651\u0642\u06e1\u0628\u064f\u0648\u0636\u064e\u0629\u065e\u06d6", "python": "\u0645\u0642\u0628\u0648\u0636\u0647", "quranOnly": false}
+{"input": "\u064a\u064e\u0670\u0653\u0623\u064e\u064a\u064f\u0651\u0647\u064e\u0627", "python": "\u064a\u0627\u064a\u0647\u0627", "quranOnly": false}
+{"input": "\u0642\u0644\u06de\u0647\u0648", "python": "\u0642\u0644 \u0647\u0648", "quranOnly": false}
+{"input": "\u0642\u0644 \u06de \u0647\u0648", "python": "\u0642\u0644 \u0647\u0648", "quranOnly": false}
+{"input": "\u0633\u062c\u062f\u0629 \u06e9", "python": "\u0633\u062c\u062f\u0647", "quranOnly": false}
+{"input": "\u0622\u064a\u0629\u06dd\u0661\u0662", "python": "\u0627\u064a\u0647 \u0661\u0662", "quranOnly": false}
+{"input": "\u0622\u064a\u0629 \u06dd\u0661\u0662", "python": "\u0627\u064a\u0647 \u0661\u0662", "quranOnly": false}
+{"input": "\u0628\u0650\u0647\u0650\u06e6", "python": "\u0628\u0647\u06e6", "quranOnly": true}
+{"input": "\u0639\u064e\u0644\u064e\u064a\u06e1\u0647\u0650\u06e6", "python": "\u0639\u0644\u064a\u0647\u06e6", "quranOnly": true}
+{"input": "\u06e5", "python": "\u06e5", "quranOnly": true}
+{"input": "\u06e6", "python": "\u06e6", "quranOnly": true}
+{"input": "\u0627\u0644\u0640\u0631\u062d\u0645\u0640\u0646", "python": "\u0627\u0644\u0631\u062d\u0645\u0646", "quranOnly": false}
+{"input": "\u0640", "python": "", "quranOnly": false}
+{"input": "\u0627\u0644\u0631\u062d\u0640\u0640\u0640\u0645\u0646", "python": "\u0627\u0644\u0631\u062d\u0645\u0646", "quranOnly": false}
+{"input": "\u0623\u0625\u0622\u0671\u0627", "python": "\u0627\u0627\u0627\u0627\u0627", "quranOnly": false}
+{"input": "\u0627\u0653", "python": "\u0627", "quranOnly": false}
+{"input": "\u0627\u0654", "python": "\u0627", "quranOnly": false}
+{"input": "\u0627\u0655", "python": "\u0627", "quranOnly": false}
+{"input": "\u0645\u0643\u0629", "python": "\u0645\u0643\u0647", "quranOnly": false}
+{"input": "\u0645\u0643\u0647", "python": "\u0645\u0643\u0647", "quranOnly": false}
+{"input": "\u0639\u0644\u0649", "python": "\u0639\u0644\u064a", "quranOnly": false}
+{"input": "\u0639\u0644\u064a", "python": "\u0639\u0644\u064a", "quranOnly": false}
+{"input": "\u0645\u0624\u0645\u0646", "python": "\u0645\u0648\u0645\u0646", "quranOnly": false}
+{"input": "\u0648\u0654", "python": "\u0648", "quranOnly": false}
+{"input": "\u0633\u0626\u0644", "python": "\u0633\u064a\u0644", "quranOnly": false}
+{"input": "\u064a\u0654", "python": "\u064a", "quranOnly": false}
+{"input": "\u06c1\u0654", "python": "\u06c2", "quranOnly": false}
+{"input": "\u0621", "python": "\u0621", "quranOnly": false}
+{"input": "  \u0627\u0644\u0644\u0647 \n\t \u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\u000b\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\u200e\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\u200f\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\u200c\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\u200d\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\u00a0\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\ufffc\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647\ufffd\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\u0642\u0627\u0644\u060c \u062b\u0645\u061b \u0642\u0627\u0644\u061f", "python": "\u0642\u0627\u0644 \u062b\u0645 \u0642\u0627\u0644", "quranOnly": false}
+{"input": "\u0627\u0644\u0644\u0647_\u0627\u0643\u0628\u0631", "python": "\u0627\u0644\u0644\u0647 \u0627\u0643\u0628\u0631", "quranOnly": false}
+{"input": "\"\u0627\u0644\u062d\u0645\u062f \u0644\u0644\u0647\" *", "python": "\u0627\u0644\u062d\u0645\u062f \u0644\u0644\u0647", "quranOnly": false}
+{"input": "\u0645\u0648\u0633\u0649-\u0641\u0631\u0639\u0648\u0646", "python": "\u0645\u0648\u0633\u064a \u0641\u0631\u0639\u0648\u0646", "quranOnly": false}
+{"input": "(\u0627\u0644\u0644\u0647)", "python": "\u0627\u0644\u0644\u0647", "quranOnly": false}
+{"input": "\u0662\u0665\u0665", "python": "\u0662\u0665\u0665", "quranOnly": false}
+{"input": "\u06f2\u06f5\u06f5", "python": "\u06f2\u06f5\u06f5", "quranOnly": false}
+{"input": "255", "python": "255", "quranOnly": false}
+{"input": "Mercy 255", "python": "Mercy 255", "quranOnly": false}
+{"input": "Al-Baqarah", "python": "Al Baqarah", "quranOnly": false}
+{"input": "\u0628\t\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628 \u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\"\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628(\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628)\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628*\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628,\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628-\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628.\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u06281\u0628", "python": "\u06281\u0628", "quranOnly": false}
+{"input": "\u06284\u0628", "python": "\u06284\u0628", "quranOnly": false}
+{"input": "\u06286\u0628", "python": "\u06286\u0628", "quranOnly": false}
+{"input": "\u0628:\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628?\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\\\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628v\u0628", "python": "\u0628v\u0628", "quranOnly": false}
+{"input": "\u0628{\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628}\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\u00ab\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\u00bb\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\u060c\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\u061f\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\u0621\u0628", "python": "\u0628\u0621\u0628", "quranOnly": false}
+{"input": "\u0628\u0622\u0628", "python": "\u0628\u0627\u0628", "quranOnly": false}
+{"input": "\u0628\u0623\u0628", "python": "\u0628\u0627\u0628", "quranOnly": false}
+{"input": "\u0628\u0624\u0628", "python": "\u0628\u0648\u0628", "quranOnly": false}
+{"input": "\u0628\u0625\u0628", "python": "\u0628\u0627\u0628", "quranOnly": false}
+{"input": "\u0628\u0626\u0628", "python": "\u0628\u064a\u0628", "quranOnly": false}
+{"input": "\u0628\u0627\u0628", "python": "\u0628\u0627\u0628", "quranOnly": false}
+{"input": "\u0628\u0628\u0628", "python": "\u0628\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0629\u0628", "python": "\u0628\u0647\u0628", "quranOnly": false}
+{"input": "\u0628\u062a\u0628", "python": "\u0628\u062a\u0628", "quranOnly": false}
+{"input": "\u0628\u062b\u0628", "python": "\u0628\u062b\u0628", "quranOnly": false}
+{"input": "\u0628\u062c\u0628", "python": "\u0628\u062c\u0628", "quranOnly": false}
+{"input": "\u0628\u062d\u0628", "python": "\u0628\u062d\u0628", "quranOnly": false}
+{"input": "\u0628\u062e\u0628", "python": "\u0628\u062e\u0628", "quranOnly": false}
+{"input": "\u0628\u062f\u0628", "python": "\u0628\u062f\u0628", "quranOnly": false}
+{"input": "\u0628\u0630\u0628", "python": "\u0628\u0630\u0628", "quranOnly": false}
+{"input": "\u0628\u0631\u0628", "python": "\u0628\u0631\u0628", "quranOnly": false}
+{"input": "\u0628\u0632\u0628", "python": "\u0628\u0632\u0628", "quranOnly": false}
+{"input": "\u0628\u0633\u0628", "python": "\u0628\u0633\u0628", "quranOnly": false}
+{"input": "\u0628\u0634\u0628", "python": "\u0628\u0634\u0628", "quranOnly": false}
+{"input": "\u0628\u0635\u0628", "python": "\u0628\u0635\u0628", "quranOnly": false}
+{"input": "\u0628\u0636\u0628", "python": "\u0628\u0636\u0628", "quranOnly": false}
+{"input": "\u0628\u0637\u0628", "python": "\u0628\u0637\u0628", "quranOnly": false}
+{"input": "\u0628\u0638\u0628", "python": "\u0628\u0638\u0628", "quranOnly": false}
+{"input": "\u0628\u0639\u0628", "python": "\u0628\u0639\u0628", "quranOnly": false}
+{"input": "\u0628\u063a\u0628", "python": "\u0628\u063a\u0628", "quranOnly": false}
+{"input": "\u0628\u0640\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0641\u0628", "python": "\u0628\u0641\u0628", "quranOnly": false}
+{"input": "\u0628\u0642\u0628", "python": "\u0628\u0642\u0628", "quranOnly": false}
+{"input": "\u0628\u0643\u0628", "python": "\u0628\u0643\u0628", "quranOnly": false}
+{"input": "\u0628\u0644\u0628", "python": "\u0628\u0644\u0628", "quranOnly": false}
+{"input": "\u0628\u0645\u0628", "python": "\u0628\u0645\u0628", "quranOnly": false}
+{"input": "\u0628\u0646\u0628", "python": "\u0628\u0646\u0628", "quranOnly": false}
+{"input": "\u0628\u0647\u0628", "python": "\u0628\u0647\u0628", "quranOnly": false}
+{"input": "\u0628\u0648\u0628", "python": "\u0628\u0648\u0628", "quranOnly": false}
+{"input": "\u0628\u0649\u0628", "python": "\u0628\u064a\u0628", "quranOnly": false}
+{"input": "\u0628\u064a\u0628", "python": "\u0628\u064a\u0628", "quranOnly": false}
+{"input": "\u0628\u064b\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u064c\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u064d\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u064e\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u064f\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0650\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0651\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0652\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0653\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0654\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0670\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u0671\u0628", "python": "\u0628\u0627\u0628", "quranOnly": false}
+{"input": "\u0628\u06dc\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06df\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06e0\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06e2\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06e3\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06e5\u0628", "python": "\u0628\u06e5\u0628", "quranOnly": true}
+{"input": "\u0628\u06e6\u0628", "python": "\u0628\u06e6\u0628", "quranOnly": true}
+{"input": "\u0628\u06e7\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06e8\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06ea\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06eb\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06ec\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u06ed\u0628", "python": "\u0628\u0628", "quranOnly": false}
+{"input": "\u0628\u200e\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\u200f\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\u2013\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\ufffc\u0628", "python": "\u0628 \u0628", "quranOnly": false}
+{"input": "\u0628\ufffd\u0628", "python": "\u0628 \u0628", "quranOnly": false}

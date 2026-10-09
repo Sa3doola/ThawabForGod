@@ -34,7 +34,12 @@ playground.xcworkspace
 # Swift Package Manager
 .build/
 .swiftpm/
-Packages/
+# SwiftPM 3 and 4 checked dependencies out for editing into a top-level Packages/ folder,
+# which is what this line was for and what it still ignores. Packages/ArabicText is not a
+# checkout but this repo's own local package (the Arabic folding shared by the app and
+# Tools/QuranBuilder), so it is the one entry let through.
+/Packages/*
+!/Packages/ArabicText/
 # Package.resolved is deliberately NOT ignored. It pins Adhan and GRDB to exact
 # revisions, and a CI runner that resolves them freshly would otherwise build a
 # different app from the one tested here.

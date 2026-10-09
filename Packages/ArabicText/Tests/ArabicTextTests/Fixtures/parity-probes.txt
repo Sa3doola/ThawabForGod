@@ -1,0 +1,91 @@
+# Probes folded by both ArabicNormalizer (Swift) and build_hadith_db.normalize (Python).
+#
+# One probe per line. Blank lines and lines starting with "#" are ignored. Invisible or
+# ambiguous characters are written as \u{XXXX}. Regenerate the expected output with
+#
+#     python3 Tools/CorpusBuilder/export_normalize_parity.py
+#
+# which also adds one generated probe per distinct character in today's hadith and Quran corpora.
+
+# Hadith, as printed: vowelled, with commas and colons through the isnad
+حَدَّثَنَا الْحُمَيْدِيُّ عَبْدُ اللَّهِ بْنُ الزُّبَيْرِ ، قَالَ : حَدَّثَنَا سُفْيَانُ
+وَحَدَّثَنَاهُ إِسْحَاقُ بْنُ إِبْرَاهِيمَ، وَابْنُ أَبِي عُمَرَ، جَمِيعًا عَنِ ابْنِ عُيَيْنَةَ
+«إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ»
+قَالَ: (يَا أَيُّهَا النَّاسُ) - فَذَكَرَهُ؟
+عَنْ عُمَرَ بْنِ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ‏.‏
+
+# Quran, Tanzil Uthmani
+بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ لَا تَأْخُذُهُۥ سِنَةٌ وَلَا نَوْمٌ لَّهُۥ مَا فِى ٱلسَّمَٰوَٰتِ
+إِنَّمَآ أَمْرُهُۥٓ إِذَآ أَرَادَ شَيْـًٔا أَن يَقُولَ لَهُۥ كُن فَيَكُونُ
+وَلَا يَـُٔودُهُۥ حِفْظُهُمَا
+الٓمٓ
+بِإِذْنِهِۦ
+
+# Quran, QUL Hafs (KFGQPC encoding, with its sukun and signs)
+ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ
+۞ وَإِذَا
+يَسۡجُدُونَۤ۩
+وَأَنَابَ ۩
+قُرۡءَانٗا
+مَّقۡبُوضَةٞۖ
+يَٰٓأَيُّهَا
+
+# The Quranic signs that are not marks: boundaries, never glue
+قل۞هو
+قل ۞ هو
+سجدة ۩
+آية۝١٢
+آية \u{06DD}١٢
+
+# Small waw and small yeh (Quran only)
+بِهِۦ
+عَلَيۡهِۦ
+\u{06E5}
+\u{06E6}
+
+# Tatweel
+الـرحمـن
+ـ
+الرحـــمن
+
+# Every alef form, and the other folds
+أإآٱا
+\u{0627}\u{0653}
+\u{0627}\u{0654}
+\u{0627}\u{0655}
+مكة
+مكه
+على
+علي
+مؤمن
+\u{0648}\u{0654}
+سئل
+\u{064A}\u{0654}
+\u{06C1}\u{0654}
+ء
+
+# Whitespace, controls and directional marks
+  الله \n\t اكبر
+الله\u{000B}اكبر
+الله\u{200E}اكبر
+الله\u{200F}اكبر
+الله\u{200C}اكبر
+الله\u{200D}اكبر
+الله\u{00A0}اكبر
+الله\u{FFFC}اكبر
+الله\u{FFFD}اكبر
+
+# Punctuation and syntax a query could carry
+قال، ثم؛ قال؟
+الله_اكبر
+"الحمد لله" *
+موسى-فرعون
+(الله)
+
+# Digits and other scripts
+٢٥٥
+۲۵۵
+255
+Mercy 255
+Al-Baqarah

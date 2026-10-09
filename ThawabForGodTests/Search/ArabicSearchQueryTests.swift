@@ -4,14 +4,16 @@
 //
 
 import Foundation
+import SQLite3
 import Testing
 @testable import ThawabForGod
 
 /// The folding a query goes through before it meets the index.
 ///
-/// This suite is one half of a rule whose other half is in Python: `ArabicSearchQuery` must fold a
-/// typed word into exactly what `build_quran_db.py` and `build_hadith_db.py` fed their indexes.
-/// The cases below are the rule stated in Swift; the search tests in `QuranRepositoryTests` and
+/// This suite is one half of a rule whose other half is at build time: `ArabicSearchQuery` must fold
+/// a typed word into exactly what the indexes were fed. The fold itself is `ArabicNormalizer`'s
+/// (`Packages/ArabicText`, with its own suite and the Python parity probes); the cases below are the
+/// rule as a query sees it, and the search tests in `QuranRepositoryTests` and
 /// `HadithRepositoryTests` are the same rule checked against the corpora that actually shipped,
 /// which is what catches the two sides drifting apart.
 struct ArabicSearchQueryTests {
@@ -48,6 +50,17 @@ struct ArabicSearchQueryTests {
 
     @Test func tatweelIsRemovedRatherThanSplittingTheWord() {
         #expect(ArabicSearchQuery("الرحـــمن").tokens == ["الرحمن"])
+    }
+
+    /// Uthmani spelling's small waw and small yeh, pasted from a mushaf, fold away like the tatweel.
+    @Test func smallWawAndSmallYehAreRemovedRatherThanSplittingTheWord() {
+        #expect(ArabicSearchQuery("بِهِۦ لَهُۥ").tokens == ["به", "له"])
+    }
+
+    /// ۞ and ۩ sit between words, so they end one — a pasted `قل۞هو` is still two words.
+    @Test func theQuranicSignsEndAWord() {
+        #expect(ArabicSearchQuery("قل۞هو").tokens == ["قل", "هو"])
+        #expect(ArabicSearchQuery("يسجدون۩").tokens == ["يسجدون"])
     }
 
     // MARK: Words
@@ -89,5 +102,28 @@ struct ArabicSearchQueryTests {
 
     @Test func aQueryWithAWordIsNotEmpty() {
         #expect(!ArabicSearchQuery("الله").isEmpty)
+    }
+
+    // MARK: The hadith index
+
+    /// The one place the query's fold and the hadith index's differ: Python keeps the small waw and
+    /// small yeh as letters, and the query drops them. That can only matter if the index holds a
+    /// word with one of them in it — which it cannot, because the text it was built from has none.
+    /// Checked against the database that shipped, so a hadith rebuild that changed this fails here.
+    @Test func theHadithTextHoldsNeitherLetterTheTwoFoldsDisagreeOn() throws {
+        let url = try #require(Bundle.main.url(forResource: "hadith", withExtension: "sqlite"))
+
+        var database: OpaquePointer?
+        defer { sqlite3_close(database) }
+        try #require(sqlite3_open_v2(url.path, &database, SQLITE_OPEN_READONLY, nil) == SQLITE_OK)
+
+        // U+06E5 and U+06E6, spelled as code points so the query cannot be mis-encoded.
+        let sql = "SELECT count(*) FROM hadith WHERE instr(text, char(1765)) OR instr(text, char(1766))"
+        var statement: OpaquePointer?
+        defer { sqlite3_finalize(statement) }
+        try #require(sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK)
+        try #require(sqlite3_step(statement) == SQLITE_ROW)
+
+        #expect(sqlite3_column_int(statement, 0) == 0)
     }
 }

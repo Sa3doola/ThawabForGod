@@ -330,8 +330,9 @@ CREATE VIRTUAL TABLE hadith_fts USING fts5(
 # MARK: The folding
 
 # Every combining mark is dropped by `skeleton`; these are the letters that
-# survive but are written more than one way. Mirrors `LETTER_FOLDING` in
-# `build_quran_db.py` and `QuranSearchQuery.letterFolding` in the app.
+# survive but are written more than one way. Mirrors `ArabicNormalizer` in
+# `Packages/ArabicText`, which folds every hadith query; `HadithParityTests`
+# holds the two together over the probes `export_normalize_parity.py` records.
 LETTER_FOLDING = str.maketrans({
     "أ": "ا", "إ": "ا", "آ": "ا", "ٱ": "ا",   # every hamza-bearing alef
     "ة": "ه",                                  # ta marbuta, which readers type as ha
