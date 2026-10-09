@@ -340,7 +340,7 @@ All of them drive the app through `-debug*` launch arguments (34 hooks; `-debugM
 | `T/Home/HomeViewModelTests.swift` (:612–800) | adapt: continue-reading cases re-pointed at M6; until then they assert the section is absent | M3/M6 |
 | `T/DeepLink/DeepLinkTests.swift`, `DeepLinkRoutingTests.swift` | extend: the hand-written `all` list (:24–36) gains the two cases | M7 |
 | `T/Activity/*`, `T/Search/*`, `T/Theming/AppBreakpointDuoTests.swift` | keep | — |
-| `UIT/ScreenshotTourTests.swift` | its header says "TEMPORARY… Not to be committed", yet it is committed and drives the old Quran screens: see Q6 | M3 |
+| `UIT/ScreenshotTourTests.swift` | delete (Q6) | M3 |
 
 ---
 
@@ -391,12 +391,12 @@ All of them drive the app through `-debug*` launch arguments (34 hooks; `-debugM
 | **T9** | `Sh/Resources/SharedAssets.xcassets/Reader/`; `Sh/Theming/UI/AppColor.swift`, `Theme.swift`; `Q/AyahActions/AyahContextMenu.swift:117–120`; `NoorWidgets/Views/QuranWidgetViews.swift` | Three palettes × (background, text, secondary, ornament, selection, success, warning) + four highlight shades ×3 themes, plus the widget palette. Alpha *masks* (`AyahPanel` :122–127, `TafsirSection` :106–111) use `.black` only for its alpha: one documented `FadeMask` helper, the single exception. |
 | **T10** | All ported views; `Sh/Localization/Domain/L10nKey.swift`; `Sh/Localizable.xcstrings` | 214 Mushaf + 10 widget keys; ~15 die with khatmah/backup/windows; 34 carry format arguments, and every number among them goes through `l10n.string(Int)`. ~200 new or reused keys. |
 | **T11** | `Q/Reader/QuranReaderView.swift` (Mushaf `ReaderRootView` :150–153, :234, :287–293, :315–332); `Q/Mushaf/MushafPageUnit.swift`; `Q/Platform/QuranCommands.swift`; `App/ThawabForGodApp.swift:47–55, :83–113` (`SectionCommands`) | `.toolbar(.hidden, for: .tabBar)` joins the existing navigation-bar/status-bar hiding. Mushaf's `usesInspector` is "Mac always", which inside Noor's split view means a third column on the detail side: keep it, but measure against the detail column. `⌘G` (library) and `⌘T` don't clash with ⌘1–4. |
-| **T12** | `Core/Layout/FoldGeometry.swift`; `Features/Adhkar/Views/AdhkarReadingView.swift:130–160` | **The premise doesn't hold**: the adhkar reader has no fold *measurement*. It hands the fold to the system's `ArrangementView` (iOS 27.1, regular width). Only Mushaf measures (`reservedRegions`). There is nothing to merge; Q1 asks how you want that recorded. |
+| **T12** | `Core/Layout/FoldGeometry.swift`; `Features/Adhkar/Views/AdhkarReadingView.swift:130–160` | **The premise doesn't hold**: the adhkar reader has no fold *measurement*. It hands the fold to the system's `ArrangementView` (iOS 27.1, regular width). Only Mushaf measures (`reservedRegions`). There is nothing to merge. **Resolved (Q1): one helper, one caller.** |
 | **T13** | Every ported `nonisolated` / `actor` / `@concurrent` / `Task.detached` / `nonisolated(unsafe)` (lists in the scout notes; key ones: `FontPackStore`, `PageMetricsCache`, `QuranRepositoring`'s `@concurrent` methods, both markup regexes, `TafsirSection` and `SurahInfoView` detached parses) | Mushaf already uses `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` (checked in its project), so the only difference is Swift 6 vs 5 mode: annotations port verbatim. `ArabicText` and `QuranBuilder` stay in Swift 6 mode as packages. `onGeometryChange` (`AyahPanel` :116, `TafsirSection` :100) is fine at iOS 17: Mushaf builds against the same 17.0 / 15.0 targets. |
 | **T14 (new)** V2 fonts in a public clone | `QuranData/…/madaniV2` folder reference; `.gitignore`; `Tools/add_quran_data_phase.rb` | A synchronized group flattens resources (**checked:** `Resources/Fonts/Quran/*.ttf` land at the bundle root today), so the 604 fonts need a **folder reference** outside `ThawabForGod/` to keep the `madaniV2/` path `FontPackStore` reads. A folder reference to a missing folder is expected to fail the copy phase in a public clone (to confirm in M2). Fix either way: commit a placeholder `README.md` in the folder and change the M0 ignore rule from `madaniV2/` to `madaniV2/*` + `!madaniV2/README.md` (M2). |
 | **T15 (new)** One `manifest.json`, two profiles | `Q/Data/Packs/ContentPackStore.swift`; `QB/.../Packs.swift` | Mushaf bundles `Packs/manifest.json`; the two profiles would write different manifests to one committed path, so every local full build would dirty git. Packs already carry a `pack` table (id, kind, language, name, author, direction, version, source, licence): the store discovers packs by scanning, and the manifest becomes a build report, not a resource. Synchronized groups also flatten `Packs/`, so discovery is by file prefix (`translation-`, `tafsir-`, `surah-info-`). |
 | **T16 (new)** Tafsir silence | `Q/Data/Packs/TafsirRepository.swift`; `Q/Tafsir/TafsirSection.swift` | Mushaf's packs give *every* ayah a group owner; Jalalayn deliberately has no row for 226 verses, and Noor's `TafsirViewModel.Phase.silent` exists so a neighbour's gloss is never shown. The ported repository returns `nil` for an ayah with no row and no covering group, and the section shows "this commentary has no note here". Noor's 226-verse test carries over. |
-| **T17 (new)** Search highlighting | `Q/Domain/QuranSearch.swift` (`SearchHighlight`); `Q/Search/QuranSearchView.swift` | Noor's CLAUDE.md says Quran results are *not* highlighted (index offsets ≠ vowelled-text offsets). Mushaf highlights by re-matching folded words on the displayed text. **Q4.** |
+| **T17 (new)** Search highlighting | `Q/Domain/QuranSearch.swift` (`SearchHighlight`); `Q/Search/QuranSearchView.swift` | Noor's CLAUDE.md says Quran results are *not* highlighted (index offsets ≠ vowelled-text offsets). Mushaf highlights by re-matching folded words on the displayed text. **Resolved (Q4): keep Mushaf's highlighting; `CLAUDE.md` rewritten at M8.** |
 
 ---
 
@@ -464,6 +464,24 @@ Only the main agent runs `xcodebuild`, makes the architecture and concurrency ca
 ---
 
 ## 7. Open questions and estimate
+
+### Answers (Saad, 2026-10-10)
+
+| Q | Ruling | Lands in |
+|---|---|---|
+| Q1 | Accepted. `MushafFold` → `Core/Layout/FoldGeometry`; the adhkar keeps `ArrangementView`. T12 is recorded as **"one helper, one caller"**. | M4 / M7 |
+| Q2 | (a) A slim, DEBUG-only `QuranLaunchOptions` (~12 hooks), compiled out of Release. | M5 |
+| Q3 | Yes: side-by-side captures from the reference project and the branch, Saad's visual sign-off, no pixel diff. | M4 |
+| Q4 | Keep Mushaf's search highlighting; `CLAUDE.md`'s "nothing is highlighted" paragraph is rewritten at M8. | M5 / M8 |
+| Q5 | The Tanzil fallback hides the Library's **Page** tab along with Mushaf mode; Juz and Hizb stay. | M5 |
+| Q6 | Delete `UIT/ScreenshotTourTests.swift` at M3. | M3 |
+| Q7 | Fixed on `Development` as its own commit ("Reminders: skip artwork whose file is missing"), then `Development` merged into `quran-migration`. | M2.0 |
+| Q8 | Confirmed: `quran-migration` merges into `Development` after M8. | M8 |
+| Q9 | Saad reviews the ayah-of-the-day list before M7. | before M7 |
+
+**Sequencing rule added for M2:** the app keeps bundling and using today's `quran.sqlite` and `tafsir.sqlite` until M3. Every M2 output goes to `QuranData/out/<profile>/` and is validated there; the swap into `Resources/Corpus/` happens in M3, together with the deletion of the legacy feature. Every M2 commit builds and runs exactly as before.
+
+### The questions as asked
 
 **Q1 — T12.** The adhkar reader has no fold implementation to merge (it uses `ArrangementView`). Proposal: `MushafFold` moves to `Core/Layout/FoldGeometry` as the one fold *measurement* in the app; the adhkar keeps `ArrangementView`; T12 is recorded as "one helper, one caller". The alternative is rewriting the adhkar onto the helper, which I'd advise against: it trades a system container for hand measurement.
 
