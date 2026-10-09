@@ -126,6 +126,21 @@ final class UserNotificationService: NotificationService {
 
     // MARK: Translation
 
+    /// The banner's thumbnail, or `nil` for a file that is not there as well as one the system
+    /// refuses.
+    ///
+    /// The file system is asked first because the system's own answer moved: the initializer used
+    /// to throw for a URL naming nothing, and on the iOS 26.5 simulator it builds an attachment
+    /// anyway — a request carrying a picture that can never be drawn. Checking here keeps the rule
+    /// the same whichever way the system leans.
+    private static func attachment(at url: URL) -> UNNotificationAttachment? {
+        guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
+            return nil
+        }
+
+        return try? UNNotificationAttachment(identifier: "artwork", url: url, options: nil)
+    }
+
     private func request(for reminder: PrayerReminder) -> UNNotificationRequest {
         let text = content.content(for: reminder)
 
@@ -145,9 +160,7 @@ final class UserNotificationService: NotificationService {
         // picture is still a reminder, and losing the reminder to save the picture is the wrong
         // trade.
         if let url = artwork.artwork(for: reminder.prayer) {
-            if let attachment = try? UNNotificationAttachment(
-                identifier: "artwork", url: url, options: nil
-            ) {
+            if let attachment = Self.attachment(at: url) {
                 notification.attachments = [attachment]
             } else {
                 // The provider hands back a fresh file each time, because a successful attachment
