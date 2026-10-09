@@ -1,0 +1,58 @@
+{
+  "profile": "qul",
+  "output": "../../../QuranData/out/qul/quran-mushaf.sqlite",
+  "qul": {
+    "sources": "../../../QuranData/SOURCES.md",
+    "raw": "../../../QuranData/raw",
+    "surahs": "metadata/quran-metadata-surah-name.json",
+    "ayahs": "metadata/quran-metadata-ayah.json",
+    "imlaei": "script/imlaei-simple.json",
+    "metadata": {
+      "juz": "metadata/quran-metadata-juz.json",
+      "hizb": "metadata/quran-metadata-hizb.json",
+      "rub": "metadata/quran-metadata-rub.json",
+      "manzil": "metadata/quran-metadata-manzil.json",
+      "ruku": "metadata/quran-metadata-ruku.json",
+      "sajda": "metadata/quran-metadata-sajda.json"
+    },
+    "words": {
+      "hafs": "script/qpc-hafs-wbw.json",
+      "glyphV2": "script/qpc-v2-glyph-wbw.json"
+    },
+    "styles": [
+      { "id": "madaniV2", "layout": "layout/qpc-v2-15-lines.db" }
+    ],
+    "fonts": {
+      "bundleDirectory": "../../../QuranData/out/qul/Fonts",
+      "files": [
+        "fonts/headers/surah-header.ttf",
+        "fonts/headers/surah-name-v2.ttf",
+        "fonts/headers/quran-common.ttf"
+      ]
+    },
+    "ligatures": {
+      "surah-header": "fonts/headers/surah-header-ligatures.json",
+      "surah-name-v2": "fonts/headers/surah-name-v2-ligatures.json",
+      "quran-common": "fonts/headers/quran-common-ligatures.json"
+    },
+    "pageFonts": [
+      {
+        "style": "madaniV2",
+        "directory": "fonts/v2",
+        "manifest": "../fonts-v2.sha256",
+        "count": 604,
+        "bundleDirectory": "../../../QuranData/Fonts/madaniV2"
+      }
+    ]
+  },
+  "curated": {
+    "ayahOfTheDay": "../data/ayah-of-the-day.txt",
+    "ayahOfTheDayOutput": "../../../QuranData/out/qul/ayah-of-the-day.json",
+    "minimumEntries": 60
+  },
+  "sizeReport": {
+    "paths": ["../../../QuranData/out/qul", "../../../QuranData/Fonts"],
+    "budgetCompressedMB": 200,
+    "budgetInstalledMB": 400
+  }
+}

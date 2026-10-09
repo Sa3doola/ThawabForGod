@@ -1,0 +1,30 @@
+{
+  "profile": "tanzil",
+  "output": "../../../QuranData/out/tanzil/quran.sqlite",
+  "tanzil": {
+    "text": {
+      "url": "https://tanzil.net/pub/download/index.php?quranType=uthmani&outType=txt-2&agree=true",
+      "cache": "../../../QuranData/raw/tanzil/quran-uthmani.txt",
+      "verseDigest": "36da55e256f54f4838b6fa1c78781734346c8d9ffde52daf5a3cbfa32626a08c"
+    },
+    "searchText": {
+      "url": "https://tanzil.net/pub/download/index.php?quranType=simple-clean&outType=txt-2&agree=true",
+      "cache": "../../../QuranData/raw/tanzil/quran-simple-clean.txt",
+      "verseDigest": "7c74ab21103b99d8d0bacd94e7c11f5f5855b22d3f0d32e1f09fb6cd73764b58"
+    },
+    "metadata": {
+      "url": "https://tanzil.net/res/text/metadata/quran-data.xml",
+      "cache": "../../../QuranData/raw/tanzil/quran-data.xml"
+    }
+  },
+  "curated": {
+    "ayahOfTheDay": "../data/ayah-of-the-day.txt",
+    "ayahOfTheDayOutput": "../../../QuranData/out/tanzil/ayah-of-the-day.json",
+    "minimumEntries": 60
+  },
+  "sizeReport": {
+    "paths": ["../../../QuranData/out/tanzil"],
+    "budgetCompressedMB": 200,
+    "budgetInstalledMB": 400
+  }
+}

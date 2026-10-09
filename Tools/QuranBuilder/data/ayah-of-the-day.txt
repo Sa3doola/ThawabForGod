@@ -1,0 +1,147 @@
+# Ayah of the day: curated list (Phase 8.0)
+#
+# STATUS: draft, TO BE REVIEWED BY SAAD. Nothing here is final until he has read every line.
+#
+# The "Ayah of the day" widget shows one entry per day. BuildQuranData turns this file into
+# Mushaf/Resources/ayah-of-the-day.json; the app picks the entry for a date deterministically
+# (DailyAyahRule), and no entry comes back within 60 days (the list must keep >= 60 entries).
+#
+# Format: one entry per line, "surah:ayah" or "surah:first-last" (a range inside one surah),
+# then "#" and a short note saying what it is. Blank lines and lines starting with "#" are
+# ignored. The pipeline fails on an ayah that does not exist, a range that runs backwards or
+# leaves its surah, an entry without a note, and two entries that share an ayah.
+#
+# Selection rules:
+#   - each entry reads on its own: it starts a sentence (never a single ayah that only continues
+#     the previous one) and ends one; when the thought needs the next ayah, the entry is a range;
+#   - widely used, well-known ayahs and du'as; no rulings that need their context;
+#   - short enough for the large widget, which shows the whole range (the smaller sizes truncate).
+# "[check]" marks entries worth a second look: borderline openings or very long text. Six
+# entries are too long to show with the whole Saheeh translation on the smallest large widget
+# (iPhone SE); there the Arabic still shows whole and the translation ends with "...".
+
+1:1-7       # Al-Fatihah: the whole surah
+2:45-46     # Seek help through patience and prayer; those certain they will meet their Lord
+2:115       # To Allah belong the east and the west; wherever you turn, there is the Face of Allah
+2:152       # "So remember Me; I will remember you"
+2:153       # "Seek help through patience and prayer; Allah is with the patient"
+2:155-157   # Tested with fear and hunger; "Indeed we belong to Allah, and to Him we return"
+2:186       # "When My servants ask you concerning Me, indeed I am near"
+2:195       # Spend in the way of Allah; do good, Allah loves the doers of good
+2:201       # "Our Lord, give us good in this world and good in the Hereafter" [check: opens "And among them is he who says"]
+2:250       # "Our Lord, pour upon us patience and plant firmly our feet"
+2:255       # Ayat al-Kursi [check: on the smallest large widget (iPhone SE) the translation is cut; the Arabic shows whole]
+2:256       # No compulsion in religion; the firmest handhold
+2:263       # A kind word and forgiveness are better than charity followed by injury
+2:285       # "The Messenger has believed..."; "We hear and we obey"
+2:286       # Allah does not burden a soul beyond its capacity; the closing du'a of Al-Baqarah [check: on the smallest large widget (iPhone SE) the translation is cut; the Arabic shows whole]
+3:8         # "Our Lord, let not our hearts deviate after You have guided us" [check: opens "[Who say]"]
+3:26        # "O Allah, Owner of sovereignty, You give sovereignty to whom You will"
+3:31        # "If you love Allah, then follow me; Allah will love you"
+3:92        # You will not attain righteousness until you spend from what you love
+3:103       # Hold firmly to the rope of Allah all together and do not become divided
+3:133-134   # Hasten to forgiveness and a garden as wide as the heavens; those who restrain anger and pardon
+3:139       # Do not weaken and do not grieve
+3:159       # Lenient by mercy from Allah; consult them, then rely upon Allah [check: long]
+3:185       # Every soul will taste death; the life of this world is the enjoyment of delusion
+3:190-191   # Signs in the creation of the heavens and the earth for those who remember Allah
+3:200       # Persevere, endure and remain stationed, that you may succeed
+4:28        # Allah wants to lighten your burden; man was created weak
+4:110       # Whoever does wrong and then seeks forgiveness will find Allah Forgiving, Merciful
+6:59        # With Him are the keys of the unseen; not a leaf falls but He knows it
+6:162-163   # "My prayer, my sacrifice, my living and my dying are for Allah, Lord of the worlds"
+7:23        # The du'a of Adam and Hawwa: "Our Lord, we have wronged ourselves"
+7:55-56     # Call upon your Lord humbly and privately; the mercy of Allah is near to the doers of good
+7:199       # Take what is given freely, enjoin what is good, turn away from the ignorant
+8:2-4       # The believers: their hearts tremble at Allah's mention; they pray and spend; they are the believers in truth [check: on the smallest large widget (iPhone SE) the translation is cut; the Arabic shows whole]
+9:51        # "Nothing will strike us except what Allah has decreed for us"
+9:128-129   # A Messenger from among yourselves; "Sufficient for me is Allah"
+10:62-64    # The allies of Allah: no fear upon them, nor do they grieve
+11:114-115  # Establish prayer; good deeds do away with misdeeds; be patient
+12:87       # "Do not despair of relief from Allah" (Ya'qub to his sons)
+13:11       # Allah will not change the condition of a people until they change what is in themselves
+13:28       # By the remembrance of Allah hearts find rest [check: opens "Those who have believed"; given as an example in the brief]
+14:7        # "If you are grateful, I will surely increase you"
+14:40-41    # The du'a of Ibrahim: "My Lord, make me an establisher of prayer"
+15:49-50    # "Inform My servants that I am the Forgiving, the Merciful"
+15:97-99    # Glorify your Lord and worship Him until certainty comes to you
+16:18       # If you counted the favours of Allah, you could not number them
+16:90       # Allah commands justice, good conduct and giving to relatives
+16:97       # Whoever does righteousness, male or female, while a believer: a good life
+16:125      # Invite to the way of your Lord with wisdom and good instruction
+16:128      # Allah is with those who fear Him and do good
+17:23-24    # Worship none but Him, and kindness to parents; "My Lord, have mercy upon them" [check: long]
+17:80       # "My Lord, cause me to enter a sound entrance and to exit a sound exit"
+18:10       # The youths of the cave: "Our Lord, grant us mercy and prepare for us right guidance"
+18:46       # Wealth and children are the adornment of this life; the lasting good deeds are better
+18:109      # If the sea were ink for the words of my Lord
+20:25-28    # The du'a of Musa: "My Lord, expand for me my chest"
+20:114      # "My Lord, increase me in knowledge"
+21:83       # The du'a of Ayyub: "Adversity has touched me, and You are the Most Merciful"
+21:87-88    # The du'a of Yunus: "There is no deity except You; exalted are You"
+21:89       # The du'a of Zakariyya: "My Lord, do not leave me alone"
+21:107      # "We have not sent you except as a mercy to the worlds"
+23:118      # "My Lord, forgive and have mercy, and You are the best of the merciful"
+24:35       # The verse of light [check: long; on the smallest large widget (iPhone SE) the translation is cut; the Arabic shows whole]
+27:62       # Who responds to the one in distress when he calls upon Him?
+28:24       # The du'a of Musa: "My Lord, I am in need of whatever good You send down to me"
+29:2        # Do people think they will be left to say "We believe" and not be tested?
+29:45       # Recite the Book and establish prayer; prayer prohibits immorality
+29:69       # Those who strive for Us, We will surely guide them to Our ways
+30:21       # Of His signs: mates for you, and affection and mercy between you
+31:13       # Luqman to his son: "Do not associate anything with Allah"
+31:17       # Luqman: "Establish prayer, enjoin what is right, and be patient"
+33:21       # In the Messenger of Allah you have an excellent example
+33:41-42    # Remember Allah often and glorify Him morning and evening
+33:56       # Allah and His angels send blessings upon the Prophet
+33:70-71    # Fear Allah and speak words of truth; He will amend your deeds
+35:15       # "O mankind, you are those in need of Allah"
+36:82       # His command, when He intends a thing, is only "Be," and it is
+37:180-182  # The close of As-Saffat: glory, peace upon the messengers, praise to Allah
+39:10       # The patient will be given their reward without measure
+39:53       # "Do not despair of the mercy of Allah; He forgives all sins"
+40:60       # "Call upon Me; I will respond to you"
+41:30       # Those who say "Our Lord is Allah" and remain steadfast: the angels descend upon them
+41:34       # Repel evil with what is better, and your enemy becomes a devoted friend
+42:43       # Whoever is patient and forgives: that is of the matters of resolve
+47:7        # If you support Allah, He will support you and plant firmly your feet
+47:24       # Do they not reflect upon the Qur'an?
+49:10       # The believers are but brothers, so make peace between your brothers
+49:12       # Avoid much suspicion, do not spy or backbite [check: long]
+49:13       # Created from male and female, made into peoples and tribes to know one another
+50:16       # We are closer to him than his jugular vein
+51:56       # I did not create jinn and mankind except to worship Me
+54:17       # We have made the Qur'an easy to remember; is there anyone who will remember?
+55:1-4      # The Most Merciful taught the Qur'an, created man and taught him eloquence
+55:26-27    # Everyone on earth will perish; the Face of your Lord remains
+55:60       # Is the reward for good anything but good?
+57:3        # He is the First and the Last, the Ascendant and the Intimate
+57:16       # Has the time not come for the hearts of the believers to humble themselves?
+57:22-23    # No disaster strikes but it is in a register, so you do not despair over what you missed
+59:18-19    # Let every soul look to what it has sent ahead for tomorrow
+59:21       # Had We sent down this Qur'an upon a mountain
+59:22-24    # The close of Al-Hashr: the names of Allah [check: long; on the smallest large widget (iPhone SE) the translation is cut; the Arabic shows whole]
+61:2-3      # Why do you say what you do not do?
+63:9        # Let not your wealth and children divert you from the remembrance of Allah
+64:11       # No disaster strikes except by permission of Allah; He guides the heart of the believer
+64:16       # Fear Allah as much as you are able
+65:2-3      # Whoever fears Allah, He makes a way out for him and provides from where he does not expect [check: opens with divorce rulings; long; given as an example in the brief] [check: on the smallest large widget (iPhone SE) the translation is cut; the Arabic shows whole]
+67:1-2      # Blessed is He in whose hand is dominion; He created death and life to test you
+68:4        # "And indeed, you are of a great moral character" [check: opens "And indeed", answer to the oath]
+71:10-12    # Nuh: "Ask forgiveness of your Lord; He is ever Forgiving"
+87:14-17    # He has succeeded who purifies himself; the Hereafter is better and more lasting
+88:17-20    # Do they not look at the camels, the sky, the mountains and the earth?
+89:27-30    # "O reassured soul, return to your Lord, well-pleased and pleasing"
+91:7-10     # The soul and its inspiration; he has succeeded who purifies it
+93:1-5      # Ad-Duha: your Lord has not forsaken you
+94:5-6      # With hardship comes ease [check: opens "For indeed"; given as an example in the brief]
+96:1-5      # The first revelation: "Read in the name of your Lord"
+97:1-5      # Al-Qadr: the whole surah
+99:7-8      # Whoever does an atom's weight of good will see it [check: opens "So whoever"]
+103:1-3     # Al-'Asr: the whole surah
+108:1-3     # Al-Kawthar: the whole surah
+109:1-6     # Al-Kafirun: the whole surah
+110:1-3     # An-Nasr: the whole surah
+112:1-4     # Al-Ikhlas: the whole surah
+113:1-5     # Al-Falaq: the whole surah
+114:1-6     # An-Nas: the whole surah
