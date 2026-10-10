@@ -5,6 +5,13 @@
 
 import SwiftUI
 
+/// A request to scroll to an ayah of the surah on screen. `serial` makes two requests for the
+/// same ayah different values.
+nonisolated struct SeparatedScrollRequest: Equatable, Sendable {
+    let ayah: VerseReference
+    let serial: Int
+}
+
 /// One surah as a vertical list of ayahs, at the reader's own size and face — the separated mode,
 /// and the whole Quran reader in a build without the printed pages.
 ///
@@ -22,6 +29,9 @@ struct SeparatedReaderView: View {
     var marks: QuranAyahMarks = .none
     /// The ayah to open at, read once when the view appears; `nil` opens at the top.
     var initialAyah: VerseReference?
+    /// A jump to an ayah of this surah while it is on screen. Not read at creation: a list being
+    /// created is positioned by `initialAyah`.
+    var scrollRequest: SeparatedScrollRequest? = nil
     let onSelect: (VerseReference) -> Void
     /// The ayah now at the top of the viewport, as the reader scrolls.
     var onTopAyahChange: (VerseReference) -> Void = { _ in }
@@ -74,6 +84,10 @@ struct SeparatedReaderView: View {
                 guard topAyah == nil, let initialAyah, initialAyah.verse > 1 else { return }
                 await Task.yield()
                 proxy.scrollTo(initialAyah, anchor: .top)
+            }
+            .onChange(of: scrollRequest) { _, request in
+                guard let request, request.ayah.surah == surah.number else { return }
+                proxy.scrollTo(request.ayah, anchor: .top)
             }
         }
         // Quran text is right-to-left whatever the interface language.

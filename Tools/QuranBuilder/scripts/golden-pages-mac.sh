@@ -6,6 +6,10 @@
 #
 #   flavour  noor | mushaf;  set  pages | separated (as in golden-pages.sh)
 #
+# Output directory: pass the git-ignored Screenshots/quran-migration/M5/M5.1/. GOLDEN_DEVICE=mac
+# names files <device>-<set>-p<page>-<theme>.png. No -quranImmersive here: the Mac has no
+# immersive mode, and the window toolbar is part of what the capture should show.
+#
 # Needs Screen Recording permission for the terminal that runs it (window capture), and a helper
 # that prints an app's window id: tools/winid, built from winid.swift beside this script.
 set -u
@@ -51,8 +55,8 @@ capture() { # name, launch args...
 for theme in $themes; do
   for page in $pages; do
     case $set in
-      pages) capture "p$page-$theme" $(args mushaf $theme $page) ;;
-      separated) capture "p$page-$theme" $(args separated $theme ${firstAyah[$page]}) ;;
+      pages) capture "${GOLDEN_DEVICE:+$GOLDEN_DEVICE-$set-}p$page-$theme" $(args mushaf $theme $page) ;;
+      separated) capture "${GOLDEN_DEVICE:+$GOLDEN_DEVICE-$set-}p$page-$theme" $(args separated $theme ${firstAyah[$page]}) ;;
     esac
   done
 done

@@ -28,9 +28,9 @@ nonisolated enum AppRoute: Hashable, Sendable {
     /// carries an identifier rather than a fetched value. See `AdhkarCoordinator`.
     case adhkar(categoryID: String)
 
-    /// The Quran tab, at its list.
+    /// The Quran tab, at its root, the Library.
     case quran
 
-    /// The Quran tab, with the chapter this verse belongs to open and scrolled to it.
+    /// The Quran tab, with the reader open at this ayah, in whichever mode the reader is in.
     case quranVerse(VerseReference)
 }

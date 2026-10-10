@@ -10,7 +10,7 @@ import Observation
 ///
 /// Separate from the reader's view model on purpose: the pager, its units and every page observe
 /// this, and a change here (a page turn, a selection) should redraw them and nothing else. The
-/// reader's view model (M5) owns one and does the navigation; until then the DEBUG entry point does.
+/// reader's view model (`QuranReaderViewModel`) owns one for the session and does the navigation.
 @Observable
 @MainActor
 final class MushafReadingState {

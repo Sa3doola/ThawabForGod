@@ -6,6 +6,10 @@
 #
 #   flavour  noor | mushaf
 #
+# Unchanged at M5.1 on purpose: the probes time the pager, not the chrome, and the reader screen now
+# sits above it (the 1→604 figure is this task's regression check). No -quranImmersive is passed, so
+# the run includes the navigation and tab bars, as a reader's does. Nothing here writes screenshots.
+#
 # Simulator numbers are for before/after comparison only, not device figures. Build both sides the
 # same way, with optimisation and the DEBUG probes, e.g.
 #   xcodebuild build -scheme ThawabForGod -destination 'generic/platform=iOS Simulator' SWIFT_OPTIMIZATION_LEVEL=-O

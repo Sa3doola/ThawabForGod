@@ -232,6 +232,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: Quran
 
     case quranTitle = "quran_title"
+    /// The reader's leading button, which returns to the chapter and part list. Not `libraryTitle`,
+    /// which is Home's menu and reads differently in Arabic.
+    case quranLibrary = "quran_library"
     case quranSectionSurahs = "quran_section_surahs"
     case quranSectionJuz = "quran_section_juz"
     /// Precedes a number — "Juz 7", "جزء ٧" — rather than carrying one, because the digits go
@@ -245,6 +248,11 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranSajda = "quran_sajda"
     case quranVerseLabel = "quran_verse_label"
     case quranUnavailable = "quran_unavailable"
+    case quranTryAgain = "quran_try_again"
+    /// The mode toggle while the reader is showing Mushaf pages — switches to the verse list.
+    case quranShowSeparated = "quran_show_separated"
+    /// The mode toggle while the reader is showing the verse list — switches to Mushaf pages.
+    case quranShowMushaf = "quran_show_mushaf"
     case quranSectionBookmarks = "quran_section_bookmarks"
     case quranBookmarksEmpty = "quran_bookmarks_empty"
     case quranBookmarkAdd = "quran_bookmark_add"
@@ -255,8 +263,6 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranSearchVerses = "quran_search_verses"
     case quranSearchEmpty = "quran_search_empty"
     case quranSearchHint = "quran_search_hint"
-    /// The Quran tab while the reader is being rebuilt on the ported engine (M3–M5).
-    case quranComingSoon = "quran_coming_soon"
     /// The search screen's scopes; the first is `quranTitle`.
     case quranSearchScopeTranslations = "quran_search_scope_translations"
     case quranSearchScopeSurahNames = "quran_search_scope_surah_names"

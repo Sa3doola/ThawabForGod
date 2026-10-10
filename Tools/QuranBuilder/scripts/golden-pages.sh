@@ -10,8 +10,17 @@
 #            spreads            the spread holding each golden page, rendered offscreen at iPad Pro
 #                               11" landscape (1210×834 pt) — iPadOS refuses a scripted rotation
 #
+# Output directory: pass the git-ignored Screenshots/quran-migration/M5/M5.1/ (or a subfolder) to
+# keep milestone captures together; files are named p<page>-<theme>.png. Name a copy per device and
+# screen as <device>-<screen>-<theme>.png when filing them there (e.g. iphone17pro-mushaf-p50-dark.png).
+# Environment: GOLDEN_IMMERSIVE=YES hides the bars on an iPhone in Mushaf mode, for both flavours
+# (-quranImmersive for noor, Mushaf's -debugImmersive for mushaf) so the two stay comparable; the
+# default is NO, which leaves the bars and so produces what the script always produced. iPad ignores
+# it. GOLDEN_DEVICE=iphone17pro prefixes names as <device>-<set>-p<page>-<theme>.png.
+#
 # Needs a DEBUG build (the launch options are compiled out of Release). English, light appearance,
-# the reader's theme pinned (follow-system off), a 9:41 status bar. A Mushaf capture is pixel-for-
+# the reader's theme pinned (follow-system off), a 9:41 status bar (not drawn in an immersive
+# capture, which hides it). A Mushaf capture is pixel-for-
 # pixel what the reference project draws; the chrome around the page differs by design.
 set -u
 flavour=$1 udid=$2 app=$3 out=$4 set=$5
@@ -42,12 +51,18 @@ args() {
   if [[ $flavour == noor ]]; then
     local a=(-quranResetSettings YES -quranFollowSystem NO -quranMode $mode -quranTheme $theme)
     if [[ $where == *:* ]]; then a+=(-quranSurah ${where%%:*} -quranAyah ${where##*:}); else a+=(-quranPage $where); fi
+    if [[ ${GOLDEN_IMMERSIVE:-NO} == YES && $mode == mushaf ]]; then a+=(-quranImmersive YES); fi
   else
     local a=(-debugFollowSystem NO -debugMode $mode -debugTheme $theme)
     if [[ $where == *:* ]]; then a+=(-debugSurah ${where%%:*} -debugAyah ${where##*:}); else a+=(-debugPage $where); fi
+    if [[ ${GOLDEN_IMMERSIVE:-NO} == YES && $mode == mushaf ]]; then a+=(-debugImmersive YES); fi
   fi
   print -r -- "${a[@]}"
 }
+
+# fname <screen> <theme>: p50-dark by default; <device>-<set>-p50-dark when GOLDEN_DEVICE is set
+# (the M5 screenshots' <device>-<screen>-<theme> convention).
+fname() { print -r -- "${GOLDEN_DEVICE:+$GOLDEN_DEVICE-$set-}$1-$2"; }
 
 running() { xcrun simctl spawn "$udid" launchctl list 2>/dev/null | grep -q "$bundle"; }
 
@@ -82,9 +97,9 @@ spread() { # name, theme, page
 for theme in $themes; do
   for page in $pages; do
     case $set in
-      pages) capture "p$page-$theme" $(args mushaf $theme $page) ;;
-      separated) capture "p$page-$theme" $(args separated $theme ${firstAyah[$page]}) ;;
-      spreads) first=$(( page - (page - 1) % 2 )); spread "p$first-$(( first + 1 ))-$theme" $theme $page ;;
+      pages) capture "$(fname "p$page" $theme)" $(args mushaf $theme $page) ;;
+      separated) capture "$(fname "p$page" $theme)" $(args separated $theme ${firstAyah[$page]}) ;;
+      spreads) first=$(( page - (page - 1) % 2 )); spread "$(fname "p$first-$(( first + 1 ))" $theme)" $theme $page ;;
     esac
   done
 done

@@ -55,25 +55,43 @@ struct AppSectionView: View {
         )
     }
 
-    /// The Quran's section. A placeholder while the reader is rebuilt on the engine ported from
-    /// Mushaf (M3–M5); still a section, with its own stack, so the tab keeps its place and a route
-    /// into it still selects it.
+    /// The Quran: the Library at the root, and the reader pushed over it.
+    ///
+    /// Driven from a typed path on `QuranCoordinator`, so a route from outside (a verse link, a
+    /// quick action) can open the reader without reaching into the view tree. The reader view model
+    /// is one for the section, shared by the root and the reader, which is what makes the corpus
+    /// load once and keeps the reading place when the view tree is rebuilt. The section's chrome
+    /// modifier sits on the stack because that is where the status-bar setting takes effect.
     private var quran: some View {
-        NavigationStack {
-            QuranPlaceholderView()
-                #if DEBUG
-                // The ported renderer, before the reader screen exists to reach it (M4–M5).
-                .quranDebugEntry(container: container)
-                #endif
+        @Bindable var coordinator = container.quranCoordinator
+        let viewModel = container.quranReaderViewModel
+
+        return NavigationStack(path: $coordinator.path) {
+            QuranLibraryView(viewModel: viewModel, coordinator: container.quranCoordinator)
+                .navigationDestination(for: QuranRoute.self) { route in
+                    switch route {
+                    case .reader:
+                        QuranReaderView(
+                            viewModel: viewModel,
+                            coordinator: container.quranCoordinator,
+                            faces: container.quranFaces,
+                            services: container.mushafRenderServices
+                        )
+                        #if DEBUG
+                        .quranLaunchHooks(viewModel: viewModel, container: container)
+                        #endif
+                    }
+                }
         }
+        .quranSectionChrome(coordinator: container.quranCoordinator, viewModel: viewModel)
     }
 
     /// The two Sahihs, each pushing into its divisions and then into the narrations.
     ///
-    /// Two pushes deep rather than the Quran's one, which is what a collection of collections
-    /// costs — so this section drives its stack from a path, like Settings, rather than from a
-    /// chain of `navigationDestination(item:)`. That is also what lets a search result land two
-    /// levels down in one move; see `HadithCoordinator`.
+    /// Two pushes deep, which is what a collection of collections costs — so this section drives
+    /// its stack from a path, like the Quran and Settings, rather than from a chain of
+    /// `navigationDestination(item:)`. That is also what lets a search result land two levels down
+    /// in one move; see `HadithCoordinator`.
     private var hadith: some View {
         @Bindable var coordinator = container.hadithCoordinator
 

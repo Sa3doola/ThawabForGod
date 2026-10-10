@@ -4438,23 +4438,6 @@
         }
       }
     },
-    "quran_coming_soon" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "قارئ القرآن الجديد في الطريق"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The new Quran reader is on its way"
-          }
-        }
-      }
-    },
     "quran_continue_reading" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4502,6 +4485,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Juz %@"
+          }
+        }
+      }
+    },
+    "quran_library" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الفهرس"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library"
           }
         }
       }
@@ -4846,6 +4846,40 @@
         }
       }
     },
+    "quran_show_mushaf" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض صفحات المصحف"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Mushaf pages"
+          }
+        }
+      }
+    },
+    "quran_show_separated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض الآيات مفصولة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show separated verses"
+          }
+        }
+      }
+    },
     "quran_surah_ayah" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4893,6 +4927,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quran"
+          }
+        }
+      }
+    },
+    "quran_try_again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة المحاولة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
           }
         }
       }

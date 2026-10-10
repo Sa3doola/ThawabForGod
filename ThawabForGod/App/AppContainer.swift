@@ -142,6 +142,10 @@ final class AppContainer {
     /// the database anyway, rather than from a second query here at launch.
     let quranReaderSettings: QuranReaderSettings
 
+    /// The reader's corpus, reading place and display-mode switch: one for the app, shared by the
+    /// tab's root and the reader. Touches no disk until its first `load()`.
+    let quranReaderViewModel: QuranReaderViewModel
+
     /// Page measurements for the session, measured off the main actor and read synchronously by the
     /// pages (T13). One per app, where Mushaf had a `static let shared`.
     let quranPageMetrics = PageMetricsCache()
@@ -202,7 +206,9 @@ final class AppContainer {
     let router: AppRouter
     let homeCoordinator = HomeCoordinator()
     let qiblaCoordinator = QiblaCoordinator()
-    let quranCoordinator = QuranCoordinator()
+    /// Built in `init`, not here: it applies a target to the reader before pushing it, so it is
+    /// constructed over `quranReaderViewModel`.
+    let quranCoordinator: QuranCoordinator
     let hadithCoordinator = HadithCoordinator()
     let adhkarCoordinator = AdhkarCoordinator()
     let tasbihCoordinator = TasbihCoordinator()
@@ -341,16 +347,35 @@ final class AppContainer {
 
         // The Quran: one database, chosen by what is bundled, read by the repository and by search;
         // the packs found beside it and joined to it through the ayah index rather than `ATTACH`.
+        #if DEBUG
+        // `-quranData public` reads the Tanzil database even where the full one is bundled, so the
+        // capability gating can be exercised without a public clone. The database only: packs and
+        // faces stay what the bundle has.
+        let quranDatabase = QuranLaunchOptions.current.usesPublicData
+            ? QuranDatabase(
+                resourceName: QuranDatabase.publicResourceName,
+                corpus: CorpusDatabase(name: QuranDatabase.publicResourceName)
+            )
+            : quranDatabase
+        #endif
         let quranAyahIndex = QuranAyahIndex(database: quranDatabase.corpus)
         self.quranDatabase = quranDatabase
-        self.quranRepository = QuranRepository(database: quranDatabase.corpus)
+        let quranRepository = QuranRepository(database: quranDatabase.corpus)
+        self.quranRepository = quranRepository
         self.quranPacks = quranPacks
         self.quranSearch = QuranSearchRepository(quran: quranDatabase.corpus, store: quranPacks, index: quranAyahIndex)
         self.quranTranslations = TranslationRepository(store: quranPacks, index: quranAyahIndex)
         self.quranTafsir = TafsirRepository(store: quranPacks, index: quranAyahIndex)
         self.quranSurahInfo = SurahInfoRepository(store: quranPacks)
         self.quranPageFonts = FontPackStore()
-        self.quranReaderSettings = QuranReaderSettings(settingsStore: settingsStore)
+        let quranReaderSettings = QuranReaderSettings(settingsStore: settingsStore)
+        self.quranReaderSettings = quranReaderSettings
+        let quranReaderViewModel = QuranReaderViewModel(
+            repository: quranRepository,
+            settings: quranReaderSettings
+        )
+        self.quranReaderViewModel = quranReaderViewModel
+        self.quranCoordinator = QuranCoordinator(reader: quranReaderViewModel)
 
         // The same three links again, over the two Sahihs. Another file and the same
         // `CorpusDatabase`, which is the point of that type taking a resource name and knowing
@@ -398,7 +423,7 @@ final class AppContainer {
         // A scripted launch into the Quran reader (golden pages, UI tests, performance runs) starts
         // on the Quran tab and past onboarding, for this launch only: nothing is written, so the
         // flag is still unset next time.
-        let quranLaunch = QuranLaunchOptions.current.target != nil
+        let quranLaunch = QuranLaunchOptions.current.readerTarget != nil
         let router = AppRouter(hasCompletedOnboarding: onboardingRepository.hasCompletedOnboarding || quranLaunch)
         if quranLaunch { router.selectedTab = .quran }
         #else
@@ -462,6 +487,13 @@ final class AppContainer {
             open: { [weak self] link in self?.open(link) }
         )
         menuBar.apply()
+        #endif
+
+        #if DEBUG
+        // A scripted launch into the reader starts with the stack already holding it. Last among the
+        // stored properties because it uses `self`; the place itself is applied by
+        // `QuranLaunchHooks`, in order, once the reader has loaded.
+        if QuranLaunchOptions.current.readerTarget != nil { quranCoordinator.openReader() }
         #endif
 
         // An install that predates the App Group has its preferences in the process's own

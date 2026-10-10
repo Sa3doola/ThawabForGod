@@ -11,8 +11,7 @@ import SwiftUI
 /// The one place both readers get what they share, so neither can drift: the resolved page colours
 /// (`\.readingPalette`, following the system into Dark if asked), the faces that registered, the
 /// separated face (`\.readingStyle`), the surah-header frame glyph, and keeping the screen awake.
-/// The reader screen (M5) puts its toolbar, panel and navigation around this; until then the DEBUG
-/// entry point does.
+/// `QuranReaderView` puts its toolbar, bars and navigation around this; the panel arrives with M5.3.
 struct QuranReadingSurface: View {
     let corpus: QuranCorpus
     let settings: QuranReaderSettings
@@ -23,6 +22,8 @@ struct QuranReadingSurface: View {
     /// The surah separated mode shows, and the ayah to open it at.
     let separatedSurah: Int
     var separatedAyah: VerseReference?
+    /// A jump inside the surah on screen; a different surah is a new list, opened at `separatedAyah`.
+    var separatedScrollRequest: SeparatedScrollRequest? = nil
     var marks: QuranAyahMarks = .none
     let onSelect: (VerseReference) -> Void
     var onSeparatedTopAyahChange: (VerseReference) -> Void = { _ in }
@@ -65,6 +66,7 @@ struct QuranReadingSurface: View {
                     selectedAyah: mushaf.selectedAyah,
                     marks: marks,
                     initialAyah: separatedAyah,
+                    scrollRequest: separatedScrollRequest,
                     onSelect: onSelect,
                     onTopAyahChange: onSeparatedTopAyahChange
                 )

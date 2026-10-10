@@ -37,11 +37,11 @@ extension AppContainer {
 
         case .quran:
             router.selectedTab = .quran
-            quranCoordinator.closeReading()
+            quranCoordinator.popToRoot()
 
         case .quranVerse(let reference):
             router.selectedTab = .quran
-            quranCoordinator.open(reference)
+            quranCoordinator.open(.ayah(reference))
         }
     }
 }

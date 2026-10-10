@@ -7,7 +7,7 @@
 import CoreGraphics
 import Foundation
 
-/// Launch arguments that put the Quran reader in a known state, for the UI tests, the golden-page
+/// Launch arguments that put the Quran tab's real reader in a known state, for the UI tests, the golden-page
 /// captures and the performance runs of the Mushaf port (QURAN_MIGRATION_PLAN.md, Q2).
 ///
 /// A slim version of Mushaf's 34 `-debug…` hooks, and **DEBUG only**: the whole type is compiled
@@ -58,6 +58,10 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
     /// order and report memory (`PerformanceProbe`).
     var pagesThrough = false
     var pageThroughEvery = 50
+    /// `-quranImmersive YES`: the iPhone reader starts with its bars hidden.
+    var startsImmersive = false
+    /// `-quranData public`: read the public (Tanzil) database even where the full one is bundled.
+    var usesPublicData = false
 
     /// The options this process was launched with.
     static let current = QuranLaunchOptions(arguments: ProcessInfo.processInfo.arguments)
@@ -100,12 +104,16 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
         }
         pagesThrough = bool("quranPageThrough") ?? false
         pageThroughEvery = int("quranPageThroughEvery").flatMap { $0 > 0 ? $0 : nil } ?? 50
+        startsImmersive = bool("quranImmersive") ?? false
+        usesPublicData = values["quranData"]?.lowercased() == "public"
     }
 
-    /// Where the launch asks the reader to open, if anywhere. A page wins over a surah.
-    var target: QuranDebugTarget? {
+    /// Where the launch asks the reader to open, if anywhere. A page wins over a surah; a surah
+    /// with an ayah is that ayah.
+    var readerTarget: GoToTarget? {
         if let page { return .page(page) }
-        if let surah { return .surah(surah, ayah: ayah) }
+        if let surah, let ayah { return .ayah(VerseReference(surah: surah, verse: ayah)) }
+        if let surah { return .surah(surah) }
         return nil
     }
 
@@ -120,13 +128,5 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
         if let font { settings.select(font: font) }
         if let textSize { settings.setTextSize(textSize) }
     }
-}
-
-/// Where the DEBUG reader opens.
-nonisolated enum QuranDebugTarget: Hashable, Sendable, Identifiable {
-    case page(Int)
-    case surah(Int, ayah: Int?)
-
-    var id: Self { self }
 }
 #endif

@@ -14,7 +14,7 @@ struct QuranLaunchOptionsTests {
 
     @Test func aPlainLaunchHasNoTargetAndChangesNothing() {
         let options = QuranLaunchOptions(arguments: ["ThawabForGod", "-AppleLanguages", "(en)"])
-        #expect(options.target == nil)
+        #expect(options.readerTarget == nil)
 
         let store = InMemorySettingsStore()
         options.apply(to: QuranReaderSettings(settingsStore: store))
@@ -28,7 +28,7 @@ struct QuranLaunchOptionsTests {
             "-quranSelect", "2:255", "-quranRenderer", "unicode", "-quranMarginMarkers", "NO",
             "-quranFont", "amiriQuran", "-quranTextSize", "32", "-quranFold", "0.55,24", "-quranResetSettings", "YES",
         ])
-        #expect(options.target == .page(50))
+        #expect(options.readerTarget == .page(50))
         #expect(options.displayMode == .mushaf)
         #expect(options.theme == .sepia)
         #expect(options.followsSystemAppearance == false)
@@ -41,10 +41,46 @@ struct QuranLaunchOptionsTests {
         #expect(options.resetsSettings)
     }
 
-    @Test func aSurahTargetCarriesItsAyahAndAPageWins() {
-        #expect(QuranLaunchOptions(arguments: ["-quranSurah", "2", "-quranAyah", "255"]).target == .surah(2, ayah: 255))
-        #expect(QuranLaunchOptions(arguments: ["-quranSurah", "115"]).target == nil)
-        #expect(QuranLaunchOptions(arguments: ["-quranSurah", "2", "-quranPage", "3"]).target == .page(3))
+    @Test func aPageIsTheReaderTarget() {
+        #expect(QuranLaunchOptions(arguments: ["-quranPage", "50"]).readerTarget == .page(50))
+    }
+
+    @Test func aSurahIsTheReaderTarget() {
+        #expect(QuranLaunchOptions(arguments: ["-quranSurah", "2"]).readerTarget == .surah(2))
+    }
+
+    @Test func aSurahWithAnAyahIsThatAyahTarget() {
+        let options = QuranLaunchOptions(arguments: ["-quranSurah", "2", "-quranAyah", "255"])
+        #expect(options.readerTarget == .ayah(VerseReference(surah: 2, verse: 255)))
+    }
+
+    @Test func aPageWinsOverASurah() {
+        #expect(QuranLaunchOptions(arguments: ["-quranSurah", "2", "-quranPage", "3"]).readerTarget == .page(3))
+    }
+
+    @Test func anOutOfRangeSurahHasNoTarget() {
+        #expect(QuranLaunchOptions(arguments: ["-quranSurah", "115"]).readerTarget == nil)
+    }
+
+    @Test func aTrailingOptionWithNoValueHasNoTarget() {
+        #expect(QuranLaunchOptions(arguments: ["-quranPage"]).readerTarget == nil)
+    }
+
+    @Test func immersiveIsOffUnlessAskedFor() {
+        #expect(!QuranLaunchOptions(arguments: []).startsImmersive)
+        #expect(!QuranLaunchOptions(arguments: ["-quranImmersive", "NO"]).startsImmersive)
+        #expect(QuranLaunchOptions(arguments: ["-quranImmersive", "YES"]).startsImmersive)
+    }
+
+    @Test func dataPublicReadsTheTanzilDatabase() {
+        #expect(QuranLaunchOptions(arguments: ["-quranData", "public"]).usesPublicData)
+    }
+
+    /// Any value other than `public` leaves the bundled database in use.
+    @Test func otherDataValuesKeepTheBundledDatabase() {
+        #expect(!QuranLaunchOptions(arguments: ["-quranData", "full"]).usesPublicData)
+        #expect(!QuranLaunchOptions(arguments: ["-quranData"]).usesPublicData)
+        #expect(!QuranLaunchOptions(arguments: []).usesPublicData)
     }
 
     @Test func measurementOptions() {
@@ -69,7 +105,7 @@ struct QuranLaunchOptionsTests {
         #expect(options.theme == nil)
         #expect(options.displayMode == nil)
         #expect(options.foldOverride == nil)
-        #expect(options.target == nil, "a trailing option with no value")
+        #expect(options.readerTarget == nil, "a trailing option with no value")
     }
 
     @Test func applyResetsFirstThenWritesTheChoices() {
