@@ -122,6 +122,10 @@ struct MushafPageContent: View {
         // Short pages (`style.shortPages`) keep the same slot height and sit in the middle.
         .frame(width: size.width, height: size.height)
         .preference(key: MushafFontSizeKey.self, value: metrics.fittedFontSize)
+        #if DEBUG
+        // The first page with its text on screen (measured; not the empty frame before it).
+        .onAppear { PerformanceProbe.firstPageAppeared() }
+        #endif
     }
 
     /// The margin labels beside their lines, in the outer margin: right on odd pages, left on even

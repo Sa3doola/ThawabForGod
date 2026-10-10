@@ -36,6 +36,25 @@ struct QuranDebugReaderView: View {
                     separatedAyah: separatedAyah,
                     onSelect: { mushaf.select(mushaf.selectedAyah == $0 ? nil : $0) }
                 )
+                .task {
+                    guard let size = options.spreadRenderSize else { return }
+                    await QuranSpreadRenderer.render(
+                        corpus: corpus, state: mushaf, size: size, services: container.mushafRenderServices,
+                        faces: container.quranFaces, settings: container.quranReaderSettings, l10n: container.localizationManager,
+                        forced: options.renderer,
+                        palette: Theme.fallback.reading(container.quranReaderSettings.theme)
+                    )
+                }
+                .task {
+                    guard options.pagesThrough else { return }
+                    let fonts = container.quranPageFonts
+                    await PerformanceProbe.pageThrough(
+                        pageCount: corpus.style.pageCount,
+                        every: options.pageThroughEvery,
+                        registeredFonts: { fonts.registeredPages(style: corpus.style.id).count },
+                        show: { mushaf.show(page: $0) }
+                    )
+                }
             } else if let failure {
                 ContentUnavailableView(failure, systemImage: "exclamationmark.triangle")
             } else {

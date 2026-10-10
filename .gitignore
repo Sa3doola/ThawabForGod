@@ -84,3 +84,7 @@ surah-info-*.sqlite
 surah-header.ttf
 surah-name-v2.ttf
 quran-common.ttf
+# Golden-page captures of the migration (Tools/QuranBuilder/scripts/golden-pages.sh). Most are pages
+# drawn in the QUL fonts above, which this public repo must not redistribute, so the captures stay
+# local like the fonts do; the milestone report says where they are.
+Screenshots/quran-migration/

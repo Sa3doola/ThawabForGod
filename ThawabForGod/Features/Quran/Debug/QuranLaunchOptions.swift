@@ -4,6 +4,7 @@
 //
 
 #if DEBUG
+import CoreGraphics
 import Foundation
 
 /// Launch arguments that put the Quran reader in a known state, for the UI tests, the golden-page
@@ -48,6 +49,15 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
     var foldOverride: FoldGeometry.DebugOverride?
     /// `-quranResetSettings YES`: forget every reader choice before applying the rest.
     var resetsSettings = false
+    /// `-quranRenderSpread 1210x834`: render the pager unit holding the target page at that point
+    /// size into Documents/spread.png (`QuranSpreadRenderer`). iPadOS refuses a programmatic
+    /// rotation under multitasking and a simulator cannot be turned from a script, so this is how a
+    /// landscape spread is captured — the same way Mushaf captured its own.
+    var spreadRenderSize: CGSize?
+    /// `-quranPageThrough YES` (with `-quranPageThroughEvery N`, default 50): show every page in
+    /// order and report memory (`PerformanceProbe`).
+    var pagesThrough = false
+    var pageThroughEvery = 50
 
     /// The options this process was launched with.
     static let current = QuranLaunchOptions(arguments: ProcessInfo.processInfo.arguments)
@@ -84,6 +94,12 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
         foldOverride = values["quranFold"].flatMap { FoldGeometry.DebugOverride(axis: .vertical, argument: $0) }
             ?? values["quranFoldHorizontal"].flatMap { FoldGeometry.DebugOverride(axis: .horizontal, argument: $0) }
         resetsSettings = bool("quranResetSettings") ?? false
+        spreadRenderSize = values["quranRenderSpread"].flatMap { spec in
+            let parts = spec.split(separator: "x").compactMap { Double($0) }
+            return parts.count == 2 ? CGSize(width: parts[0], height: parts[1]) : nil
+        }
+        pagesThrough = bool("quranPageThrough") ?? false
+        pageThroughEvery = int("quranPageThroughEvery").flatMap { $0 > 0 ? $0 : nil } ?? 50
     }
 
     /// Where the launch asks the reader to open, if anywhere. A page wins over a surah.

@@ -4,6 +4,7 @@
 //
 
 #if DEBUG
+import CoreGraphics
 import Testing
 @testable import ThawabForGod
 
@@ -44,6 +45,18 @@ struct QuranLaunchOptionsTests {
         #expect(QuranLaunchOptions(arguments: ["-quranSurah", "2", "-quranAyah", "255"]).target == .surah(2, ayah: 255))
         #expect(QuranLaunchOptions(arguments: ["-quranSurah", "115"]).target == nil)
         #expect(QuranLaunchOptions(arguments: ["-quranSurah", "2", "-quranPage", "3"]).target == .page(3))
+    }
+
+    @Test func measurementOptions() {
+        let options = QuranLaunchOptions(arguments: ["-quranRenderSpread", "1210x834", "-quranPageThrough", "YES", "-quranPageThroughEvery", "25"])
+        #expect(options.spreadRenderSize == CGSize(width: 1210, height: 834))
+        #expect(options.pagesThrough)
+        #expect(options.pageThroughEvery == 25)
+
+        let defaults = QuranLaunchOptions(arguments: ["-quranRenderSpread", "wide", "-quranPageThroughEvery", "0"])
+        #expect(defaults.spreadRenderSize == nil)
+        #expect(!defaults.pagesThrough)
+        #expect(defaults.pageThroughEvery == 50)
     }
 
     @Test func aHorizontalFoldIsTabletop() {
