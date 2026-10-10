@@ -253,9 +253,9 @@ struct HomeView: View {
             nextPrayer
 
         case .continueReading:
-            if let reading = viewModel.continueReading {
-                ContinueReadingSection(reading: reading, open: open)
-            }
+            // Absent until the ported Quran reader stores a reading position and brings its card
+            // back (M6); `renderableSections` already drops the section while this is `nil`.
+            EmptyView()
 
         case .shortcuts:
             ShortcutsSection(

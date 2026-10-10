@@ -33,26 +33,19 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     // holding the whole value as JSON — see `HomeLayoutRepository` for why it is not nine.
     case homeLayout
 
-    // The reading screen's own look. Unset means the app's colours at the app's size — the
-    // reader has to have opened the panel and moved something for any of these to exist, which
-    // is what lets "reset" write `nil` back rather than the defaults.
-    case readerPaper
+    // The Quran reader's own look. Unset means the defaults — the reader has to have moved
+    // something for any of these to exist. The three the Mushaf port keeps (D4): the separated
+    // mode's text size, its face (a `ReaderFont` raw value) and keeping the screen awake. Their
+    // reader, and the rest of the reader's keys, arrive with the reading settings (M4).
     case readerTextSize
-    case readerLineSpacing
-    case readerShowsVerseNumbers
     case readerKeepsScreenAwake
-    // A `ReaderFont` raw value, and an `AyahMarkerStyle` raw value stored as its decimal string —
-    // the store carries strings, bools and doubles, and a style is a name, not a quantity.
     case readerFont
-    case readerAyahMarkerStyle
 
     /// How large the adhkar are set. **Its own key rather than `readerTextSize`**, deliberately:
     /// the Quran is read in long sittings on a page the reader chose a paper for, and a dhikr is
     /// one short passage said several times over — the size that suits one is not the size that
     /// suits the other, and a single key would have each screen silently overwrite the other's
-    /// answer. Unset until the reader moves the control. Sharing the Quran's whole
-    /// `ReaderSettings` across both tabs is a slice of its own; this is the one value the adhkar
-    /// screen actually needs.
+    /// answer. Unset until the reader moves the control.
     case adhkarTextSize
 
     // One per obligatory prayer. Unset means on — a reminder the user has never opinionated

@@ -111,42 +111,10 @@ final class AppContainer {
     /// Opening is deferred to the first read, so this line touches no disk.
     let corpus: any CorpusDatabaseProviding
 
-    /// The Quran, which is a second file rather than more tables in the first.
-    ///
-    /// Its text is an order of magnitude larger than everything in `corpus` put together, and it
-    /// has a different upstream and a different licence — so it is versioned, rebuilt and
-    /// attributed on its own. `CorpusDatabase` is constructed with a resource name and knows
-    /// nothing about what is inside it, which is what makes a second one free.
-    let quranCorpus: any CorpusDatabaseProviding
-
-    /// The commentaries, which are a third file for the third time the same argument holds: a
-    /// different upstream, a different licence — public domain by age rather than by permission —
-    /// and a size that grows with every edition added rather than staying put.
-    let tafsirCorpus: any CorpusDatabaseProviding
-
-    /// The two Sahihs, and a fourth file for the fourth time the same argument holds. This one
-    /// also settles it: at twenty-four megabytes it is larger than the other three together, and
+    /// The two Sahihs, a file of their own for the reason the Quran's is: a different upstream, a
+    /// different licence, and at twenty-four megabytes larger than everything else together —
     /// only a reader who opens that tab ever pays to page any of it in.
     let hadithCorpus: any CorpusDatabaseProviding
-
-    // MARK: Quran
-
-    let quranRepository: any QuranRepositoring
-    let getQuran: GetQuranUseCase
-
-    let tafsirRepository: any TafsirRepositoring
-    let getTafsir: GetTafsirUseCase
-
-    /// The reader's own marks — bookmarks and where they left off. The other half of the Quran's
-    /// storage split: `quranCorpus` above is read-only and bundled, this writes to the same
-    /// SwiftData container the tasbih counts do.
-    let quranProgressRepository: any QuranProgressRepositoring
-    let quranProgress: QuranProgressUseCase
-
-    /// How the reader has asked the page to look. Built here rather than lazily like the view
-    /// models because it reads nothing onboarding seeds — the panel is the only thing that ever
-    /// writes these three keys, and it cannot have run before launch.
-    let readerSettings: ReaderSettings
 
     // MARK: Hadith
 
@@ -155,7 +123,7 @@ final class AppContainer {
 
     /// The reader's own marks in the hadith. The other half of this feature's storage split:
     /// `hadithCorpus` above is read-only and bundled, this writes to the same SwiftData container
-    /// the Quran's bookmarks and the tasbih counts do.
+    /// the tasbih counts do.
     let hadithProgressRepository: any HadithProgressRepositoring
     let hadithProgress: HadithProgressUseCase
 
@@ -226,8 +194,6 @@ final class AppContainer {
         widgets: any WidgetRefreshing = WidgetCenterRefresher(),
         hijriDates: any HijriDateServicing = HijriDateService(),
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
-        quranCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "quran"),
-        tafsirCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "tafsir"),
         hadithCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "hadith"),
         fallbackCoordinates: Coordinates = .makkah,
         // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
@@ -334,22 +300,9 @@ final class AppContainer {
         self.namesRepository = namesRepository
         self.getNames = GetNamesUseCase(repository: namesRepository)
 
-        // The same three links again, over the other file. Nothing but this line and the
-        // property above knows there are two databases.
-        let quranRepository = QuranRepository(database: quranCorpus)
-        self.quranCorpus = quranCorpus
-        self.quranRepository = quranRepository
-        self.getQuran = GetQuranUseCase(repository: quranRepository)
-        self.readerSettings = ReaderSettings(settingsStore: settingsStore)
-
-        // And a third time, over the commentaries.
-        let tafsirRepository = TafsirRepository(database: tafsirCorpus)
-        self.tafsirCorpus = tafsirCorpus
-        self.tafsirRepository = tafsirRepository
-        self.getTafsir = GetTafsirUseCase(repository: tafsirRepository)
-
-        // A fourth, over the two Sahihs. Four files and one `CorpusDatabase`, which is the point
-        // of that type taking a resource name and knowing nothing else about what it opens.
+        // The same three links again, over the two Sahihs. Another file and the same
+        // `CorpusDatabase`, which is the point of that type taking a resource name and knowing
+        // nothing else about what it opens.
         let hadithRepository = HadithRepository(database: hadithCorpus)
         self.hadithCorpus = hadithCorpus
         self.hadithRepository = hadithRepository
@@ -372,12 +325,6 @@ final class AppContainer {
             memorization: hadithMemorizationRepository,
             corpus: hadithRepository
         )
-
-        let quranProgressRepository = QuranProgressRepository(
-            modelContainer: persistence.container
-        )
-        self.quranProgressRepository = quranProgressRepository
-        self.quranProgress = QuranProgressUseCase(repository: quranProgressRepository)
 
         let prayerTrackerRepository = PrayerTrackerRepository(
             modelContainer: persistence.container
@@ -583,15 +530,10 @@ final class AppContainer {
             // The same object Settings edits, not a snapshot of it — which is what lets a method
             // changed in Settings redraw today's times.
             calculation: calculationSettings(),
-            // Home reaching into the Quran's use cases, on purpose: the "continue reading"
-            // section is *about* the Quran, and a second way to ask where the reader stopped
-            // would be a second answer waiting to disagree with the first.
-            quranProgress: quranProgress,
-            quran: getQuran,
-            // Two more of somebody else's use cases, for the same reason: the chips name a
-            // chapter, an adhkar chapter and a dhikr, and resolving those names anywhere but
-            // through the feature that owns them would be a second copy of the corpus's
-            // vocabulary.
+            // Somebody else's use cases, on purpose: the chips name an adhkar chapter and a
+            // dhikr, and resolving those names anywhere but through the feature that owns them
+            // would be a second copy of the corpus's vocabulary. The Quran's "continue reading"
+            // and chapter names come back with the ported reader's user data (M6).
             tasbih: tasbihUseCase,
             adhkar: getAdhkar,
             recentActivity: recentActivity,
@@ -677,54 +619,14 @@ final class AppContainer {
         return viewModel
     }
 
-    // MARK: Quran
-
-    private var cachedQuranViewModel: QuranViewModel?
-
-    /// The Quran's view model, built on first use and kept.
-    ///
-    /// Kept rather than rebuilt because the chosen segment and the loaded lists live on it: a
-    /// reader who was looking at the parts, opened one, and came back should find the parts
-    /// still selected and no second read of the corpus behind it.
-    func quranViewModel() -> QuranViewModel {
-        if let cachedQuranViewModel {
-            return cachedQuranViewModel
-        }
-
-        let viewModel = QuranViewModel(
-            useCase: getQuran,
-            progress: quranProgress,
-            activity: activityRecorder
-        )
-        cachedQuranViewModel = viewModel
-        return viewModel
-    }
-
-    private var cachedTafsirViewModel: TafsirViewModel?
-
-    /// The tafsir sheet's view model, built on first use and kept.
-    ///
-    /// One for the app rather than one per verse: the sheet shows a single verse at a time, and
-    /// `TafsirPanel`'s `.task(id:)` reloads it when the reader taps another. Rebuilding it per
-    /// row would put a view model inside a `LazyVStack` child, which the scroll throws away.
-    func tafsirViewModel() -> TafsirViewModel {
-        if let cachedTafsirViewModel {
-            return cachedTafsirViewModel
-        }
-
-        let viewModel = TafsirViewModel(useCase: getTafsir)
-        cachedTafsirViewModel = viewModel
-        return viewModel
-    }
-
     // MARK: Hadith
 
     private var cachedHadithViewModel: HadithViewModel?
 
     /// The hadith view model, built on first use and kept.
     ///
-    /// Kept rather than rebuilt for the reason the Quran's is, and one more: it holds the
-    /// narrations of the open kitab, which for Muslim's Book of Faith is 439 of them. Rebuilding
+    /// Kept rather than rebuilt because it holds what the reader left on screen — the selected
+    /// collection, and the narrations of the open kitab, which for Muslim's Book of Faith is 439 of them. Rebuilding
     /// on every push would re-read all of that off disk to show the reader what they were
     /// already looking at.
     func hadithViewModel() -> HadithViewModel {

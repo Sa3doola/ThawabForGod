@@ -34,12 +34,16 @@ final class HomeViewModel {
         }
     }
 
-    /// The whole of a "continue reading" card: where the reader stopped, and the chapter it is
-    /// in. The chapter is optional because the position is the user's data and the chapter is the
-    /// corpus's — a card that says the verse but not the name is still a way back into the text.
+    /// The whole of a "continue reading" card: where the reader stopped, and the name of the
+    /// chapter it is in. The name is optional because the position is the user's data and the
+    /// chapter is the corpus's — a card that says the verse but not the name is still a way back
+    /// into the text.
+    ///
+    /// Nothing produces one until the ported Quran reader stores a reading position (M6); until
+    /// then the section stays absent, which is what `nil` already means.
     struct ContinueReading: Equatable {
-        let position: ReadingPosition
-        let surah: Surah?
+        let reference: VerseReference
+        let surahName: String?
     }
 
     /// One chip in the recent-activity row: what was recorded, plus the name of the thing it
@@ -133,8 +137,6 @@ final class HomeViewModel {
 
     @ObservationIgnored private let useCase: GetPrayerScheduleUseCase
     @ObservationIgnored private let getLayout: GetHomeLayoutUseCase
-    @ObservationIgnored private let quranProgress: QuranProgressUseCase?
-    @ObservationIgnored private let quran: GetQuranUseCase?
     @ObservationIgnored private let tasbih: TasbihUseCase?
     @ObservationIgnored private let adhkar: GetAdhkarUseCase?
     @ObservationIgnored private let recentActivity: RecentActivityUseCase?
@@ -175,12 +177,6 @@ final class HomeViewModel {
     ///   - tips: where TipKit's rule inputs are reported. Behind a protocol so this type never
     ///     imports TipKit and its tests never open a datastore.
     ///   - getLayout: which sections this user wants, in what order.
-    ///   - quranProgress: where the reader stopped, for the "continue reading" section, and
-    ///   - quran: the chapter that verse is in. Both optional, and both a deliberate reach across
-    ///     a feature boundary: the section is *about* the Quran, so Home composes that feature's
-    ///     use cases rather than growing a second way to ask the same question. Wired at the
-    ///     composition root like everything else; `nil` in previews and in tests about prayer
-    ///     times, which leaves the section absent.
     ///   - clock: the time, and the heartbeat. Injected so tests can place themselves at any
     ///     moment of the day *and* step the countdown without sleeping — see `ClockService`.
     ///   - calendar: used only to notice that midnight has passed. Gregorian in the device's own
@@ -197,8 +193,6 @@ final class HomeViewModel {
         hijriDates: any HijriDateServicing,
         calculation: CalculationSettings,
         tips: any HomeTipReporting = HomeTipReporter(),
-        quranProgress: QuranProgressUseCase? = nil,
-        quran: GetQuranUseCase? = nil,
         tasbih: TasbihUseCase? = nil,
         adhkar: GetAdhkarUseCase? = nil,
         recentActivity: RecentActivityUseCase? = nil,
@@ -208,8 +202,6 @@ final class HomeViewModel {
     ) {
         self.useCase = useCase
         self.getLayout = getLayout
-        self.quranProgress = quranProgress
-        self.quran = quran
         self.tasbih = tasbih
         self.adhkar = adhkar
         self.recentActivity = recentActivity
@@ -260,7 +252,6 @@ final class HomeViewModel {
         // `async let` is awaited below so the child is still structured: cancelling the screen's
         // task cancels this too.
         async let name: Void = resolvePlaceName()
-        async let reading: Void = loadContinueReading()
         async let activities: Void = loadRecentActivities()
         async let tracked: Void = reloadTracker()
 
@@ -269,7 +260,6 @@ final class HomeViewModel {
         }
 
         await name
-        await reading
         await activities
         await tracked
     }
@@ -280,24 +270,6 @@ final class HomeViewModel {
     /// the user has just spent time arranging.
     func reloadLayout() {
         layout = getLayout()
-    }
-
-    /// Loads where the reader stopped in the Quran.
-    ///
-    /// Silent on failure, and the section simply stays absent. This is somebody else's store and
-    /// a nice-to-have besides — a Home screen that could not read it should still show the times,
-    /// which is what it is for.
-    private func loadContinueReading() async {
-        guard let quranProgress, let quran, let position = try? await quranProgress.lastRead()
-        else {
-            continueReading = nil
-            return
-        }
-
-        continueReading = ContinueReading(
-            position: position,
-            surah: try? await quran.surah(position.reference.surah)
-        )
     }
 
     /// Reads a live fix, if the app has a location service and is already authorized.
@@ -384,8 +356,9 @@ final class HomeViewModel {
     private func subject(of activity: RecentActivity) async -> String? {
         switch activity.kind {
         case .quran:
-            guard let quran, let reference = activity.verseReference else { return nil }
-            return try? await quran.surah(reference.surah)?.arabicName
+            // The chapter's name comes back with the ported reader (M6); until then the chip
+            // says "Quran" and the verse, which is still the way back to it.
+            return nil
 
         case .adhkar:
             // The chapter titles now live in the corpus rather than in the string catalog, so

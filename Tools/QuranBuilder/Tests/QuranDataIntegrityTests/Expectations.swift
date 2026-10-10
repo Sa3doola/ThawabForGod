@@ -8,6 +8,7 @@
 // Suites that read a profile's output are skipped, with the reason, when that output has not been
 // built — a public clone has no QUL downloads and builds only `tanzil`.
 
+import CryptoKit
 import Foundation
 
 enum Paths {
@@ -41,18 +42,24 @@ enum Paths {
     static func packs(_ profile: String) -> URL { out.appendingPathComponent("\(profile)/Packs") }
     /// What the build wrote, with sizes and hashes. A report, never bundled.
     static func packReport(_ profile: String) -> URL { out.appendingPathComponent("reports/\(profile)-packs.json") }
-    /// Today's tafsir database, which the Jalalayn pack must reproduce until M3 replaces it.
-    static let legacyTafsirSQLite = root.appendingPathComponent("ThawabForGod/Resources/Corpus/tafsir.sqlite")
     static var jalalaynBuilt: Bool {
         FileManager.default.fileExists(atPath: packs("tanzil").appendingPathComponent("tafsir-ar-jalalayn.sqlite").path)
     }
+
+    // MARK: Installed in the app
+
+    /// Where the builder installs what it built: the app target's resources (T4). The tanzil
+    /// database and its pack are committed; the qul ones are git-ignored by name.
+    static let installedCorpus = root.appendingPathComponent("ThawabForGod/Resources/Corpus")
+    static let installedQuranSQLite = installedCorpus.appendingPathComponent("quran.sqlite")
+    static let installedMushafSQLite = installedCorpus.appendingPathComponent("quran-mushaf.sqlite")
+    static let installedPacks = installedCorpus.appendingPathComponent("Packs")
+    static let installedQuranFonts = root.appendingPathComponent("ThawabForGod/Resources/Fonts/Quran")
 
     // MARK: Shared
 
     /// The KFGQPC Hafs face the app bundles today.
     static let kfgqpcFont = root.appendingPathComponent("ThawabForGod/Resources/Fonts/Quran/KFGQPC-HafsUthmanic.ttf")
-    /// Today's corpus, which the tanzil profile must reproduce until M3 replaces it.
-    static let legacyQuranSQLite = root.appendingPathComponent("ThawabForGod/Resources/Corpus/quran.sqlite")
     /// The hand-kept ayah-of-the-day list, and the JSON each profile writes from it.
     static let curatedList = root.appendingPathComponent("Tools/QuranBuilder/data/ayah-of-the-day.txt")
     static func curatedJSON(_ profile: String) -> URL { out.appendingPathComponent("\(profile)/ayah-of-the-day.json") }
@@ -85,3 +92,29 @@ let expectedJuzFirstPages = [
 /// rule for Al-Ahzab matches "033" instead of "surah033": "surah" shapes as five empty,
 /// zero-advance glyphs and the name still draws correctly. Reported, not patched.
 let expectedMultiGlyphSurahNames: [Int] = [33]
+
+/// The corpus the app shipped before the migration — `quran.sqlite` and `tafsir.sqlite` as
+/// `build_quran_db.py` and `build_tafsir_db.py` wrote them — as `Fingerprint`s of the line formats
+/// the tests below build. Taken from those files on 2026-10-10, just before M3 replaced the one and
+/// deleted the other; the M2 suites had already compared them with this build row for row.
+enum PreMigrationCorpus {
+    /// `s:v<TAB>text`, the 6,236 verses in order.
+    static let text = "ab0242de736a16e11d44df50b5737863b89956af5a41b556586d1bdd07f624cd"
+    /// `s:v<TAB>juz<TAB>hizb<TAB>rub<TAB>sajdah`, sajdah in QUL's words or empty.
+    static let divisions = "ef150a2942e7d039a9cabae750a317565647e927f882d7a1899d16c06a183ab3"
+    /// `s:v<TAB>folded search text`.
+    static let searchFold = "6c02d92f0e9844961496b45a703dd6808df308206d75cecf68fa730a3c9358fc"
+    /// `word<TAB>s:v,s:v,…` for the 368 probe words of `theSameQueriesFindTheSameVerses`.
+    static let searchResults = "e364d408e6a3b8774f4d367931db14e10dcfce43553f6ddbe82bbd949d2f1cdc"
+    /// `s:v<TAB>note`, Tafsir al-Jalalayn's 6,010 notes in order.
+    static let jalalaynNotes = "39798a890fadc61fcd13c58cae5f7d4ac0ef288ad862c6055576a0c00979cf2c"
+}
+
+/// A one-line summary of many rows: the SHA-256 of the lines joined by newlines. What the M3 swap
+/// pinned the pre-migration corpus with, so a later build can still be held to it after the files
+/// it came from were deleted.
+enum Fingerprint {
+    static func of(_ lines: [String]) -> String {
+        SHA256.hash(data: Data(lines.joined(separator: "\n").utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}

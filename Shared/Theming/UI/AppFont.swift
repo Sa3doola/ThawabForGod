@@ -212,8 +212,8 @@ private struct AppFontModifier: ViewModifier {
 /// also the only one that ignored the setting.
 private struct ReadingFontModifier: ViewModifier {
     @Environment(\.appFont) private var provider
-    /// The reader's choice inside `ReaderView`; `ReaderFont.fallback` anywhere nothing resolved
-    /// one.
+    /// The reader's choice inside the Quran reader; `ReaderFont.fallback` anywhere nothing
+    /// resolved one.
     @Environment(\.readingStyle) private var style
     @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
     let size: Double

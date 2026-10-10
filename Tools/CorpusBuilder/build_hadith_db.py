@@ -60,8 +60,8 @@ The text and the reference numbers come from
 [fawazahmed0/hadith-api](https://github.com/fawazahmed0/hadith-api), which is
 released under the Unlicense. That dedication covers what its author can give
 away and nothing more, which is exactly why the underlying work has to be public
-domain by age for any of this to be shippable — the same reasoning
-`build_tafsir_db.py` sets out at greater length.
+domain by age for any of this to be shippable — the same reasoning the Corpus
+README sets out at greater length for Tafsir al-Jalalayn.
 
 It is used because **it carries the numbers a reader can cite.** Its last hadith
 of Bukhari is 7563, the standard total; the other widely-mirrored data set,
@@ -102,7 +102,7 @@ and the count is pinned below so that a change in it has to be looked at.
 
 ## One text, not two
 
-`build_quran_db.py` downloads a second copy of the Quran because Uthmani
+The Quran's build downloads a second copy of the text because Uthmani
 orthography spells ٱلسَّمَٰوَٰتِ, whose letters alone are `السموت` — a word no reader
 will ever type — so the search index had to be folded from a different text.
 **That does not apply here.** The Sahihs are printed in ordinary vowelled

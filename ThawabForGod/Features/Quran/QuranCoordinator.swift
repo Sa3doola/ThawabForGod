@@ -5,99 +5,26 @@
 
 import Observation
 
-/// Owns what the reader has open, and nothing else.
+/// Where the Quran tab is, kept outside the view tree like every other section's.
 ///
-/// No `NavigationPath` here, for the reason `AdhkarCoordinator` has none: the Quran tab's own
-/// `NavigationStack` is put up once by `MainTabView`, and a second path would mean a stack
-/// nested inside that one. What this holds is the one value that decides whether the reading
-/// screen is on top, driven through `navigationDestination(item:)` so a push and a back swipe
-/// are the same value changing.
+/// **Between engines.** The legacy reader was deleted in M3 of the Mushaf port, and the tab shows
+/// `QuranPlaceholderView` until the ported reader arrives (QURAN_MIGRATION_PLAN.md, M5), when this
+/// grows the typed `QuranRoute` path and the sheet and panel state Mushaf's router held. What it
+/// keeps meanwhile is the one thing a route into the tab carries: the verse that was asked for. So
+/// `AppRoute.quranVerse` — a reminder, a recent-activity chip, a widget link — still lands on the
+/// Quran tab and still says which verse, and the reader built in M5 has the request waiting.
 @Observable
 @MainActor
 final class QuranCoordinator {
 
-    /// What is being read, or `nil` at the list.
-    private(set) var openReading: QuranReading?
+    /// The verse a route asked for, or `nil` at the tab's root.
+    private(set) var requestedVerse: VerseReference?
 
-    /// Where in the open span the reader should be put, or `nil` to start at the top.
-    ///
-    /// Held here rather than inside `QuranReading` because it is not part of *what* is open: two
-    /// bookmarks in Al-Baqara open the same chapter, and folding the verse into the value would
-    /// make them two different destinations and push the screen twice. It is also consumed once
-    /// — the reader scrolls afterwards, and a target that outlived the scroll would drag them
-    /// back to it on the next redraw.
-    private(set) var scrollTarget: VerseReference?
-
-    func open(_ reading: QuranReading) {
-        openReading = reading
-        scrollTarget = nil
-    }
-
-    /// Opens the chapter a verse belongs to, positioned at that verse — how a bookmark and
-    /// "continue reading" both get back into the text.
     func open(_ reference: VerseReference) {
-        openReading = .surah(reference.surah)
-        scrollTarget = reference
-    }
-
-    /// Called by the reader once it has scrolled. See `scrollTarget`.
-    func clearScrollTarget() {
-        scrollTarget = nil
+        requestedVerse = reference
     }
 
     func closeReading() {
-        openReading = nil
-        scrollTarget = nil
+        requestedVerse = nil
     }
-
-    // MARK: The reading panel
-
-    /// Whether the customization panel is up.
-    ///
-    /// Here rather than as `@State` on `ReaderView` for the reason `QiblaCoordinator` holds its
-    /// manual-location sheet: what is on screen is this type's subject, and a flag on the view
-    /// would be the one presentation in the feature that nothing outside the view could reach.
-    /// It also survives the reader scrolling, which view state recreated by a redraw need not.
-    private(set) var isCustomizing = false
-
-    func customize() {
-        isCustomizing = true
-    }
-
-    func finishCustomizing() {
-        isCustomizing = false
-    }
-
-    // MARK: The tafsir
-
-    /// The verse whose commentary is open, or `nil` when none is.
-    ///
-    /// A `VerseReference` rather than a `Bool` beside a stored verse, so that presentation and
-    /// subject are one value: `sheet(item:)` cannot then be up with nothing to show, and tapping
-    /// a second verse while the first is open moves the sheet rather than needing it closed.
-    ///
-    /// Here rather than as `@State` on `VerseRow` for the reason `isCustomizing` is here: the row
-    /// is a leaf built and thrown away by a `LazyVStack` as the reader scrolls, and a sheet owned
-    /// by one would be dismissed by scrolling past it.
-    private(set) var openTafsir: VerseReference?
-
-    func showTafsir(for reference: VerseReference) {
-        openTafsir = reference
-    }
-
-    func closeTafsir() {
-        openTafsir = nil
-    }
-}
-
-/// The two ways into the text, which are the two lists the tab offers.
-///
-/// A chapter and a part are the same screen with a different span of verses on it, so they are
-/// one type rather than two destinations — the reader does not change shape depending on which
-/// list the reader came from.
-nonisolated enum QuranReading: Hashable, Sendable, Identifiable {
-    case surah(Int)
-    case juz(Int)
-
-    var id: Self { self }
 }

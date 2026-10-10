@@ -4438,6 +4438,23 @@
         }
       }
     },
+    "quran_coming_soon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قارئ القرآن الجديد في الطريق"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The new Quran reader is on its way"
+          }
+        }
+      }
+    },
     "quran_continue_reading" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4829,57 +4846,6 @@
         }
       }
     },
-    "reader_line_spacing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تباعد الأسطر"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Line Spacing"
-          }
-        }
-      }
-    },
-    "reader_marker_section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "شكل رقم الآية"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verse Number Style"
-          }
-        }
-      }
-    },
-    "reader_marker_style_label" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "النمط"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Style"
-          }
-        }
-      }
-    },
     "reader_options_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4914,74 +4880,6 @@
         }
       }
     },
-    "reader_paper_night" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ليلي"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Night"
-          }
-        }
-      }
-    },
-    "reader_paper_parchment" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ورقي"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parchment"
-          }
-        }
-      }
-    },
-    "reader_paper_section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لون الصفحة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Page Colour"
-          }
-        }
-      }
-    },
-    "reader_paper_system" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حسب النظام"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
-          }
-        }
-      }
-    },
     "reader_preview_section" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5012,23 +4910,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reset"
-          }
-        }
-      }
-    },
-    "reader_show_verse_numbers" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إظهار أرقام الآيات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show verse numbers"
           }
         }
       }
@@ -5917,57 +5798,6 @@
         }
       }
     },
-    "source_ayah_marker_font_attribution" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "quranb1og.blogspot.com — زخارف أرقام الآيات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "quranb1og.blogspot.com — the verse-number medallions"
-          }
-        }
-      }
-    },
-    "source_ayah_marker_font_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خط آيات قرآن"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ayat quran"
-          }
-        }
-      }
-    },
-    "source_font_terms_note" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لم تُؤكَّد بعدُ شروط إعادة توزيع هذا الخط."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The terms for redistributing this font have not yet been confirmed."
-          }
-        }
-      }
-    },
     "source_grdb_attribution" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6219,40 +6049,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read the licence"
-          }
-        }
-      }
-    },
-    "source_surah_names_font_attribution" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "elharrakfonts.com — عناوين السور المخطوطة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "elharrakfonts.com — the calligraphic chapter titles"
-          }
-        }
-      }
-    },
-    "source_surah_names_font_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خط قرآن كريم ١١٤"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quran karim 114"
           }
         }
       }

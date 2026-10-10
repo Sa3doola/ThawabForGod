@@ -55,18 +55,12 @@ struct AppSectionView: View {
         )
     }
 
-    /// The chapters and the parts, each pushing into the reading screen.
-    ///
-    /// A section rather than a push for the same reason the adhkar are: reading is a sitting the
-    /// reader returns to, and a section is what remembers where they were.
+    /// The Quran's section. A placeholder while the reader is rebuilt on the engine ported from
+    /// Mushaf (M3–M5); still a section, with its own stack, so the tab keeps its place and a route
+    /// into it still selects it.
     private var quran: some View {
         NavigationStack {
-            QuranListView(
-                viewModel: container.quranViewModel(),
-                coordinator: container.quranCoordinator,
-                settings: container.readerSettings,
-                tafsir: container.tafsirViewModel()
-            )
+            QuranPlaceholderView()
         }
     }
 

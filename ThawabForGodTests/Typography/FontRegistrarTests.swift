@@ -22,8 +22,6 @@ struct FontRegistrarTests {
     static let postScriptNames: [String] =
         PlexAppFont.Weight.allCases.map(\.postScriptName)
         + ReaderFont.allCases.map(\.postScriptName)
-        + [SurahNameGlyph.postScriptName]
-        + AyahMarkerStyle.allCases.map(\.postScriptName)
 
     @Test(arguments: postScriptNames)
     func everyBundledFaceResolvesToItself(_ name: String) {
@@ -34,10 +32,13 @@ struct FontRegistrarTests {
         #expect(CTFontCopyPostScriptName(font) as String == name)
     }
 
-    /// Twenty faces: five Plex weights, two Quranic faces, the chapter titles and twelve
-    /// medallions. A count that drifts means a face was added without a name to test it by.
+    /// Seven faces every clone bundles: five Plex weights and the two Quranic faces. (The chapter
+    /// titles and the twelve verse medallions went with the legacy reader in M3 — their terms were
+    /// never confirmed. The QUL header, name and common faces exist only where the full data was
+    /// built, and are named with the renderer in M4.) A count that drifts means a face was added
+    /// without a name to test it by.
     @Test func theListCoversEveryBundledFace() {
-        #expect(Set(Self.postScriptNames).count == 20)
+        #expect(Set(Self.postScriptNames).count == 7)
     }
 
     // MARK: The page fonts are not registered at launch (T1)

@@ -379,12 +379,9 @@ struct SettingsScreensTests {
         let context = makeContext()
         let noted = context.screens.about.sources.filter { $0.noteKey != nil }.map(\.id)
 
-        // The two fonts whose redistribution terms are unconfirmed carry the caveat too, until
-        // that is settled — see `AttributionSource.all`.
-        #expect(
-            noted.sorted()
-                == ["adhkar", "font-ayah-markers", "font-surah-names", "hadith", "names"]
-        )
+        // The two fonts whose redistribution terms were never confirmed carried the caveat too,
+        // until M3 of the Quran migration removed them with the legacy reader.
+        #expect(noted.sorted() == ["adhkar", "hadith", "names"])
     }
 
     // MARK: Restoring the calculation defaults

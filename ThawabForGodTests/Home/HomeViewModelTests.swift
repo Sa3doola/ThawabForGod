@@ -23,8 +23,6 @@ struct HomeViewModelTests {
         placeNames: (any PlaceNameResolving)? = nil,
         reachability: (any NetworkReachability)? = nil,
         settingsStore: any SettingsStore = InMemorySettingsStore(),
-        quranProgress: QuranProgressUseCase? = nil,
-        quran: GetQuranUseCase? = nil,
         tasbih: TasbihUseCase? = nil,
         recentActivity: RecentActivityUseCase? = nil
     ) -> (HomeViewModel, TestClock) {
@@ -50,8 +48,6 @@ struct HomeViewModelTests {
                 settingsStore: InMemorySettingsStore()
             ),
             tips: tips,
-            quranProgress: quranProgress,
-            quran: quran,
             tasbih: tasbih,
             recentActivity: recentActivity,
             clock: clock,
@@ -621,63 +617,13 @@ struct HomeViewModelTests {
 
     // MARK: Continue reading
 
+    /// The legacy Quran's reading position went with it (M3 of the Mushaf port), and the ported
+    /// reader stores one again in M6. Until then there is nothing to continue, so there is no
+    /// card — "continue" with nothing to continue is worse than nothing — and the prayer times are
+    /// on screen regardless.
     @Test(.timeLimit(.minutes(1)))
-    func theLastReadVerseAndItsChapterAreLoaded() async {
-        let reference = VerseReference(surah: 2, verse: 142)
-        let (viewModel, _) = makeViewModel(
-            at: PrayerTimeFixtures.instant(today, hour: 13),
-            quranProgress: QuranProgressUseCase(
-                repository: StubQuranProgressRepository(
-                    position: ReadingPosition(reference: reference, updatedAt: .distantPast)
-                )
-            ),
-            quran: GetQuranUseCase(
-                repository: StubQuranRepository(surahs: .success([.stub(id: 2, arabicName: "البقرة")]))
-            )
-        )
-
-        let task = Task { await viewModel.start() }
-        while viewModel.continueReading == nil {
-            await Task.yield()
-        }
-        task.cancel()
-        await task.value
-
-        #expect(viewModel.continueReading?.position.reference == reference)
-        #expect(viewModel.continueReading?.surah?.arabicName == "البقرة")
-    }
-
-    /// A reader who has never opened the Quran gets no card at all — "continue" with nothing to
-    /// continue is worse than nothing.
-    @Test(.timeLimit(.minutes(1)))
-    func nothingReadMeansNoCard() async {
-        let (viewModel, clock) = makeViewModel(
-            at: PrayerTimeFixtures.instant(today, hour: 13),
-            quranProgress: QuranProgressUseCase(repository: StubQuranProgressRepository()),
-            quran: GetQuranUseCase(repository: StubQuranRepository())
-        )
-
-        let task = Task { await viewModel.start() }
-        while !clock.isTicking {
-            await Task.yield()
-        }
-        task.cancel()
-        await task.value
-
-        #expect(viewModel.continueReading == nil)
-    }
-
-    /// Somebody else's store, and a nice-to-have besides: a failure to read it must leave the
-    /// prayer times on screen rather than taking Home down with it.
-    @Test(.timeLimit(.minutes(1)))
-    func aFailureToReadTheReadingPositionIsSilent() async throws {
-        let (viewModel, clock) = makeViewModel(
-            at: PrayerTimeFixtures.instant(today, hour: 13),
-            quranProgress: QuranProgressUseCase(
-                repository: StubQuranProgressRepository(failure: QuranStubError())
-            ),
-            quran: GetQuranUseCase(repository: StubQuranRepository())
-        )
+    func thereIsNoCardUntilTheReaderStoresAPosition() async throws {
+        let (viewModel, clock) = makeViewModel(at: PrayerTimeFixtures.instant(today, hour: 13))
 
         let task = Task { await viewModel.start() }
         while !clock.isTicking {
@@ -692,20 +638,17 @@ struct HomeViewModelTests {
 
     // MARK: Recent activity
 
-    /// The names are resolved when the row is *drawn*, not when the activity was recorded — which
-    /// is what lets the digit system and the language change afterwards without rewriting history.
+    /// A Quran chip recorded before the port still routes to its verse. The chapter's name is
+    /// resolved again once the ported reader is wired to Home (M6); until then the chip carries
+    /// none rather than an invented one.
     @Test(.timeLimit(.minutes(1)))
-    func theChipsCarryNamesResolvedFromTheCorpus() async {
+    func aQuranChipStillRoutesWithoutAChapterName() async {
         let repository = SpyRecentActivityRepository()
-        try? await repository.record(
-            .quran(VerseReference(surah: 2, verse: 142), of: 286, at: Date())
-        )
+        let reference = VerseReference(surah: 2, verse: 142)
+        try? await repository.record(.quran(reference, of: 286, at: Date()))
 
         let (viewModel, _) = makeViewModel(
             at: PrayerTimeFixtures.instant(today, hour: 13),
-            quran: GetQuranUseCase(
-                repository: StubQuranRepository(surahs: .success([.stub(id: 2, arabicName: "البقرة")]))
-            ),
             recentActivity: RecentActivityUseCase(repository: repository)
         )
 
@@ -717,11 +660,12 @@ struct HomeViewModelTests {
         await task.value
 
         #expect(viewModel.recentActivities.map(\.id) == [.quran])
-        #expect(viewModel.recentActivities.first?.subject == "البقرة")
+        #expect(viewModel.recentActivities.first?.activity.route == .quranVerse(reference))
+        #expect(viewModel.recentActivities.first?.subject == nil)
     }
 
     /// The chapter titles live in the corpus now rather than in the string catalog, so the chip
-    /// resolves one the way the Quran's and the tasbih's do — and gets `nil` rather than an
+    /// resolves one the way the tasbih's does — and gets `nil` rather than an
     /// invented name when the view model was built without the adhkar use case, which is how it
     /// is built here.
     @Test(.timeLimit(.minutes(1)))

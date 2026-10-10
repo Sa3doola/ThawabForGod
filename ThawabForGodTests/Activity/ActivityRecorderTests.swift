@@ -113,8 +113,8 @@ struct ActivityRecorderTests {
     @Test(.timeLimit(.minutes(1)))
     func aFailedWriteIsSwallowed() async {
         nonisolated final class FailingRepository: RecentActivityRepositoring, @unchecked Sendable {
-            func recent() async throws -> [RecentActivity] { throw QuranStubError() }
-            func record(_ activity: RecentActivity) async throws { throw QuranStubError() }
+            func recent() async throws -> [RecentActivity] { throw StubError() }
+            func record(_ activity: RecentActivity) async throws { throw StubError() }
         }
 
         let recorder = ActivityRecorder(

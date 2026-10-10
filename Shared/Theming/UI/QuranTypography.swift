@@ -29,15 +29,3 @@ nonisolated extension ReaderFont {
         }
     }
 }
-
-nonisolated extension AyahMarkerStyle {
-    /// The marker's size as a share of the verse's. Small enough that the medallion sits inside
-    /// the line rather than pushing it apart; large enough that a three-digit number stays legible
-    /// inside the ring.
-    static let scale: Double = 1.5
-
-    /// The face at a size that is already final, for the reason the note on `ReaderFont` gives.
-    func font(size: Double) -> Font {
-        .custom(postScriptName, fixedSize: size)
-    }
-}

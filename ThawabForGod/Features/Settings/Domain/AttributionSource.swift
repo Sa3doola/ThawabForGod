@@ -135,25 +135,6 @@ nonisolated extension AttributionSource {
             url: URL(string: "https://github.com/IBM/plex")!,
             licenceFile: "IBMPlexSansArabic-OFL"
         ),
-        // TODO(license): confirm redistribution rights before App Store release — for this row
-        // and the next. Both are listed with the note that says so, which is the honest version
-        // of shipping them until it is settled.
-        AttributionSource(
-            id: "font-surah-names",
-            titleKey: .sourceSurahNamesFontTitle,
-            attributionKey: .sourceSurahNamesFontAttribution,
-            licenceKey: .licenceUnsettled,
-            noteKey: .sourceFontTermsNote,
-            url: URL(string: "https://www.elharrakfonts.com")!
-        ),
-        AttributionSource(
-            id: "font-ayah-markers",
-            titleKey: .sourceAyahMarkerFontTitle,
-            attributionKey: .sourceAyahMarkerFontAttribution,
-            licenceKey: .licenceUnsettled,
-            noteKey: .sourceFontTermsNote,
-            url: URL(string: "https://quranb1og.blogspot.com")!
-        ),
         AttributionSource(
             id: "adhan",
             titleKey: .sourceAdhanTitle,

@@ -1,5 +1,6 @@
-// The Jalalayn pack against the tafsir the app ships today, and the contract every pack keeps so
-// the app can find it without a manifest (T15, T16).
+// The Jalalayn pack against the tafsir the app shipped before the migration (pinned as a
+// fingerprint since M3 deleted `tafsir.sqlite`), and the contract every pack keeps so the app can
+// find it without a manifest (T15, T16).
 
 import Foundation
 import QuranDataModel
@@ -10,8 +11,6 @@ struct JalalaynPack {
     let pack: SQLiteDatabase
     /// "s:a" by global ayah id, from the tanzil database the pack was joined against.
     let keyOfAyah: [Int: String]
-    /// Today's notes, by "s:a".
-    let today: [String: String]
 
     init() throws {
         pack = try SQLiteDatabase(path: Paths.packs("tanzil").appendingPathComponent("tafsir-ar-jalalayn.sqlite").path, readOnly: true)
@@ -20,13 +19,6 @@ struct JalalaynPack {
         try SQLiteDatabase(path: Paths.tanzilSQLite.path, readOnly: true)
             .query("SELECT id, surah, ayah FROM ayah") { keys[$0.int(0)!] = "\($0.int(1)!):\($0.int(2)!)" }
         keyOfAyah = keys
-
-        var notes: [String: String] = [:]
-        try SQLiteDatabase(path: Paths.legacyTafsirSQLite.path, readOnly: true)
-            .query("SELECT surah_id, number, text FROM tafsir WHERE edition_id = 'jalalayn'") {
-                notes["\($0.int(0)!):\($0.int(1)!)"] = $0.text(2)!
-            }
-        today = notes
     }
 
     /// The inverse of `MirroredTafsirMarkup.html`: the paragraph unwrapped, line breaks back, the
@@ -48,13 +40,13 @@ struct JalalaynPack {
 
     // MARK: Silence
 
-    /// The heart of T16: the ayahs the two Jalals pass over have no row — exactly the ones that have
-    /// none today, so the app's "no note here" lands on the same 226 verses.
-    @Test func theSilentAyahsAreTodaysSilentVerses() throws {
+    /// The heart of T16: the ayahs the two Jalals pass over have no row, so the app's "no note
+    /// here" lands on 226 verses — the same ones as before the migration, since the notes'
+    /// fingerprint below names every verse that has one.
+    @Test func theCommentaryPassesOver226Ayahs() throws {
         let built = Set(try notes().keys)
         let all = Set(keyOfAyah.values)
         #expect(all.count == 6236)
-        #expect(all.subtracting(built) == all.subtracting(Set(today.keys)))
         #expect(all.subtracting(built).count == 226)
     }
 
@@ -73,19 +65,21 @@ struct JalalaynPack {
 
     // MARK: The same words
 
-    /// The commentary is no more edited than the Quran: undoing the markup gives today's note back,
-    /// byte for byte, for every one of the 6,010.
-    @Test func everyNoteIsTodaysTextByteForByte() throws {
-        let built = try notes()
-        var differing: [String] = []
-        for (key, html) in built where Self.text(fromHTML: html) != today[key] { differing.append(key) }
-        #expect(built.count == today.count)
-        #expect(differing.isEmpty, "differs at \(differing.sorted().prefix(5))")
+    /// The commentary is no more edited than the Quran: undoing the markup gives back the note the
+    /// app shipped before the migration, byte for byte, for every one of the 6,010.
+    @Test func everyNoteIsThePreMigrationTextByteForByte() throws {
+        var lines: [String] = []
+        try pack.query("SELECT ayah_id, html FROM tafsir ORDER BY ayah_id") { row in
+            lines.append("\(keyOfAyah[row.int(0)!]!)\t\(Self.text(fromHTML: row.text(1)!))")
+        }
+        #expect(lines.count == 6010)
+        #expect(Fingerprint.of(lines) == PreMigrationCorpus.jalalaynNotes)
     }
 
+    /// 77 notes run to more than one paragraph (Tools/QuranBuilder/README.md); their breaks survive.
     @Test func notesThatRunToSeveralParagraphsKeepTheirBreaks() throws {
         let built = try notes()
-        #expect(built.values.filter { $0.contains("<br>") }.count == today.values.filter { $0.contains("\n") }.count)
+        #expect(built.values.filter { $0.contains("<br>") }.count == 77)
         #expect(try #require(built["2:1"]).contains("<br>"))
     }
 

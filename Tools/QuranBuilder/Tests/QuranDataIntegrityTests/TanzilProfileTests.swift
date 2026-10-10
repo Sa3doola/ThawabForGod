@@ -1,8 +1,11 @@
-// The tanzil profile against the database the app ships today.
+// The tanzil profile against the corpus the app shipped before the migration.
 //
-// Until M3 swaps it in, `ThawabForGod/Resources/Corpus/quran.sqlite` (built by the retiring
-// `build_quran_db.py`) is the reference: the new build must carry the same Quran, verse for verse
-// and byte for byte, with the same divisions, and must find the same verses for the same words.
+// Until M3 the reference was `ThawabForGod/Resources/Corpus/quran.sqlite` as `build_quran_db.py`
+// wrote it, read row for row. M3 replaced that file with this build's output and retired the
+// script, so what the old file proved is kept as fingerprints (`PreMigrationCorpus`), taken from it
+// by these same line formats just before it was deleted: the build must still carry the same
+// Quran, verse for verse and byte for byte, with the same divisions, and find the same verses for
+// the same words.
 
 import ArabicText
 import Foundation
@@ -12,11 +15,9 @@ import Testing
 @Suite(.enabled(if: Paths.tanzilBuilt, "build the tanzil profile first"))
 struct TanzilProfile {
     let db: SQLiteDatabase
-    let legacy: SQLiteDatabase
 
     init() throws {
         db = try SQLiteDatabase(path: Paths.tanzilSQLite.path, readOnly: true)
-        legacy = try SQLiteDatabase(path: Paths.legacyQuranSQLite.path, readOnly: true)
     }
 
     private func meta(_ key: String) throws -> String? {
@@ -54,47 +55,29 @@ struct TanzilProfile {
         #expect(try meta("digest:tanzil-simple-clean") == "7c74ab21103b99d8d0bacd94e7c11f5f5855b22d3f0d32e1f09fb6cd73764b58")
     }
 
-    // MARK: The same Quran as today
+    // MARK: The same Quran as before the migration
 
     /// The text of the Quran is never edited: what is drawn must be byte-identical to what the app
-    /// draws today, the basmala lifted off verse 1 the same way.
-    @Test func textIsByteIdenticalToTodaysCorpus() throws {
-        var today: [String: String] = [:]
-        try legacy.query("SELECT surah_id, number, text FROM verse") { row in
-            today["\(row.int(0)!):\(row.int(1)!)"] = row.text(2)
+    /// drew before the migration, the basmala lifted off verse 1 the same way.
+    @Test func textIsByteIdenticalToThePreMigrationCorpus() throws {
+        var lines: [String] = []
+        try db.query("SELECT surah, ayah, text_hafs FROM ayah ORDER BY id") { row in
+            lines.append("\(row.int(0)!):\(row.int(1)!)\t\(row.text(2)!)")
         }
-        #expect(today.count == 6236)
-
-        var differing: [String] = []
-        try db.query("SELECT surah, ayah, text_hafs FROM ayah") { row in
-            let key = "\(row.int(0)!):\(row.int(1)!)"
-            if today[key] != row.text(2) { differing.append(key) }
-        }
-        #expect(differing.isEmpty, "differs at \(differing.prefix(5))")
+        #expect(lines.count == 6236)
+        #expect(Fingerprint.of(lines) == PreMigrationCorpus.text)
     }
 
-    @Test func divisionsAndSajdahsMatchTodaysCorpus() throws {
-        var today: [String: [Int]] = [:]
-        var sajdahs: [String: String] = [:]
-        try legacy.query("SELECT surah_id, number, juz, hizb, rub_el_hizb, sajda FROM verse") { row in
-            let key = "\(row.int(0)!):\(row.int(1)!)"
-            today[key] = [row.int(2)!, row.int(3)!, row.int(4)!]
-            if let sajda = row.text(5) { sajdahs[key] = sajda }
+    /// Juz, hizb, rub el hizb and sajdah per verse; Tanzil's sajdah words are stored in the
+    /// schema's (QUL's): obligatory → required, recommended → optional.
+    @Test func divisionsAndSajdahsMatchThePreMigrationCorpus() throws {
+        var lines: [String] = []
+        try db.query("SELECT surah, ayah, juz, hizb, rub, sajdah FROM ayah ORDER BY id") { row in
+            lines.append("\(row.int(0)!):\(row.int(1)!)\t\(row.int(2)!)\t\(row.int(3)!)\t\(row.int(4)!)\t\(row.text(5) ?? "")")
         }
-
-        var differing: [String] = []
-        var built: [String: String] = [:]
-        try db.query("SELECT surah, ayah, juz, hizb, rub, sajdah FROM ayah") { row in
-            let key = "\(row.int(0)!):\(row.int(1)!)"
-            if today[key] != [row.int(2)!, row.int(3)!, row.int(4)!] { differing.append(key) }
-            if let sajdah = row.text(5) { built[key] = sajdah }
-        }
-        #expect(differing.isEmpty, "differs at \(differing.prefix(5))")
-
-        // Same fifteen verses; Tanzil's words translated into the schema's (QUL's).
-        let translated = sajdahs.mapValues { $0 == "obligatory" ? "required" : "optional" }
-        #expect(built == translated)
-        #expect(built.values.filter { $0 == "required" }.count == 4)
+        #expect(Fingerprint.of(lines) == PreMigrationCorpus.divisions)
+        #expect(try db.int("SELECT count(*) FROM ayah WHERE sajdah = 'required'") == 4)
+        #expect(try db.int("SELECT count(*) FROM ayah WHERE sajdah IS NOT NULL") == 15)
     }
 
     @Test func the112SurahsThatOpenWithTheBasmalaSaySo() throws {
@@ -107,46 +90,42 @@ struct TanzilProfile {
         #expect(text == "الٓمٓ")
     }
 
-    // MARK: The same search as today
+    // MARK: The same search as before the migration
 
-    /// The search text is folded by `ArabicNormalizer` now, and by Python's `normalize()` before.
-    /// Over the whole Simple Clean text the two must agree, verse for verse.
+    /// The search text is folded by `ArabicNormalizer` now, and was by Python's `normalize()`
+    /// before. Over the whole Simple Clean text the two agree, verse for verse.
     @Test func everyVerseFoldsAsItDidBefore() throws {
-        var today: [String: String] = [:]
-        try legacy.query("SELECT surah_id, number, text_normalized FROM verse") { row in
-            today["\(row.int(0)!):\(row.int(1)!)"] = row.text(2)
-        }
-
-        var differing: [String] = []
-        try db.query("SELECT surah, ayah, text_imlaei FROM ayah") { row in
-            let key = "\(row.int(0)!):\(row.int(1)!)"
-            if today[key] != ArabicNormalizer.normalize(row.text(2)!) { differing.append(key) }
-        }
-        #expect(differing.isEmpty, "differs at \(differing.prefix(5))")
+        #expect(Fingerprint.of(try foldedVerses().map { "\($0.key)\t\($0.folded)" }) == PreMigrationCorpus.searchFold)
     }
 
-    /// The same words find the same verses in both indexes. The new index's stem column is left
-    /// out (`text_norm :`), since finding للرحمن under الرحمن is new and deliberate.
+    /// The same words find the same verses as the pre-migration index did. The new index's stem
+    /// column is left out (`text_norm :`), since finding للرحمن under الرحمن is new and deliberate.
     @Test func theSameQueriesFindTheSameVerses() throws {
         var words: [String] = ["الرحمن", "السماوات", "موسي", "فرعون", "الحمد لله", "بسم الله", "يا ايها الذين امنوا"]
         // A deterministic spread of the corpus: the first and last word of every 25th verse.
-        try legacy.query("SELECT text_normalized FROM verse WHERE rowid % 25 = 0") { row in
-            let verse = row.text(0)!.split(separator: " ")
-            words += [verse.first, verse.last].compactMap { $0.map(String.init) }
+        for (index, verse) in try foldedVerses().enumerated() where (index + 1) % 25 == 0 {
+            let parts = verse.folded.split(separator: " ")
+            words += [parts.first, parts.last].compactMap { $0.map(String.init) }
         }
 
-        var differing: [String] = []
-        for word in Set(words) {
+        var lines: [String] = []
+        for word in Set(words).sorted() {
             let phrase = "\"\(ArabicNormalizer.words(in: word).joined(separator: " "))\""
-            var built = Set<String>(), today = Set<String>()
-            try db.query("SELECT a.surah, a.ayah FROM ayah_fts JOIN ayah a ON a.id = ayah_fts.rowid WHERE ayah_fts MATCH ?",
-                         [.text("text_norm : \(phrase)")]) { built.insert("\($0.int(0)!):\($0.int(1)!)") }
-            try legacy.query("SELECT v.surah_id, v.number FROM verse_fts JOIN verse v ON v.rowid = verse_fts.rowid WHERE verse_fts MATCH ?",
-                             [.text(phrase)]) { today.insert("\($0.int(0)!):\($0.int(1)!)") }
-            if built != today { differing.append(word) }
+            var found: [String] = []
+            try db.query("SELECT a.surah, a.ayah FROM ayah_fts JOIN ayah a ON a.id = ayah_fts.rowid WHERE ayah_fts MATCH ? ORDER BY a.id",
+                         [.text("text_norm : \(phrase)")]) { found.append("\($0.int(0)!):\($0.int(1)!)") }
+            lines.append("\(word)\t\(found.joined(separator: ","))")
         }
-        #expect(words.count > 400)
-        #expect(differing.isEmpty, "differs for \(differing.prefix(5))")
+        #expect(lines.count == 368)
+        #expect(Fingerprint.of(lines) == PreMigrationCorpus.searchResults)
+    }
+
+    private func foldedVerses() throws -> [(key: String, folded: String)] {
+        var verses: [(key: String, folded: String)] = []
+        try db.query("SELECT surah, ayah, text_imlaei FROM ayah ORDER BY id") { row in
+            verses.append(("\(row.int(0)!):\(row.int(1)!)", ArabicNormalizer.normalize(row.text(2)!)))
+        }
+        return verses
     }
 
     /// The stem column is what the tanzil build adds: a word with an attached particle is found

@@ -4,10 +4,11 @@
 //   swift run -c release --package-path Tools/QuranBuilder QuranBuilder --profile qul
 //
 // `--profile <name>` reads `Tools/QuranBuilder/profiles/<name>.json`; `--config <path>` reads any
-// other. Every output — the database, `Packs/` and the pack report — goes under
-// `QuranData/out/<profile>/` (git-ignored); the qul profile also
-// fills `QuranData/Fonts/madaniV2/` with the page fonts. Nothing is copied into the app's
-// resources here — that swap is a deliberate step of its own (QURAN_MIGRATION_PLAN.md, M3).
+// other. Every output — the database, `Packs/` and the pack report — is written under
+// `QuranData/out/<profile>/` (git-ignored); the qul profile also fills `QuranData/Fonts/madaniV2/`
+// with the page fonts. Once every check has passed, the profile's `install` section copies the
+// database, the packs and (qul) the QUL faces into the app's resources: tanzil's copies are
+// committed, qul's are git-ignored by name (QURAN_MIGRATION_PLAN.md, T4).
 
 import Foundation
 import QuranDataModel
@@ -79,6 +80,10 @@ func build() async throws {
     }
     let violations = report.violations(budgetCompressedMB: budget.budgetCompressedMB, budgetInstalledMB: budget.budgetInstalledMB)
     try require(violations.isEmpty, violations.joined(separator: "; "))
+
+    for file in try installOutputs(config) {
+        print("installed \(file.path)")
+    }
 }
 
 do {

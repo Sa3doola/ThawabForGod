@@ -15,12 +15,15 @@ swift test --package-path Tools/QuranBuilder
 
 | Profile | Inputs | Writes | In git? |
 | --- | --- | --- | --- |
-| `tanzil` | Tanzil's Uthmani and Simple Clean texts and `quran-data.xml`, downloaded once into `QuranData/raw/tanzil/`; Tafsir al-Jalalayn from the `spa5k/tafsir_api` mirror, into `QuranData/raw/jalalayn/` | `QuranData/out/tanzil/quran.sqlite`, `Packs/tafsir-ar-jalalayn.sqlite`, `ayah-of-the-day.json` | The outputs are moved into the app and committed at M3 |
-| `qul` | The Quranic Universal Library downloads in `QuranData/raw/` (git-ignored), each verified against `QuranData/SOURCES.md` | `QuranData/out/qul/quran-mushaf.sqlite`, `Fonts/` (QUL header, surah-name and juz-name faces), `Packs/` (Saheeh International, Al-Muyassar, Al-Mukhtasar, surah info), `ayah-of-the-day.json`; the 604 page fonts into `QuranData/Fonts/madaniV2/` | **Never.** QUL publishes no licence |
+| `tanzil` | Tanzil's Uthmani and Simple Clean texts and `quran-data.xml`, downloaded once into `QuranData/raw/tanzil/`; Tafsir al-Jalalayn from the `spa5k/tafsir_api` mirror, into `QuranData/raw/jalalayn/` | `QuranData/out/tanzil/quran.sqlite`, `Packs/tafsir-ar-jalalayn.sqlite`, `ayah-of-the-day.json`; installs the database and the pack into `ThawabForGod/Resources/Corpus/` | **Yes**, the installed copies |
+| `qul` | The Quranic Universal Library downloads in `QuranData/raw/` (git-ignored), each verified against `QuranData/SOURCES.md` | `QuranData/out/qul/quran-mushaf.sqlite`, `Fonts/` (QUL header, surah-name and juz-name faces), `Packs/` (Saheeh International, Al-Muyassar, Al-Mukhtasar, surah info), `ayah-of-the-day.json`; the 604 page fonts into `QuranData/Fonts/madaniV2/`; installs the database and packs into `ThawabForGod/Resources/Corpus/` and the three faces into `ThawabForGod/Resources/Fonts/Quran/` | **Never.** QUL publishes no licence; the installed copies are git-ignored by name |
 
-Profiles live in `profiles/<name>.json`; paths in them are relative to that folder. Every output goes
-under `QuranData/out/` (git-ignored) except the page fonts, whose folder the app target references
-(`Tools/add_quran_data_phase.rb`). Nothing is copied into the app's resources from here.
+Profiles live in `profiles/<name>.json`; paths in them are relative to that folder. Every output is
+written under `QuranData/out/` (git-ignored), except the page fonts, whose folder the app target
+references (`Tools/add_quran_data_phase.rb`). Once every check and the size budget have passed, the
+profile's `install` section copies the outputs into the app's resources (`Install.swift`), so a failed
+build never replaces what the app has. Whether a copy is committed is the `.gitignore`'s decision, by
+file name: the tanzil database and the Jalalayn pack are; nothing from qul is.
 
 ## What every build checks
 
@@ -59,8 +62,11 @@ by prefix with no manifest. The build's manifest is a report in `QuranData/out/r
 `Tests/QuranDataIntegrityTests`: Mushaf's suites (layout, metadata, text against the fonts, search,
 ligatures, page fonts, packs, sanitizer, size report, curated list) against the qul output; `TanzilProfile`
 against the database the app ships today (text byte for byte, divisions, sajdahs, every verse's search fold,
-the same verses for the same queries); `ProfilesAgree`; `JalalaynPack` against today's `tafsir.sqlite`
-(the 226 silent ayahs, every note byte for byte); `PackDiscovery`. A suite whose profile has not been
+the same verses for the same queries); `ProfilesAgree`; `JalalaynPack` (the 226 silent ayahs, every note
+byte for byte); `PackDiscovery`; `TanzilInstalled` and `QULInstalled`, that what the app bundles is what
+the build wrote. The "same as before" checks compare against `PreMigrationCorpus`: fingerprints of the
+`quran.sqlite` and `tafsir.sqlite` the app shipped before M3, taken from those files just before M3
+replaced the one and deleted the other. A suite whose profile has not been
 built is skipped with the reason — a public clone builds and tests `tanzil` alone.
 
 ## Findings (reported, not altered)
@@ -97,5 +103,5 @@ New with the tanzil profile:
   numbers diverge after the first split they place differently). Each profile stores its own source's.
 - **Revelation:** Tanzil and QUL agree on all 28 Madinan surahs.
 - **Basmala:** Tanzil carries it as a prefix of verse 1 of 112 surahs; the build lifts it off, exactly as
-  `build_quran_db.py` did, so verse text is byte-identical to the database the app ships today.
+  `build_quran_db.py` (retired at M3) did, so verse text is byte-identical to what the app shipped before.
 - **Jalalayn:** 77 of its 6,010 notes run to more than one paragraph; the line breaks are kept as `<br>`.

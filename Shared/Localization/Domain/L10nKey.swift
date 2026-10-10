@@ -94,12 +94,6 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case sourceAmiriAttribution = "source_amiri_attribution"
     case sourceKFGQPCTitle = "source_kfgqpc_title"
     case sourceKFGQPCAttribution = "source_kfgqpc_attribution"
-    case sourceSurahNamesFontTitle = "source_surah_names_font_title"
-    case sourceSurahNamesFontAttribution = "source_surah_names_font_attribution"
-    case sourceAyahMarkerFontTitle = "source_ayah_marker_font_title"
-    case sourceAyahMarkerFontAttribution = "source_ayah_marker_font_attribution"
-    /// The standing caveat on the two faces whose redistribution terms are unconfirmed.
-    case sourceFontTermsNote = "source_font_terms_note"
     /// What a row with a bundled licence file offers to open.
     case sourceReadLicence = "source_read_licence"
 
@@ -261,6 +255,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranSearchVerses = "quran_search_verses"
     case quranSearchEmpty = "quran_search_empty"
     case quranSearchHint = "quran_search_hint"
+    /// The Quran tab while the reader is being rebuilt on the ported engine (M3–M5).
+    case quranComingSoon = "quran_coming_soon"
 
     // MARK: Tafsir
 
@@ -275,25 +271,16 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: The reading panel
 
     case readerOptionsTitle = "reader_options_title"
-    case readerPaperSection = "reader_paper_section"
-    case readerPaperSystem = "reader_paper_system"
-    case readerPaperParchment = "reader_paper_parchment"
-    case readerPaperNight = "reader_paper_night"
     case readerPageSection = "reader_page_section"
-    case readerShowVerseNumbers = "reader_show_verse_numbers"
     case readerKeepScreenAwake = "reader_keep_screen_awake"
     case readerKeepScreenAwakeDetail = "reader_keep_screen_awake_detail"
     case readerTextSection = "reader_text_section"
     case readerTextSize = "reader_text_size"
-    case readerLineSpacing = "reader_line_spacing"
     case readerReset = "reader_reset"
     case readerPreviewSection = "reader_preview_section"
     case readerFontSection = "reader_font_section"
     case readerFontKFGQPC = "reader_font_kfgqpc"
     case readerFontAmiri = "reader_font_amiri"
-    case readerMarkerSection = "reader_marker_section"
-    /// Precedes a number — "Style 3" — for VoiceOver on each medallion in the picker.
-    case readerMarkerStyleLabel = "reader_marker_style_label"
     case readerDone = "reader_done"
 
     // MARK: Hadith

@@ -239,9 +239,24 @@ struct BuildConfig: Decodable {
         let minimumEntries: Int
     }
 
+    /// Where the app target picks the outputs up (T4). The build writes under `QuranData/out/` and
+    /// then copies what it wrote here, so the app never reads a half-written file and the outputs
+    /// can be checked against what is installed (`InstalledTests`). Whether the copies are
+    /// committed is the `.gitignore`'s decision, by file name, not this one's.
+    struct Install: Decodable {
+        /// The database's destination, relative to the config file.
+        let database: String
+        /// The folder every pack this profile wrote is copied into. The app's synchronized group
+        /// flattens it into the bundle root, which is why the app finds packs by file prefix.
+        let packs: String?
+        /// The folder the QUL header, surah-name and common faces are copied into (qul only).
+        let fonts: String?
+    }
+
     let profile: Profile
     /// The database, relative to the config file.
     let output: String
+    let install: Install?
     let tanzil: Tanzil?
     let qul: QUL?
     let packs: Packs?
@@ -252,7 +267,7 @@ struct BuildConfig: Decodable {
     private(set) var base = URL(fileURLWithPath: ".")
 
     private enum CodingKeys: String, CodingKey {
-        case profile, output, tanzil, qul, packs, curated, sizeReport
+        case profile, output, install, tanzil, qul, packs, curated, sizeReport
     }
 
     static func load(path: String) throws -> BuildConfig {

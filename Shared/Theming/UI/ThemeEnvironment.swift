@@ -9,7 +9,7 @@ extension EnvironmentValues {
     @Entry var theme: Theme = .fallback
     @Entry var appFont: any AppFontProviding = SystemAppFont()
     /// Resolved by the reading screen from the reader's saved choices; `fallback` everywhere
-    /// else, which is the app's own palette at the app's own size.
+    /// else, which is the default face.
     @Entry var readingStyle: ReadingStyle = .fallback
 }
 

@@ -30,7 +30,7 @@ nonisolated struct HomeLayoutRepository: HomeLayoutRepositoring {
         guard let stored = settingsStore.string(for: .homeLayout),
               let data = stored.data(using: .utf8),
               // Unreadable JSON falls back rather than trapping, the same way an unrecognised
-              // `ReaderPaper` does. The decoder itself is tolerant of *unknown members* — see
+              // `ReaderFont` does. The decoder itself is tolerant of *unknown members* — see
               // `HomeLayout.init(from:)` — so reaching here means the string is not a layout at
               // all, which only a corrupted store can produce.
               let layout = try? JSONDecoder().decode(HomeLayout.self, from: data) else {
