@@ -237,16 +237,14 @@ final class AppContainer {
         quranDatabase: QuranDatabase = .bundled(),
         quranPacks: any ContentPackStoring = ContentPackStore(),
         fallbackCoordinates: Coordinates = .makkah,
-        // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
-        // elsewhere) is a real call into the system's background-task service — unlike
-        // `locationService` or `notificationService`, there is no protocol here to hand a fake
-        // to, so this is the escape hatch instead. Constructing a real `AppContainer()` in a
-        // test (`AppRoutingTests` does, for its routing-through-the-container coverage) with
-        // this left `true` registers for real from inside the test host process, which is a
-        // different bundle than the app ships as — that mismatch is what surfaced as flaky,
-        // unrelated-looking test failures and simulator instability across an entire run, not
-        // a failure of this call itself. Unconditional (not `#if os(iOS)`) only because Swift
-        // does not allow a single parameter in a list to be conditionally compiled cleanly.
+        // `false` in tests that only need a container. When `true` (iOS only — a no-op read
+        // elsewhere), this container publishes its `BackgroundRefreshScheduler` as the one the
+        // background launch handler runs. A container built by a test, with a mock notification
+        // service, must never become the target of the host app's handler, so this is the escape
+        // hatch. Registering the handler is no longer the container's job: the app delegate does
+        // that at launch, and this flag only decides which scheduler it finds. Unconditional (not
+        // `#if os(iOS)`) only because Swift does not allow a single parameter in a list to be
+        // conditionally compiled cleanly.
         registersBackgroundRefresh: Bool = true
     ) {
         self.tipsService = tipsService
@@ -426,11 +424,14 @@ final class AppContainer {
         tipsService.configure()
 
         #if os(iOS)
-        // Same requirement, stricter: `BGTaskScheduler` fatals if `register()` runs any later
-        // than the app finishing launch, so this cannot wait for `RootView` to appear either.
-        // Skipped in tests — see `registersBackgroundRefresh`'s own documentation for why.
+        // Publishes only; it does not register. This initialiser can run as late as the first
+        // scene's connection (observed), after the app has finished launching, and
+        // `BGTaskScheduler` fatals on a launch handler registered that late. The handler is
+        // registered by `AppDelegate.application(_:didFinishLaunchingWithOptions:)` and finds
+        // this scheduler through `current` when a task fires.
+        // Skipped by most tests — see `registersBackgroundRefresh`'s own documentation for why.
         if registersBackgroundRefresh {
-            backgroundRefreshScheduler.register()
+            BackgroundRefreshScheduler.makeCurrent(backgroundRefreshScheduler)
         }
         #endif
 
