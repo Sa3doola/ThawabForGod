@@ -86,7 +86,9 @@ func loadShasumManifest(_ url: URL) throws -> [String: String] {
 
 /// Copies the page fonts (`p1.ttf…`) into the bundle folder. Every source file must be in the
 /// manifest with the right hash, the manifest must list exactly these files, and every copy is
-/// hashed again. The destination is replaced as a whole, so no stale file survives.
+/// hashed again. Everything in the destination is replaced but its `README.md`, which is committed
+/// (the folder is an app-target folder reference and must exist in a clone without the fonts), so
+/// no stale font survives and the README is never deleted by a rebuild.
 func copyPageFonts(_ fonts: BuildConfig.PageFonts, config: BuildConfig) throws -> (files: Int, bytes: Int) {
     let manifest = try loadShasumManifest(config.input(fonts.manifest).url)
     let names = (1...fonts.count).map { "p\($0).ttf" }
@@ -94,8 +96,10 @@ func copyPageFonts(_ fonts: BuildConfig.PageFonts, config: BuildConfig) throws -
     try require(Set(manifest.keys) == expectedPaths, "\(fonts.manifest) does not list exactly \(fonts.directory)/p1…p\(fonts.count).ttf")
 
     let destination = config.path(fonts.bundleDirectory)
-    try? FileManager.default.removeItem(at: destination)
     try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
+    for name in try FileManager.default.contentsOfDirectory(atPath: destination.path) where name != "README.md" {
+        try FileManager.default.removeItem(at: destination.appendingPathComponent(name))
+    }
     var bytes = 0
     for name in names {
         let path = "\(fonts.directory)/\(name)"

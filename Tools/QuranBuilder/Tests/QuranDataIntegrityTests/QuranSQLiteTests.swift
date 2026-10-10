@@ -700,8 +700,12 @@ struct BundledPageFonts {
             expected[String(parts[1].trimmingCharacters(in: .whitespaces).split(separator: "/").last!)] = String(parts[0])
         }
         #expect(expected.count == 604)
-        let files = try FileManager.default.contentsOfDirectory(atPath: folder.path).filter { !$0.hasPrefix(".") }
+        // The committed README.md travels with the fonts (the folder is a folder reference); every
+        // other file must be a manifest font.
+        let files = try FileManager.default.contentsOfDirectory(atPath: folder.path)
+            .filter { !$0.hasPrefix(".") && $0 != "README.md" }
         #expect(Set(files) == Set(expected.keys))
+        #expect(FileManager.default.fileExists(atPath: folder.appendingPathComponent("README.md").path))
         for name in files.sorted() {
             #expect(try SourceManifest.sha256(of: folder.appendingPathComponent(name)) == expected[name], "\(name)")
         }
@@ -744,7 +748,8 @@ struct BundledPageFonts {
     func shippedDataFitsTheBudget() throws {
         let report = try SizeReport(folders: [Paths.out.appendingPathComponent("qul"), Paths.quranData.appendingPathComponent("Fonts")])
         #expect(report.violations(budgetCompressedMB: 200, budgetInstalledMB: 400).isEmpty)
-        #expect(report.items.first { $0.path == "Fonts/madaniV2/" }?.files == 604)
+        // 604 page fonts and the folder's README, which the folder reference bundles too.
+        #expect(report.items.first { $0.path == "Fonts/madaniV2/" }?.files == 605)
     }
 }
 
