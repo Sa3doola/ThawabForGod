@@ -137,6 +137,11 @@ final class AppContainer {
     /// process's.
     let quranPageFonts: any FontPackStoring
 
+    /// How the reader looks and is laid out (D4): one instance, read by the reader and written by
+    /// its settings sheet. It learns what the database can draw from the reader, which has to ask
+    /// the database anyway, rather than from a second query here at launch.
+    let quranReaderSettings: QuranReaderSettings
+
     // MARK: Hadith
 
     let hadithRepository: any HadithRepositoring
@@ -334,6 +339,7 @@ final class AppContainer {
         self.quranTafsir = TafsirRepository(store: quranPacks, index: quranAyahIndex)
         self.quranSurahInfo = SurahInfoRepository(store: quranPacks)
         self.quranPageFonts = FontPackStore()
+        self.quranReaderSettings = QuranReaderSettings(settingsStore: settingsStore)
 
         // The same three links again, over the two Sahihs. Another file and the same
         // `CorpusDatabase`, which is the point of that type taking a resource name and knowing

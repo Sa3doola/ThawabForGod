@@ -285,6 +285,19 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case readerFontKFGQPC = "reader_font_kfgqpc"
     case readerFontAmiri = "reader_font_amiri"
     case readerDone = "reader_done"
+    /// `ReaderTheme`: the page the Quran is read on.
+    case readerThemePaper = "reader_theme_paper"
+    case readerThemeSepia = "reader_theme_sepia"
+    case readerThemeDark = "reader_theme_dark"
+    /// `QuranDisplayMode`.
+    case readerModeMushaf = "reader_mode_mushaf"
+    case readerModeSeparated = "reader_mode_separated"
+    /// `PhoneLandscapeLayout`: an iPhone held sideways.
+    case readerLandscapeOnePage = "reader_landscape_one_page"
+    case readerLandscapeTwoPages = "reader_landscape_two_pages"
+    /// `FlatOpenLayout`: a foldable iPhone opened flat.
+    case readerFlatOpenSpread = "reader_flat_open_spread"
+    case readerFlatOpenSinglePage = "reader_flat_open_single_page"
 
     // MARK: Hadith
 

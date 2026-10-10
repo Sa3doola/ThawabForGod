@@ -11,6 +11,9 @@ extension EnvironmentValues {
     /// Resolved by the reading screen from the reader's saved choices; `fallback` everywhere
     /// else, which is the default face.
     @Entry var readingStyle: ReadingStyle = .fallback
+    /// The Quran page's colours, resolved by the reader from its theme setting and the system
+    /// appearance; Paper everywhere else.
+    @Entry var readingPalette: ReadingPalette = .fallback
 }
 
 nonisolated extension AppearanceOverride {

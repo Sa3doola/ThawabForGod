@@ -33,13 +33,31 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     // holding the whole value as JSON — see `HomeLayoutRepository` for why it is not nine.
     case homeLayout
 
-    // The Quran reader's own look. Unset means the defaults — the reader has to have moved
-    // something for any of these to exist. The three the Mushaf port keeps (D4): the separated
-    // mode's text size, its face (a `ReaderFont` raw value) and keeping the screen awake. Their
-    // reader, and the rest of the reader's keys, arrive with the reading settings (M4).
+    // The Quran reader's own look, all read and written by `QuranReaderSettings`. Unset means the
+    // default — the reader has to have moved something for any of these to exist. One key per
+    // choice rather than Mushaf's single `readerState` blob, so a reset or a new default touches
+    // only what the reader never chose (D4).
+    //
+    // Three keep the names Noor's own reader gave them: the separated mode's text size, its face
+    // (a `ReaderFont` raw value) and keeping the screen awake.
     case readerTextSize
     case readerKeepsScreenAwake
     case readerFont
+    // The rest arrived with the Mushaf port. Enums are stored as raw values.
+    /// `QuranDisplayMode`. Unset: the printed page where the build has it, separated otherwise.
+    case quranDisplayMode
+    /// `ReaderTheme`. Unset: Paper.
+    case quranReaderTheme
+    /// Use the dark page while the system is dark. Unset: on.
+    case quranFollowsSystemAppearance
+    /// Juz, hizb, quarter and sajdah labels in a Mushaf page's margin. Unset: on.
+    case quranShowsMarginMarkers
+    /// Separated mode: the enabled translations under each ayah. Unset: on.
+    case quranShowsTranslationInSeparated
+    /// `PhoneLandscapeLayout`. Unset: one page.
+    case quranPhoneLandscape
+    /// `FlatOpenLayout`. Unset: a spread.
+    case quranFlatOpen
 
     /// How large the adhkar are set. **Its own key rather than `readerTextSize`**, deliberately:
     /// the Quran is read in long sittings on a page the reader chose a paper for, and a dhikr is

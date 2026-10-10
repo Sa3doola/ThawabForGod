@@ -26,4 +26,35 @@ nonisolated enum AppColor {
     static func accent(_ palette: AccentPalette) -> Color {
         Color("Accents/\(palette.assetName)", bundle: .main)
     }
+
+    /// One colour of a Quran reader theme, from the `Reader/<Theme>/` group. Unlike every set
+    /// above, these carry a single value for both appearances: a reader theme is a page, and a
+    /// page does not change colour when the system does (see `ReaderTheme`).
+    static func reader(_ theme: ReaderTheme, _ role: ReaderColorRole) -> Color {
+        Color("Reader/\(theme.assetFolder)/\(role.rawValue)", bundle: .main)
+    }
+}
+
+/// The colours each reader theme names, by their asset names.
+nonisolated enum ReaderColorRole: String, CaseIterable, Sendable {
+    case background = "Background"
+    case text = "Text"
+    case secondaryText = "SecondaryText"
+    case ornament = "Ornament"
+    case selection = "Selection"
+    case divider = "Divider"
+    case highlightYellow = "HighlightYellow"
+    case highlightGreen = "HighlightGreen"
+    case highlightBlue = "HighlightBlue"
+    case highlightPink = "HighlightPink"
+}
+
+private nonisolated extension ReaderTheme {
+    var assetFolder: String {
+        switch self {
+        case .paper: "Paper"
+        case .sepia: "Sepia"
+        case .dark: "Dark"
+        }
+    }
 }

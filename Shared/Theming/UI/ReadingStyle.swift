@@ -12,8 +12,9 @@ import SwiftUI
 /// that edits them is presented from the top — so the value has to reach a leaf without every view
 /// in between naming it.
 ///
-/// Only the face for now. The reader's themes (Paper, Sepia, Dark) arrive with the page renderer
-/// and join it here as named colour sets (QURAN_MIGRATION_PLAN.md, T9).
+/// Only the face. The page's colours are `\.readingPalette`, a separate entry so a view that
+/// reads one is not invalidated by a change to the other: the face changes in separated mode
+/// only, the theme on every page.
 nonisolated struct ReadingStyle: Equatable, Sendable {
     var font: ReaderFont = .fallback
 
