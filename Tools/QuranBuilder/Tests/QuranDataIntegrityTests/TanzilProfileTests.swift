@@ -189,4 +189,22 @@ struct ProfilesAgree {
         }
         #expect(try rows(Paths.tanzilSQLite) == rows(Paths.quranSQLite))
     }
+
+    /// The two sources' divisions, as the Corpus README records them: identical hizb and manzil,
+    /// one rub el hizb boundary apart (quarter 106 opens at 15:49 in QUL, 15:50 in Tanzil). A change
+    /// in either source shows up here before it shows up as a reader sent to the wrong quarter.
+    @Test func theDivisionsDifferOnlyWhereTheREADMESaysTheyDo() throws {
+        let db = try SQLiteDatabase(path: Paths.tanzilSQLite.path, readOnly: true)
+        try db.execute("ATTACH DATABASE '\(Paths.quranSQLite.path)' AS qul")
+        func differing(_ column: String) throws -> [String] {
+            var keys: [String] = []
+            try db.query("SELECT a.surah, a.ayah FROM ayah a JOIN qul.ayah b USING (id) WHERE a.\(column) <> b.\(column)") {
+                keys.append("\($0.int(0)!):\($0.int(1)!)")
+            }
+            return keys
+        }
+        #expect(try differing("hizb").isEmpty)
+        #expect(try differing("manzil").isEmpty)
+        #expect(try differing("rub") == ["15:49"])
+    }
 }

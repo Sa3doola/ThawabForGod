@@ -19,6 +19,15 @@ is inside it, which is what makes each one after the first free:
   argument holds: another upstream, another licence — public domain by age
   rather than by anyone's permission — and a size that grows with every edition
   added rather than staying put.
+
+  **Both are being replaced** (the Quran migration, `QURAN_MIGRATION_PLAN.md`).
+  `Tools/QuranBuilder` now builds the Quran in Mushaf's schema, from Tanzil for
+  this repository and from the Quranic Universal Library on a machine that has its
+  downloads, and turns each commentary into a *pack* — one file per edition, in
+  `Packs/`. Its outputs wait in `QuranData/out/` until M3, which moves them in here
+  and deletes the two files above and the scripts that built them. Until then the
+  app reads exactly what it read before; see [The Quran](#the-quran) and
+  [Building the Quran data](#building-the-quran-data).
 - **`hadith.sqlite`** holds the two Sahihs, and settles the argument: at
   twenty-four megabytes it is larger than the other three together, and only a
   reader who opens that tab ever pays to page any of it in.
@@ -269,14 +278,34 @@ whoever does the real pass rather than decided here:
 
 ### The Quran
 
-**Source:** the [Tanzil Project](https://tanzil.net) — *two* of their texts,
-both version 1.1, plus `quran-data.xml` for the chapter metadata and the
-divisions.
+There are now **two builds of the Quran, one schema**, and which one an app carries
+is a licensing question before it is a technical one.
+
+| Profile | What it is | Where its inputs come from | Committed? |
+| --- | --- | --- | --- |
+| **`tanzil`** — the public build | The text, the search text and the divisions. No printed page layout, so the app offers separated (verse-by-verse) reading only | The [Tanzil Project](https://tanzil.net), downloaded and pinned by the build | Yes, from M3: `quran.sqlite` here |
+| **`qul`** — the full Mushaf | The same, plus the King Fahd Complex's Madani V2 page layout (1421H print: 604 pages, 15 lines), its word-by-word Hafs text, the per-page glyph codes and fonts, and the header, surah-name and juz-name fonts | The [Quranic Universal Library](https://qul.tarteel.ai) (Tarteel), behind a free account, kept in `QuranData/raw/` | **Never.** Built locally, git-ignored |
+
+**Why the second is never committed.** QUL publishes no licence for any of it; its
+FAQ says licensing is "per resource", and no resource page states one. This
+repository is public and MIT-licensed, so nothing derived from QUL may enter it —
+not the database, not the fonts, not the packs (QURAN_MIGRATION_PLAN.md, D1).
+Every QUL file is listed in `QuranData/SOURCES.md` with its SHA-256, its original
+publisher and its status, which is `unconfirmed` for all of them; the build
+refuses an input whose hash differs. A full App Store build ships the QUL data
+only once the requests in the Mushaf project's `docs/release/license-requests.md`
+are answered in writing; until then a Release build without it fails on purpose,
+and the public build is the Tanzil one.
+
+#### The Tanzil build
+
+**Source:** *two* Tanzil texts, both version 1.1, plus `quran-data.xml` for the
+chapter metadata and the divisions.
 
 | Text | What it is for |
 | --- | --- |
-| **Uthmani** | Every verse the reader ever sees. Stored verbatim in `verse.text`. |
-| **Simple Clean** | Never displayed. Folded into `verse.text_normalized`, which is the only thing search matches against. |
+| **Uthmani** | Every verse the reader ever sees. Stored verbatim in `ayah.text_hafs`. |
+| **Simple Clean** | Never displayed. Stored in `ayah.text_imlaei` and folded into the search index, which is the only thing search matches against. |
 
 **Why a second text rather than a folding of the first.** Uthmani orthography
 writes a large class of words without the alef that modern spelling has, marking
@@ -286,59 +315,81 @@ what the index used to hold, and what nobody will ever type. The corpus shipped
 that way at first, and the failure was silent: the screen said "no results" for
 words that occur in the Quran hundreds of times. Tanzil's Simple Clean text is
 the same verses in modern imla'i spelling, so folding *it* produces the tokens a
-reader actually types. `QuranRepositoryTests` pins the six worst of those words
-so the regression cannot come back quietly.
-
-The second text is pinned by its own SHA-256 and carries its own copyright
-block, which is stored beside the first in the `source` table — two rows,
-`tanzil-uthmani` and `tanzil-simple-clean`, because the terms below ask for the
-notice per text.
+reader actually types. (The QUL build does the same with QUL's own imla'i text.)
 
 **Licence: Creative Commons Attribution 3.0**, with terms that shape how this is
-built. Their copyright block states them in full and is reproduced *inside*
-`quran.sqlite` — in the `source` table — because those terms ask for it to appear
-in "all files derived from or containing substantial portion of this text". A
-copy of the database on its own is therefore still compliant. The build fails
-outright if the download arrives without that block.
-
-The three obligations, and how each is met:
+built. Their copyright block states them in full and is reproduced *inside* the
+database — one `meta` row per text, `source:tanzil-uthmani:notice` and
+`source:tanzil-simple-clean:notice`, beside each text's name, link and licence —
+because those terms ask for it to appear in "all files derived from or containing
+substantial portion of this text". A copy of the database on its own is therefore
+still compliant. The build fails outright if a download arrives without that block.
 
 | Term | How |
 | --- | --- |
-| Verbatim copies only; **changing it is not allowed** | The text is inserted exactly as downloaded, and a SHA-256 of the verses is pinned in the build script — an upstream revision is a loud failure to be re-pinned deliberately, not a silent change to the mushaf the app ships |
+| Verbatim copies only; **changing it is not allowed** | The text is inserted exactly as downloaded. A SHA-256 of each text's verses is pinned in `Tools/QuranBuilder/profiles/tanzil.json` — over the verses, not the file, whose copyright block carries the current year — so an upstream revision is a loud failure to be re-pinned deliberately, never a silent change to the Quran the app ships |
 | Source clearly indicated, with a link to tanzil.net | Settings → Sources carries the row, linking to tanzil.net |
-| Notice reproduced in derived files | The `source` table, as above |
+| Notice reproduced in derived files | The `meta` rows, as above |
 
 **One transformation is applied, and it is worth being explicit about.** For the
 112 chapters that open with it, Tanzil delivers the basmala as a *prefix of verse
-1*; the mushaf prints it above the chapter, unnumbered. The build moves it into
-`surah.bismillah` so the reading screen can draw it as a heading. Not a word is
-added, removed or altered — the same characters in the same order, stored in two
-columns instead of one, and the reader sees them in the order the mushaf has
-them. (The Tazkiya Tech Quran SDK, working from the same upstream, makes the same
-cut for the same reason.) Al-Fatiha is left alone, its basmala being verse 1, and
-At-Tawba has none. `QuranRepositoryTests` pins all of that.
+1*; the mushaf prints it above the chapter, unnumbered. The build lifts it off, so
+verse 1 of Al-Baqara is الٓمٓ, and records that the chapter opens with it
+(`surah.bismillah_pre`). Not a word of any verse is added, removed or altered.
+Al-Fatiha is left alone, its basmala being verse 1, and At-Tawba has none. The
+same cut is made on the search text, or searching "بسم الله الرحمن الرحيم" would
+return every chapter's first verse and then draw each with text that does not
+contain those words.
 
-**A second transformation, on the search text only.** The basmala is cut off
-verse 1 of the same 112 chapters there too. Without it, searching "بسم الله
-الرحمن الرحيم" would return every chapter's first verse and then draw each of
-them with text that does not contain those words. It is a verse exactly twice —
-1:1, and 27:30, where Sulayman's letter opens with it — and the test says so.
+**The test of all of that is the database the app ships today.** Until M3,
+`TanzilProfileTests` holds the new build to `quran.sqlite` in this folder: every
+verse's text byte-identical, every verse's juz, hizb and rub el hizb identical, the
+same fifteen sajdas, every verse's search fold identical, and the same verses
+found for the same words.
 
 **What is not verified:** nothing about the *text* is in doubt. The divisions —
-juz, hizb, rub el hizb, page numbers, sajda markers — come from Tanzil's metadata
-rather than from a printed mushaf, and while the canonical boundaries are pinned
-in tests, a full page-by-page check against a printed Madina mushaf has not been
-done. The page numbers in particular are unused today; a paged reading mode would
-be the point at which they need one.
+juz, hizb, rub el hizb, manzil, ruku, sajdas — come from Tanzil's metadata rather
+than from a printed mushaf. The juz boundaries are checked against a static table,
+and Tanzil and QUL agree on every juz, hizb, manzil and sajda — but not on one rub
+el hizb (quarter 106 begins at 15:49 in QUL, at 15:50 in Tanzil) and not on the
+rukus (556 against 558). Each build keeps its own source's, and a check against a
+printed Madina mushaf has not been done. Tanzil's page
+table is deliberately **not** used: 56 verses start one page away from the V2
+print, so a fallback page number would not be the printed page, and the fallback
+build has no Page view at all.
+
+#### The QUL build
+
+Everything above, and the page itself: the V2 layout puts every word on its line
+of its page, and `word.glyph_v2` names the glyph that draws it in that page's own
+font. The fonts, the layout and the word-by-word text come from the King Fahd
+Glorious Quran Printing Complex (KFGQPC) by way of QUL. `KFGQPC-HafsUthmanic.ttf`,
+which this folder's sibling `Fonts/Quran/` already ships, is byte-identical to
+QUL's copy and carries the Complex's own grant ("free to use, copy and
+distribute; must not be sold or modified"); nothing else from QUL has a grant.
 
 ### The tafsir
+
+Commentaries now ship as **packs**: one SQLite file per edition, named by kind —
+`tafsir-<id>`, and beside them `translation-<id>` and `surah-info-<id>` — each
+describing itself, in English and Arabic, in its own `pack` table. The app finds
+them by name; there is no manifest to keep in step (QURAN_MIGRATION_PLAN.md, T15).
+
+| Pack | Licence | Build | Committed? |
+| --- | --- | --- | --- |
+| `tafsir-ar-jalalayn` — Tafsir al-Jalalayn | **Public domain by age** | `tanzil` | Yes, from M3 |
+| `tafsir-ar-muyassar` — Tafsir al-Muyassar (KFGQPC) | unconfirmed | `qul` | Never |
+| `tafsir-en-mukhtasar` — the Abridged Explanation (Tafsir Center for Quranic Studies) | unconfirmed | `qul` | Never |
+| `translation-en-sahih-international` — Saheeh International | unconfirmed | `qul` | Never |
+| `surah-info-en` — surah introductions (QUL) | unconfirmed (author not recorded) | `qul` | Never |
+
+#### Tafsir al-Jalalayn
 
 **Source:** Tafsir al-Jalalayn, begun by Jalal al-Din al-Mahalli (d. 864 AH /
 1459 CE) and completed by his pupil Jalal al-Din al-Suyuti (d. 911 AH / 1505 CE).
 
-**Licence: public domain by age.** That is the whole reason it is this tafsir and
-not a better-known modern one, and the reasoning is worth keeping because the
+**Licence: public domain by age.** That is the whole reason it is the one
+commentary this repository carries, and the reasoning is worth keeping because the
 next person will ask.
 
 **Every distributor in this space publishes the same thing about licensing:
@@ -355,31 +406,42 @@ nothing.** Checked in August 2026:
 
 So the only texts whose status can be established *independently of whoever is
 hosting them* are the ones old enough to be public domain everywhere, and that
-is the standard this file already holds the rest of the corpus to. Al-Jalalayn is
-also the tafsir actually built for a per-verse screen: a terse gloss meant to be
-read *beside* the verse, quoting the words it explains between ﴿ ﴾ ornaments.
+is the standard this file holds the rest of the corpus to. That is also why the
+QUL packs above are built and tested here but never committed: they are what the
+full build would ship once permission is in writing, not what this repository may
+publish. Al-Jalalayn is also the tafsir actually built for a per-verse screen: a
+terse gloss meant to be read *beside* the verse, quoting the words it explains
+between ﴿ ﴾ ornaments.
 
-**Arabic only, deliberately.** The classical Arabic is free; every English
+**Arabic only, in the public build.** The classical Arabic is free; every English
 translation of it belongs to its modern translator — Feras Hamza's is © 2007 the
-Royal Aal al-Bayt Institute, Aisha Bewley's is her own. Nothing English gets
-bundled until that is settled, which is the same rule this file records for the
-Quran's translations. An English-reading user therefore gets nothing from this
-slice yet, and that is a known gap rather than a bug.
+Royal Aal al-Bayt Institute, Aisha Bewley's is her own. A public build therefore
+offers an English reader no commentary; the QUL build's English pack is the
+licensing question above, not a technical one.
 
 **The text is taken from a mirror**, `spa5k/tafsir_api`, which copies what
 quran.com and altafsir.com carry. That indirection is acceptable *here and only
 here*: the underlying work is five centuries old, so there is no licence to
-inherit from the host — only a transcription to check. It is pinned by SHA-256 in
-the build script so the transcription cannot change under the app silently.
+inherit from the host — only a transcription to check. It is pinned by the
+SHA-256 of its notes in `Tools/QuranBuilder/profiles/tanzil.json`, so the
+transcription cannot change under the app silently.
+
+**The note is not edited either.** The pack stores HTML, so each note goes through
+one fixed conversion — escaped, its line breaks marked, wrapped in a paragraph —
+and `JalalaynPackTests` inverts it and requires today's text back, byte for byte,
+for all 6,010 notes.
 
 **226 verses have no note, and that is the commentary rather than a gap.** The
 two Jalals pass over the plain formulas — "those who believe and do righteous
 deeds", and the like — that need no gloss. This was checked rather than assumed:
 the independently-sourced *English* edition of the same tafsir carries, for
-exactly those verses, the verse restated with nothing added. Those verses get no
-row, and the app says the commentary has no note here — it does not show a blank,
-and it does not borrow the note from the verse above, which would print a gloss
-of one verse under another. `TafsirRepositoryTests` pins the count.
+exactly those verses, the verse restated with nothing added. Those verses get **no
+row** in the pack, not a pointer to a neighbour as a QUL tafsir's grouped verses
+have, and the app says the commentary has no note here — it does not show a blank,
+and it does not borrow the note from the verse above, which would print a gloss of
+one verse under another (QURAN_MIGRATION_PLAN.md, T16). The count is pinned in the
+build and the 226 verses are checked against the ones `tafsir.sqlite` leaves out
+today.
 
 **What is not verified:** nobody on this project has read the commentary against
 a printed edition. It is not in the same position as the adhkar — this is a
@@ -521,15 +583,6 @@ letter, and how much of the cross-check still folds onto the corpus. Every one o
 those is a fact about the published collections rather than about a mirror, so a
 mismatch means somebody should read the diff before the app ships it.
 
-## Rebuilding `tafsir.sqlite`
-
-```bash
-python3 Tools/CorpusBuilder/build_tafsir_db.py
-```
-
-Build `quran.sqlite` first — the tafsir is checked against the verses it comments
-on, and the script refuses to run without it.
-
 ## Rebuilding `corpus.sqlite`
 
 ```bash
@@ -576,48 +629,6 @@ from insertion order, so a rebuild cannot renumber one. Treat both as permanent.
 user's saved count on it, so renaming one orphans whatever they had counted. Treat
 these ids as permanent.
 
-## Rebuilding `quran.sqlite`
-
-```bash
-python3 Tools/CorpusBuilder/build_quran_db.py
-```
-
-That downloads the Uthmani text and `quran-data.xml` from Tanzil and regenerates
-the database in place. Pass `--text` and `--metadata` to build from local copies
-instead — which is also how to rebuild without hitting the network twice.
-
-The same rule as above: **the script is the only thing that writes this file, and
-rows must not be edited by hand.** Here it is not only reproducibility — an edit
-is a change to the Quran text, which the licence forbids and which no reviewer
-could see in a binary diff.
-
-### Schema
-
-| table | holds |
-| --- | --- |
-| `surah` | the 114 chapters: three name spellings, verse count, where and when revealed, and the basmala heading (`NULL` for Al-Fatiha and At-Tawba) |
-| `verse` | all 6,236 verses: the Uthmani text, a search-normalized copy, the juz / hizb / rub el hizb it falls in, its mushaf page, and its sajda kind where it has one |
-| `juz`, `hizb`, `rub_el_hizb` | the divisions, as ranges to jump to |
-| `source` | Tanzil's copyright notice, verbatim — see above |
-| `verse_fts`, `surah_fts` | FTS5 indexes over the normalized text and the three name spellings |
-
-`PRAGMA user_version` is the schema version, and is `2` (`1` was `surah` and
-`verse` alone, Arabic only).
-
-**`text_normalized` is built here, not on device.** It is the verse with every
-diacritic dropped and the ambiguous letters folded together — alef forms to `ا`,
-ta marbuta to `ه`, alef maqsura to `ي` — so that a reader typing plain Arabic
-matches a fully vowelled text. Normalizing 6,236 verses to answer one query would
-be the whole corpus walked per keystroke.
-
-**A known limit, for whoever builds search.** Folding drops the superscript alef,
-so `ٱلْعَٰلَمِينَ` normalizes to `العلمين` — the Uthmani spelling without its
-diacritics, not the modern `العالمين` that a reader is more likely to type. The
-same applies to `الرحمن`. Tanzil publish a separate "simple" (imlaei) edition
-that spells those alefs out, and pulling it in as a second column is the obvious
-answer when full-text search lands. It is not a problem today: nothing queries
-these indexes yet.
-
 ### The citation is prose, not a structured reference
 
 `reference_ar` / `reference_en` hold the citation exactly as upstream wrote it —
@@ -626,3 +637,84 @@ rather than a parsed book-and-number pair. Most citations name several books,
 several numbers, and a grading, so splitting them into one book and one number
 would throw information away and invent precision the source does not have. The
 reading view prints the line as written.
+
+## Building the Quran data
+
+```bash
+swift run -c release --package-path Tools/QuranBuilder QuranBuilder --profile tanzil
+swift run -c release --package-path Tools/QuranBuilder QuranBuilder --profile qul    # needs QuranData/raw
+swift test --package-path Tools/QuranBuilder
+```
+
+`Tools/QuranBuilder` (its README has the detail) is the one writer of the Quran,
+its packs and the curated ayah list. The `tanzil` profile downloads Tanzil's two
+texts, `quran-data.xml` and the Jalalayn mirror once, into `QuranData/raw/tanzil/`
+and `QuranData/raw/jalalayn/`, and reads them from there afterwards; the `qul`
+profile reads the QUL downloads in `QuranData/raw/` and verifies each against
+`QuranData/SOURCES.md`. Both write to `QuranData/out/<profile>/`, git-ignored;
+the `qul` profile also fills `QuranData/Fonts/madaniV2/` with the 604 page fonts,
+a folder the app target references.
+
+**What is committed and what is local:**
+
+| | Committed | Local only |
+| --- | --- | --- |
+| Inputs | `QuranData/SOURCES.md`, `QuranData/fonts-v2.sha256` (hashes and notes, no content); the Tanzil and Jalalayn pins in `profiles/tanzil.json` | `QuranData/raw/` — the QUL downloads, and the cached Tanzil and Jalalayn ones |
+| Outputs | From M3: the `tanzil` build — `quran.sqlite` and `Packs/tafsir-ar-jalalayn.sqlite` here; the page-font folder's README | `quran-mushaf.sqlite`, the four QUL packs, the QUL header, surah-name and juz-name fonts, the 604 page fonts; everything in `QuranData/out/` until M3 |
+
+The same rule as everywhere in this folder: **the builder is the only thing that
+writes these files, and rows must not be edited by hand.** For the Quran it is not
+only reproducibility — an edit is a change to the Quran text, which Tanzil's
+licence forbids and which no reviewer could see in a binary diff. Nothing in the
+pipeline changes a word of the Quran or of a commentary: the text goes in as it
+was downloaded, the one cut (the basmala off verse 1) moves words rather than
+altering them, and the tests compare the result with what the app ships today.
+
+**A Release build of the app refuses to proceed without the full data** — the
+`qul` database, its four packs and all 604 page fonts — naming what is missing and
+the command above. A Debug build only warns, so a public clone builds and runs on
+the Tanzil build (QURAN_MIGRATION_PLAN.md, T4).
+
+### Schema
+
+Mushaf's schema 3, the same for both builds; what a build lacks it leaves empty,
+and `meta.capabilities` says what it filled.
+
+| table | holds | `tanzil` | `qul` |
+| --- | --- | --- | --- |
+| `surah` | the 114 chapters: Arabic (the printed headers' spelling), English and transliterated names, ayah count, where and in what order revealed, and whether it opens with the basmala | ✓ | ✓ |
+| `ayah` | all 6,236 ayahs: the displayed text (`text_hafs`), the search text (`text_imlaei`), juz, hizb, rub el hizb, manzil, ruku, and the sajda kind where there is one | ✓ | ✓ |
+| `ayah_fts` | FTS5, contentless: the folded search text and its particle stems | ✓ | ✓ |
+| `word` | the word-by-word Hafs text with each ayah's end marker, and its V2 glyph code | | ✓ |
+| `mushaf_line`, `mushaf_page`, `marker` | the printed page: every line of the 604 pages, each page's ayahs and divisions, the margin marks | | ✓ |
+| `font_ligature` | which string draws each surah header, surah name and juz name in the QUL fonts | | ✓ |
+| `meta` | schema version, profile, capabilities, the input hashes, and for Tanzil each text's notice, name, link and licence | ✓ | ✓ |
+
+A pack holds `pack` (one row: kind, language, names and authors in English and
+Arabic, direction, source and licence), `meta`, a contentless `pack_fts`, and its
+kind's table — `tafsir` (ayah, its group's owner, the owner's HTML), `translation`
+(ayah, text, footnotes) or `surah_info`.
+
+**The search text is folded at build time, by the same code that folds every
+query.** `Packages/ArabicText`'s `ArabicNormalizer` drops every combining mark, the
+tatweel and the small waw and yeh of Uthmani spelling, folds the alef forms to
+`ا`, ta marbuta to `ه`, alef maqsura to `ي` and the hamza seats to their letters,
+and splits on everything that is not a letter or a digit. The app's
+`ArabicSearchQuery` calls it; the hadith index, still built by
+`build_hadith_db.py`, is held to it by a parity test over the hadith text's every
+character. Two copies of a folding rule are two things to keep in step, and the
+failure when they drift is silence rather than an error.
+
+### Until M3: the retired scripts
+
+`Tools/CorpusBuilder/build_quran_db.py` and `build_tafsir_db.py` built the two
+files the app still reads today, `quran.sqlite` (schema 3: `verse`, `verse_fts`,
+`source`, …) and `tafsir.sqlite`. Their downloads, pins and checks now live in
+`Tools/QuranBuilder`, and its tests hold the new build to their output. They are
+**retired at M3**, when the new files replace the old ones; until then, should
+`quran.sqlite` need rebuilding, run them in that order:
+
+```bash
+python3 Tools/CorpusBuilder/build_quran_db.py
+python3 Tools/CorpusBuilder/build_tafsir_db.py
+```
