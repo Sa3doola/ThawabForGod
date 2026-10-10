@@ -15,8 +15,8 @@ import Foundation
 /// `Tools/add_quran_data_phase.rb`, filled from QUL's downloads by `Tools/QuranBuilder --profile qul`,
 /// and empty but for a README in a public clone.
 ///
-/// A plain constant rather than part of `MushafStyle` only because that type arrives with the
-/// renderer; when it does, it reads this.
+/// `MushafStyle.madaniV2` reads it for its `PageFontPack`, so the style, the registrar and the
+/// page-font store cannot name three different folders.
 nonisolated enum QuranPageFonts {
     /// The folder's name, which is also its name inside the app bundle.
     static let folderName = "madaniV2"

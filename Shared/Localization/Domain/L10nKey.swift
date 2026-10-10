@@ -257,6 +257,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranSearchHint = "quran_search_hint"
     /// The Quran tab while the reader is being rebuilt on the ported engine (M3–M5).
     case quranComingSoon = "quran_coming_soon"
+    /// The search screen's scopes; the first is `quranTitle`.
+    case quranSearchScopeTranslations = "quran_search_scope_translations"
+    case quranSearchScopeSurahNames = "quran_search_scope_surah_names"
 
     // MARK: Tafsir
 

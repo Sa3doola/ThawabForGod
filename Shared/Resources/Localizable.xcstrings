@@ -4608,6 +4608,40 @@
         }
       }
     },
+    "quran_search_scope_surah_names" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أسماء السور"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surah names"
+          }
+        }
+      }
+    },
+    "quran_search_scope_translations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الترجمات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Translations"
+          }
+        }
+      }
+    },
     "quran_search_verses" : {
       "extractionState" : "manual",
       "localizations" : {
