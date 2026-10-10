@@ -35,8 +35,8 @@ nonisolated struct QuranFaces: Equatable, Sendable {
     }
 
     /// The faces available in this process, resolved once. Registers the bundled fonts first —
-    /// idempotent, and necessary because `AppContainer` is built before `App.init` runs the
-    /// registrar, so a value computed in the container's initialiser would find none.
+    /// idempotent, so the answer does not depend on whether `App.init` or the container's
+    /// initialiser reached the registrar first.
     static let launch: QuranFaces = {
         FontRegistrar.registerBundledFonts()
         return registered()

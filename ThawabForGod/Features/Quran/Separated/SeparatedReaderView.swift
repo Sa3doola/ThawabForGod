@@ -117,8 +117,10 @@ private struct SeparatedAyahRow: View {
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.readingPalette) private var palette
     @Environment(\.quranFaces) private var faces
-    /// The multiplier `readingFont(size:)` applies to the words, so the marker — whose face is named
-    /// inside the attributed string, where that modifier cannot reach — grows with them.
+    @Environment(\.readingStyle) private var style
+    /// The multiplier `readingFont(size:)` applies to the words, so the marker and the fallback
+    /// stretches — whose faces are named inside the attributed string, where that modifier cannot
+    /// reach — grow with them.
     @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
 
     var body: some View {
@@ -152,13 +154,21 @@ private struct SeparatedAyahRow: View {
     /// **The marker is always KFGQPC Hafs, whichever face the words are in.** The marker's text is
     /// the ayah number in Arabic-Indic digits, which Hafs draws as one ornamented end-of-ayah glyph;
     /// Amiri would draw three bare digits. The words carry no font of their own and take the reader's
-    /// face from `readingFont(size:)`; only the marker names one.
+    /// face from `readingFont(size:)`, except the few stretches KFGQPC Hafs cannot draw (the
+    /// silent-letter mark of the public text), which `QuranAyahText` names as Amiri Quran. The
+    /// characters are the stored ones either way; only the marker and those stretches name a face.
     private var paragraph: AttributedString {
-        var text = AttributedString(ayah.text)
+        let scaledSize = textSize * Double(typeScale)
+        var text = QuranAyahText.attributed(
+            ayah.text,
+            face: style.font,
+            scaledSize: scaledSize,
+            hafsIsRegistered: faces.contains(.ayahText)
+        )
         guard !ayah.marker.isEmpty else { return text }
         var marker = AttributedString(ayah.marker)
         marker.font = faces.contains(.ayahText)
-            ? ReaderFont.kfgqpcHafs.font(size: textSize * Double(typeScale))
+            ? ReaderFont.kfgqpcHafs.font(size: scaledSize)
             : nil
         text.append(AttributedString("\u{00A0}"))
         text.append(marker)

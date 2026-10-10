@@ -21,8 +21,10 @@ import Foundation
 /// crash and not a page drawn in whatever CoreText substitutes for an unknown name.
 nonisolated enum ReaderFont: String, CaseIterable, Identifiable, Sendable {
 
-    /// The King Fahd Complex's Hafs face — the Madinah mushaf's own letterforms, and the text this
-    /// corpus is encoded for. The default.
+    /// The King Fahd Complex's Hafs face — the Madinah mushaf's own letterforms, and the text the
+    /// full (QUL) build is encoded for. The public Tanzil text encodes two marks differently: its
+    /// silent-letter circle is U+06DF, which this face draws as a spacing glyph (see
+    /// `QuranTextFallback`), and its sukun is U+0652, which this face draws round. The default.
     case kfgqpcHafs
 
     /// Amiri Quran: a Naskh face with a lighter colour on the page and much taller marks.
