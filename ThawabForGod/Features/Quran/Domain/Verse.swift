@@ -43,35 +43,6 @@ nonisolated struct Verse: Identifiable, Hashable, Sendable {
     var number: Int { id.verse }
 }
 
-/// A verse's address: which chapter, which verse in it.
-///
-/// Its own type rather than a pair of `Int`s, because every navigation path in the feature —
-/// a search result, a bookmark, "continue reading" — carries one, and two bare integers in a
-/// row are exactly the kind of thing that gets passed in the wrong order.
-nonisolated struct VerseReference: Hashable, Sendable, Comparable, Identifiable, CustomStringConvertible {
-    let surah: Int
-    let verse: Int
-
-    /// Itself, the way `QuranReading` is its own id: a verse's address *is* its identity, so a
-    /// separate one would be a second thing to keep in step. It is what `sheet(item:)` presents
-    /// the tafsir on.
-    var id: Self { self }
-
-    init(surah: Int, verse: Int) {
-        self.surah = surah
-        self.verse = verse
-    }
-
-    /// Reading order, which is the order the mushaf is in.
-    static func < (lhs: Self, rhs: Self) -> Bool {
-        (lhs.surah, lhs.verse) < (rhs.surah, rhs.verse)
-    }
-
-    /// `2:255`. Developer-facing — a displayed reference goes through `LocalizationManager` so
-    /// its digits follow the reader's number system.
-    var description: String { "\(surah):\(verse)" }
-}
-
 /// The two kinds of prostration the mushaf marks, which the corpus keeps apart.
 ///
 /// Which verses are obligatory is a point the schools differ on, and flattening the distinction

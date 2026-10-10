@@ -155,17 +155,8 @@ struct QuranMappingTests {
     }
 }
 
-/// A verse address orders the way the mushaf does.
-struct VerseReferenceTests {
-
-    @Test func chapterOutranksVerseInReadingOrder() {
-        #expect(VerseReference(surah: 2, verse: 1) > VerseReference(surah: 1, verse: 7))
-        #expect(VerseReference(surah: 2, verse: 1) < VerseReference(surah: 2, verse: 2))
-    }
-
-    @Test func itDescribesItselfAsAReference() {
-        #expect(VerseReference(surah: 2, verse: 255).description == "2:255")
-    }
+/// Search through the use case.
+struct GetQuranUseCaseSearchTests {
 
     // MARK: Search
 

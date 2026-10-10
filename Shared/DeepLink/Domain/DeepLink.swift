@@ -10,9 +10,9 @@ import Foundation
 /// The app already has `AppRoute`, and this is deliberately not it. Two reasons, and the second
 /// is the one that matters.
 ///
-/// `AppRoute` carries `AdhkarCategory` and `VerseReference` — types that live in feature Domain
-/// folders and stay there. A widget process cannot see them without dragging half the app across
-/// the target boundary.
+/// `AppRoute` lives in the app target and is free to name anything there. A widget process cannot
+/// see it without dragging half the app across the target boundary. (`VerseReference` is the one
+/// thing it carries that moved to `Shared/` — the Quran widgets have to say which verse too.)
 ///
 /// More importantly the two have different lifetimes. `AppRoute` is internal wiring and may be
 /// reshaped whenever the features behind it are. A `DeepLink` is a *promise*: once
