@@ -123,6 +123,8 @@ final class AppContainer {
     /// read from the file — never inferred from which file this is.
     let quranDatabase: QuranDatabase
     let quranRepository: any QuranRepositoring
+    /// Search over the same database, and over the translation packs.
+    let quranSearch: any QuranSearchRepositoring
 
     /// The translation, tafsir and surah-info packs, found in the bundle by file prefix (T15).
     let quranPacks: any ContentPackStoring
@@ -322,6 +324,7 @@ final class AppContainer {
         self.quranDatabase = quranDatabase
         self.quranRepository = QuranRepository(database: quranDatabase.corpus)
         self.quranPacks = quranPacks
+        self.quranSearch = QuranSearchRepository(quran: quranDatabase.corpus, store: quranPacks, index: quranAyahIndex)
         self.quranTranslations = TranslationRepository(store: quranPacks, index: quranAyahIndex)
         self.quranTafsir = TafsirRepository(store: quranPacks, index: quranAyahIndex)
         self.quranSurahInfo = SurahInfoRepository(store: quranPacks)
