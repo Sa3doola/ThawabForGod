@@ -48,4 +48,24 @@ nonisolated enum QuranTestData {
     static func index(_ database: QuranDatabase = preferredDatabase) -> QuranAyahIndex {
         QuranAyahIndex(database: database.corpus)
     }
+
+    /// The packs bundled in the app: Jalalayn in every clone, the QUL packs with the full data.
+    static let bundledPacks = ContentPackStore()
+
+    /// A folder holding copies of the named bundled packs and nothing else — a public clone's set
+    /// (`["tafsir-ar-jalalayn.sqlite"]`), or any other. Delete it when done.
+    static func packFolder(holding files: [String]) throws -> URL {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("QuranPacks-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        for file in files {
+            guard let source = Bundle.main.url(forResource: (file as NSString).deletingPathExtension, withExtension: "sqlite") else {
+                throw CorpusDatabaseError.resourceMissing(name: file)
+            }
+            try FileManager.default.copyItem(at: source, to: folder.appendingPathComponent(file))
+        }
+        return folder
+    }
+
+    /// Tafsir al-Jalalayn's pack id: the one tafsir in every clone.
+    static let jalalayn = ContentPackID("ar-jalalayn")
 }

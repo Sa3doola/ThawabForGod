@@ -124,6 +124,12 @@ final class AppContainer {
     let quranDatabase: QuranDatabase
     let quranRepository: any QuranRepositoring
 
+    /// The translation, tafsir and surah-info packs, found in the bundle by file prefix (T15).
+    let quranPacks: any ContentPackStoring
+    let quranTranslations: any TranslationRepositoring
+    let quranTafsir: any TafsirRepositoring
+    let quranSurahInfo: any SurahInfoRepositoring
+
     // MARK: Hadith
 
     let hadithRepository: any HadithRepositoring
@@ -204,6 +210,7 @@ final class AppContainer {
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
         hadithCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "hadith"),
         quranDatabase: QuranDatabase = .bundled(),
+        quranPacks: any ContentPackStoring = ContentPackStore(),
         fallbackCoordinates: Coordinates = .makkah,
         // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
         // elsewhere) is a real call into the system's background-task service — unlike
@@ -309,9 +316,15 @@ final class AppContainer {
         self.namesRepository = namesRepository
         self.getNames = GetNamesUseCase(repository: namesRepository)
 
-        // The Quran: one database, chosen by what is bundled.
+        // The Quran: one database, chosen by what is bundled, read by the repository and by search;
+        // the packs found beside it and joined to it through the ayah index rather than `ATTACH`.
+        let quranAyahIndex = QuranAyahIndex(database: quranDatabase.corpus)
         self.quranDatabase = quranDatabase
         self.quranRepository = QuranRepository(database: quranDatabase.corpus)
+        self.quranPacks = quranPacks
+        self.quranTranslations = TranslationRepository(store: quranPacks, index: quranAyahIndex)
+        self.quranTafsir = TafsirRepository(store: quranPacks, index: quranAyahIndex)
+        self.quranSurahInfo = SurahInfoRepository(store: quranPacks)
 
         // The same three links again, over the two Sahihs. Another file and the same
         // `CorpusDatabase`, which is the point of that type taking a resource name and knowing
