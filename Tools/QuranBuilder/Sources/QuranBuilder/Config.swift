@@ -103,6 +103,122 @@ struct BuildConfig: Decodable {
         let pageFonts: [PageFonts]
     }
 
+    // MARK: Packs
+
+    /// Translation, tafsir and surah-info packs: one sqlite each in `directory`.
+    struct Packs: Decodable {
+        struct Translation: Decodable {
+            let id: String
+            let language: String
+            let nameEn: String
+            let nameAr: String
+            let authorEn: String
+            let authorAr: String
+            let direction: String
+            let version: Int
+            let sourceURL: String
+            let license: String
+            /// QUL shape of `file`: "footnote-tags" (keyed "s:a" → {t, f}).
+            let format: String
+            /// Relative to `qul.raw`, as SOURCES.md lists it.
+            let file: String
+            /// Optional QUL "simple" sqlite of the same translation (translation(sura, ayah,
+            /// ayah_key, text)): its text must equal ours with the footnote tokens removed.
+            let crossCheck: String?
+        }
+
+        /// A QUL tafsir: grouped entries, HTML sanitized to the app's subset.
+        struct Tafsir: Decodable {
+            let id: String
+            let language: String
+            let nameEn: String
+            let nameAr: String
+            let authorEn: String
+            let authorAr: String
+            let direction: String
+            let version: Int
+            let sourceURL: String
+            let license: String
+            /// QUL shape of `file`: "qul-sqlite" (tafsir(ayah_key, group_ayah_key, from_ayah,
+            /// to_ayah, ayah_keys, text); only the group owner carries the text).
+            let format: String
+            let file: String
+        }
+
+        /// A public-domain tafsir read from a mirror, pinned by the digest of its notes. One note
+        /// per ayah, no groups, and **no row for an ayah the commentary passes over**: that
+        /// absence is the commentary's own answer, which the app shows as "no note here".
+        struct MirroredTafsir: Decodable {
+            let id: String
+            let language: String
+            let nameEn: String
+            let nameAr: String
+            let authorEn: String
+            let authorAr: String
+            let direction: String
+            let version: Int
+            /// The mirror's folder of per-surah JSON (`<url>/<n>.json`).
+            let sourceURL: String
+            let license: String
+            /// "spa5k-json": `[{surah, ayah, text}]` per surah.
+            let format: String
+            /// Where the 114 downloads are kept, relative to the config file.
+            let cache: String
+            /// SHA-256 of the notes joined as `surah|ayah|text` lines, in Quran order.
+            let textDigest: String
+            /// How many ayahs the commentary passes over. Pinned: a change is a change in the
+            /// commentary, to be read rather than absorbed.
+            let silentCount: Int
+
+            /// The pack row and file name, as a QUL tafsir would have them.
+            var header: Tafsir {
+                Tafsir(id: id, language: language, nameEn: nameEn, nameAr: nameAr, authorEn: authorEn,
+                       authorAr: authorAr, direction: direction, version: version, sourceURL: sourceURL,
+                       license: license, format: format, file: "")
+            }
+        }
+
+        /// Surah introductions: one HTML text per surah, sanitized like tafsir.
+        struct SurahInfo: Decodable {
+            let id: String
+            let language: String
+            let nameEn: String
+            let nameAr: String
+            let authorEn: String
+            let authorAr: String
+            let direction: String
+            let version: Int
+            let sourceURL: String
+            let license: String
+            /// QUL shape of `file`: "qul-surah-info-json".
+            let format: String
+            let file: String
+        }
+
+        /// Output folder, relative to the config file.
+        let directory: String
+        /// The JSON report of what was written (not bundled), relative to the config file.
+        let report: String
+        let translations: [Translation]
+        let tafsirs: [Tafsir]
+        let mirroredTafsirs: [MirroredTafsir]
+        let surahInfo: [SurahInfo]
+
+        private enum CodingKeys: String, CodingKey {
+            case directory, report, translations, tafsirs, mirroredTafsirs, surahInfo
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            directory = try container.decode(String.self, forKey: .directory)
+            report = try container.decode(String.self, forKey: .report)
+            translations = try container.decodeIfPresent([Translation].self, forKey: .translations) ?? []
+            tafsirs = try container.decodeIfPresent([Tafsir].self, forKey: .tafsirs) ?? []
+            mirroredTafsirs = try container.decodeIfPresent([MirroredTafsir].self, forKey: .mirroredTafsirs) ?? []
+            surahInfo = try container.decodeIfPresent([SurahInfo].self, forKey: .surahInfo) ?? []
+        }
+    }
+
     // MARK: Shared
 
     /// The size budget for everything the profile puts in the app bundle (T6).
@@ -128,6 +244,7 @@ struct BuildConfig: Decodable {
     let output: String
     let tanzil: Tanzil?
     let qul: QUL?
+    let packs: Packs?
     let curated: Curated?
     let sizeReport: SizeReportConfig
 
@@ -135,7 +252,7 @@ struct BuildConfig: Decodable {
     private(set) var base = URL(fileURLWithPath: ".")
 
     private enum CodingKeys: String, CodingKey {
-        case profile, output, tanzil, qul, curated, sizeReport
+        case profile, output, tanzil, qul, packs, curated, sizeReport
     }
 
     static func load(path: String) throws -> BuildConfig {
@@ -168,8 +285,11 @@ struct BuildConfig: Decodable {
         let tables = [m.juz, m.hizb, m.rub, m.manzil, m.ruku, m.sajda]
         let fontInputs = qul.fonts.files + qul.ligatures.keys.sorted().map { qul.ligatures[$0]! }
             + qul.pageFonts.map(\.manifest)
+        let packInputs = (packs?.translations ?? []).flatMap { [$0.file] + ($0.crossCheck.map { [$0] } ?? []) }
+            + (packs?.tafsirs ?? []).map(\.file)
+            + (packs?.surahInfo ?? []).map(\.file)
         return ([qul.surahs, qul.ayahs, qul.imlaei, qul.words.hafs, qul.words.glyphV2] + tables
-            + qul.styles.map(\.layout) + fontInputs).map(input)
+            + qul.styles.map(\.layout) + fontInputs + packInputs).map(input)
     }
 }
 

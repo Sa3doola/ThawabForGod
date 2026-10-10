@@ -20,7 +20,10 @@
       "glyphV2": "script/qpc-v2-glyph-wbw.json"
     },
     "styles": [
-      { "id": "madaniV2", "layout": "layout/qpc-v2-15-lines.db" }
+      {
+        "id": "madaniV2",
+        "layout": "layout/qpc-v2-15-lines.db"
+      }
     ],
     "fonts": {
       "bundleDirectory": "../../../QuranData/out/qul/Fonts",
@@ -45,13 +48,83 @@
       }
     ]
   },
+  "packs": {
+    "directory": "../../../QuranData/out/qul/Packs",
+    "report": "../../../QuranData/out/reports/qul-packs.json",
+    "translations": [
+      {
+        "id": "en-sahih-international",
+        "language": "en",
+        "name_en": "Saheeh International",
+        "name_ar": "صحيح إنترناشيونال",
+        "author_en": "Saheeh International",
+        "author_ar": "صحيح إنترناشيونال",
+        "direction": "ltr",
+        "version": 1,
+        "sourceURL": "https://qul.tarteel.ai/resources/translation/193",
+        "license": "unconfirmed (Saheeh International / Al-Muntada); see QuranData/SOURCES.md",
+        "format": "footnote-tags",
+        "file": "translations/en-sahih-international/en-sahih-international-with-footnote-tags.json",
+        "crossCheck": "translations/en-sahih-international/en-sahih-international-simple.db"
+      }
+    ],
+    "tafsirs": [
+      {
+        "id": "ar-muyassar",
+        "language": "ar",
+        "name_en": "Tafsir al-Muyassar",
+        "name_ar": "التفسير الميسر",
+        "author_en": "King Fahd Glorious Quran Printing Complex",
+        "author_ar": "مجمع الملك فهد لطباعة المصحف الشريف",
+        "direction": "rtl",
+        "version": 1,
+        "sourceURL": "https://qul.tarteel.ai/resources/tafsir",
+        "license": "unconfirmed (KFGQPC); see QuranData/SOURCES.md",
+        "format": "qul-sqlite",
+        "file": "tafsir/ar-muyassar/ar-tafsir-muyassar.db"
+      },
+      {
+        "id": "en-mukhtasar",
+        "language": "en",
+        "name_en": "Abridged Explanation of the Quran (Al-Mukhtasar)",
+        "name_ar": "المختصر في تفسير القرآن الكريم (بالإنجليزية)",
+        "author_en": "Tafsir Center for Quranic Studies",
+        "author_ar": "مركز تفسير للدراسات القرآنية",
+        "direction": "ltr",
+        "version": 1,
+        "sourceURL": "https://qul.tarteel.ai/resources/tafsir",
+        "license": "unconfirmed (Tafsir Center for Quranic Studies); see QuranData/SOURCES.md",
+        "format": "qul-sqlite",
+        "file": "tafsir/en-mukhtasar/abridged-explanation-of-the-quran.db"
+      }
+    ],
+    "surahInfo": [
+      {
+        "id": "surah-info-en",
+        "language": "en",
+        "name_en": "Surah Information",
+        "name_ar": "معلومات السورة (بالإنجليزية)",
+        "author_en": "Quranic Universal Library (QUL)",
+        "author_ar": "مكتبة القرآن الشاملة",
+        "direction": "ltr",
+        "version": 1,
+        "sourceURL": "https://qul.tarteel.ai/resources/surah-info",
+        "license": "unconfirmed (author not recorded); see QuranData/SOURCES.md",
+        "format": "qul-surah-info-json",
+        "file": "surah-info/en.json"
+      }
+    ]
+  },
   "curated": {
     "ayahOfTheDay": "../data/ayah-of-the-day.txt",
     "ayahOfTheDayOutput": "../../../QuranData/out/qul/ayah-of-the-day.json",
     "minimumEntries": 60
   },
   "sizeReport": {
-    "paths": ["../../../QuranData/out/qul", "../../../QuranData/Fonts"],
+    "paths": [
+      "../../../QuranData/out/qul",
+      "../../../QuranData/Fonts"
+    ],
     "budgetCompressedMB": 200,
     "budgetInstalledMB": 400
   }

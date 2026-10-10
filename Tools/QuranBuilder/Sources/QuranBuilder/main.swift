@@ -4,7 +4,8 @@
 //   swift run -c release --package-path Tools/QuranBuilder QuranBuilder --profile qul
 //
 // `--profile <name>` reads `Tools/QuranBuilder/profiles/<name>.json`; `--config <path>` reads any
-// other. Every output goes under `QuranData/out/<profile>/` (git-ignored); the qul profile also
+// other. Every output — the database, `Packs/` and the pack report — goes under
+// `QuranData/out/<profile>/` (git-ignored); the qul profile also
 // fills `QuranData/Fonts/madaniV2/` with the page fonts. Nothing is copied into the app's
 // resources here — that swap is a deliberate step of its own (QURAN_MIGRATION_PLAN.md, M3).
 
@@ -57,6 +58,11 @@ func build() async throws {
             let copied = try copyPageFonts(pageFonts, config: config)
             print("\(pageFonts.style) page fonts: \(copied.files) files (\(copied.bytes / 1_048_576) MB) verified and copied to \(pageFonts.bundleDirectory)")
         }
+    }
+
+    // Packs, joined to the ayahs by "surah:ayah" and never by order.
+    for pack in try await buildPacks(config, ayahIDs: rows.ayahIDs).packs {
+        print("pack \(pack.file): \(pack.kind) \(pack.language) \(pack.nameEn), \(pack.bytes / 1024) KB, sha256 \(pack.sha256.prefix(12))…")
     }
 
     if let curated = config.curated {

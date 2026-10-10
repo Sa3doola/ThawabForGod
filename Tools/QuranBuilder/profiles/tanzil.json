@@ -17,13 +17,37 @@
       "cache": "../../../QuranData/raw/tanzil/quran-data.xml"
     }
   },
+  "packs": {
+    "directory": "../../../QuranData/out/tanzil/Packs",
+    "report": "../../../QuranData/out/reports/tanzil-packs.json",
+    "mirroredTafsirs": [
+      {
+        "id": "ar-jalalayn",
+        "language": "ar",
+        "name_en": "Tafsir al-Jalalayn",
+        "name_ar": "تفسير الجلالين",
+        "author_en": "Jalal al-Din al-Mahalli and Jalal al-Din al-Suyuti",
+        "author_ar": "جلال الدين المحلي وجلال الدين السيوطي",
+        "direction": "rtl",
+        "version": 1,
+        "sourceURL": "https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/ar-tafsir-al-jalalayn",
+        "license": "Public domain — completed 1505 CE (911 AH)",
+        "format": "spa5k-json",
+        "cache": "../../../QuranData/raw/jalalayn",
+        "textDigest": "15f89b2781e2b8e804d2c6dc837ef892ea206c4f6f91eed9b7daf5af69beedc2",
+        "silentCount": 226
+      }
+    ]
+  },
   "curated": {
     "ayahOfTheDay": "../data/ayah-of-the-day.txt",
     "ayahOfTheDayOutput": "../../../QuranData/out/tanzil/ayah-of-the-day.json",
     "minimumEntries": 60
   },
   "sizeReport": {
-    "paths": ["../../../QuranData/out/tanzil"],
+    "paths": [
+      "../../../QuranData/out/tanzil"
+    ],
     "budgetCompressedMB": 200,
     "budgetInstalledMB": 400
   }

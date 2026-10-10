@@ -35,6 +35,18 @@ enum Paths {
     /// The public database (`--profile tanzil`).
     static let tanzilSQLite = out.appendingPathComponent("tanzil/quran.sqlite")
 
+    // MARK: Packs
+
+    /// A profile's pack folder: the files the app will discover by prefix.
+    static func packs(_ profile: String) -> URL { out.appendingPathComponent("\(profile)/Packs") }
+    /// What the build wrote, with sizes and hashes. A report, never bundled.
+    static func packReport(_ profile: String) -> URL { out.appendingPathComponent("reports/\(profile)-packs.json") }
+    /// Today's tafsir database, which the Jalalayn pack must reproduce until M3 replaces it.
+    static let legacyTafsirSQLite = root.appendingPathComponent("ThawabForGod/Resources/Corpus/tafsir.sqlite")
+    static var jalalaynBuilt: Bool {
+        FileManager.default.fileExists(atPath: packs("tanzil").appendingPathComponent("tafsir-ar-jalalayn.sqlite").path)
+    }
+
     // MARK: Shared
 
     /// The KFGQPC Hafs face the app bundles today.
