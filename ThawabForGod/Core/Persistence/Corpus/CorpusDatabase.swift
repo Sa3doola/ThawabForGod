@@ -22,9 +22,14 @@ import os
 /// `AppContainer` never touches the file system and a missing resource surfaces as an error on
 /// one screen instead of a throwing initialiser at launch.
 nonisolated final class CorpusDatabase: CorpusDatabaseProviding {
-    private let name: String
-    private let fileExtension: String
-    private let bundle: Bundle
+    /// Where the file is: a bundle resource by name, or a file already located — a Quran pack,
+    /// found by scanning the bundle for its prefix, or a test's fixture.
+    private enum Location {
+        case resource(name: String, fileExtension: String, bundle: Bundle)
+        case file(URL)
+    }
+
+    private let location: Location
 
     /// The opened queue, kept so the file is opened once however many repositories read it.
     ///
@@ -42,9 +47,12 @@ nonisolated final class CorpusDatabase: CorpusDatabaseProviding {
     ///   - fileExtension: its extension, as it appears in `Resources`.
     ///   - bundle: which bundle to look in. Tests pass their own to read a fixture.
     init(name: String, fileExtension: String = "sqlite", bundle: Bundle = .main) {
-        self.name = name
-        self.fileExtension = fileExtension
-        self.bundle = bundle
+        location = .resource(name: name, fileExtension: fileExtension, bundle: bundle)
+    }
+
+    /// A file that has already been found. Opening is still deferred to the first read.
+    init(url: URL) {
+        location = .file(url)
     }
 
     func reader() throws -> any DatabaseReader {
@@ -60,8 +68,18 @@ nonisolated final class CorpusDatabase: CorpusDatabaseProviding {
     }
 
     private func open() throws -> any DatabaseReader {
-        guard let url = bundle.url(forResource: name, withExtension: fileExtension) else {
-            throw CorpusDatabaseError.resourceMissing(name: "\(name).\(fileExtension)")
+        let url: URL
+        switch location {
+        case .resource(let name, let fileExtension, let bundle):
+            guard let found = bundle.url(forResource: name, withExtension: fileExtension) else {
+                throw CorpusDatabaseError.resourceMissing(name: "\(name).\(fileExtension)")
+            }
+            url = found
+        case .file(let file):
+            guard FileManager.default.fileExists(atPath: file.path) else {
+                throw CorpusDatabaseError.resourceMissing(name: file.lastPathComponent)
+            }
+            url = file
         }
 
         var configuration = Configuration()

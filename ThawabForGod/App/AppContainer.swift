@@ -116,6 +116,14 @@ final class AppContainer {
     /// only a reader who opens that tab ever pays to page any of it in.
     let hadithCorpus: any CorpusDatabaseProviding
 
+    // MARK: Quran
+
+    /// The Quran database the app reads: the full (QUL) build when it was bundled, the public
+    /// (Tanzil) one otherwise (T4). What the screens may offer is `quranRepository.capabilities()`,
+    /// read from the file — never inferred from which file this is.
+    let quranDatabase: QuranDatabase
+    let quranRepository: any QuranRepositoring
+
     // MARK: Hadith
 
     let hadithRepository: any HadithRepositoring
@@ -195,6 +203,7 @@ final class AppContainer {
         hijriDates: any HijriDateServicing = HijriDateService(),
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
         hadithCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "hadith"),
+        quranDatabase: QuranDatabase = .bundled(),
         fallbackCoordinates: Coordinates = .makkah,
         // `false` in tests. `BGTaskScheduler.shared.register(_:)` (iOS only — a no-op read
         // elsewhere) is a real call into the system's background-task service — unlike
@@ -299,6 +308,10 @@ final class AppContainer {
         let namesRepository = NamesRepository(database: corpus)
         self.namesRepository = namesRepository
         self.getNames = GetNamesUseCase(repository: namesRepository)
+
+        // The Quran: one database, chosen by what is bundled.
+        self.quranDatabase = quranDatabase
+        self.quranRepository = QuranRepository(database: quranDatabase.corpus)
 
         // The same three links again, over the two Sahihs. Another file and the same
         // `CorpusDatabase`, which is the point of that type taking a resource name and knowing
