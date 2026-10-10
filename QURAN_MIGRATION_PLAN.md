@@ -54,17 +54,33 @@ Each milestone is one Claude Code run that stops for review. Every task builds c
 
 Rough effort: **8–10 sessions.**
 
-## 4. How the sessions use subagents
+## 4. How the sessions use subagents (Opus · Sonnet · Haiku)
 
-Subagent definitions live in `.claude/agents/` and run on **Claude Haiku 4.5** (`model: haiku`). The main agent plans, makes every architectural and concurrency decision, reviews every subagent result, builds, tests and commits.
+Agent definitions are written in `docs/quran-migration/agents/` and copied to `.claude/agents/` (the two folders stay identical). Each file's `model:` decides the model; **the main agent never passes a model override**, and `CLAUDE_CODE_SUBAGENT_MODEL` stays unset. The main session runs on **Opus** (`/model opus`): it orchestrates, resolves build errors, and is the only one that builds, tests and commits.
 
 | Subagent | Model | Used for | Never does |
 |---|---|---|---|
-| `migration-scout` | haiku | Read-only inventories of a folder in either project: files, types, responsibilities, dependencies → a table | Edit files, run builds |
-| `l10n-porter` | haiku | Turning hard-coded strings in given files into `L10nKey` cases with ar + en | Change logic, layout or anything outside the given files |
-| `test-porter` | haiku | Porting given Mushaf tests to this repo's types and Swift Testing style | Change app code to make a test pass |
+| `quran-architect` | **opus** | Design note per task: types, isolation, data flow, navigation, disjoint batches with exact interfaces, test plan, risks → `docs/quran-migration/design/<task>.md` | Write app code, build |
+| `quran-reviewer` | **opus** | Independent review of the staged diff: correctness, concurrency, rendering, data safety, rules → Blocking / Should fix / Later | Edit, build, any git command that writes |
+| `feature-implementer` | **sonnet** | One batch of views / view models / coordinator wiring / ports, only its listed files; strings as literals marked `// L10N-TODO` | Touch files outside its batch, add `L10nKey`s, build |
+| `ui-test-writer` | **sonnet** | XCUITest flows and screenshot scripts from the design note | Edit app code (reports missing identifiers instead) |
+| `migration-scout` | haiku | Read-only inventories → a table | Edit, build |
+| `l10n-porter` | haiku | `L10N-TODO` lines and literals → `L10nKey` + ar/en | Change logic or layout |
+| `test-porter` | haiku | Port Mushaf unit tests; write the unit tests the design note lists | Change app code to pass a test |
+| `rules-checker` | haiku | Mechanical scan of the staged diff (QUL files, Quran data, pbxproj, literals, `UserDefaults`, `#if os`, `print`) | Judge design, edit |
 
-Rules: subagents run **in parallel only on disjoint files**. **Only the main agent runs `xcodebuild`**, because parallel builds fight over DerivedData. Rendering, concurrency, data-pipeline, persistence and navigation work stays with the main agent.
+**Every task runs this pipeline**, so all three models work on every task:
+
+1. **Design (Opus)**: `quran-architect` writes the design note. The main agent checks it and sends any open decision to Saad in the stop report (or decides if it's reversible and says so).
+2. **Scout (Haiku, when porting)**: `migration-scout` on the Mushaf folders the note names, in parallel.
+3. **Implement (Sonnet)**: one `feature-implementer` per batch, **in parallel**, batches share no file.
+4. **Localize (Haiku)**: `l10n-porter` on the changed files, split into disjoint batches if there are many.
+5. **Build (main)**: iOS simulator + macOS, zero warnings. The main agent fixes build errors itself; a fix bigger than a few lines goes back to the batch's implementer.
+6. **Tests (Haiku + Sonnet, parallel)**: `test-porter` for unit tests, `ui-test-writer` for UI flows; then the main agent runs both suites on iOS and macOS.
+7. **Gate (Haiku → Opus)**: stage the change, `rules-checker` first; once it passes, `quran-reviewer`. Blocking and Should-fix items are fixed (back to step 5); Later items go in the stop report.
+8. **Commit (main)**: `Quran migration Mx.y: …`, with a body line `Agents: architect(opus) · implementer×N(sonnet) · ui-test-writer(sonnet) · l10n-porter(haiku) · test-porter(haiku) · rules-checker(haiku) · reviewer(opus)` listing what actually ran.
+
+A tiny task (a one-file fix) may use a three-line design note and skip step 2 and the UI tests, but never skips steps 1, 4, 7. Rules: parallel subagents only on disjoint files; **only the main agent runs `xcodebuild`** (parallel builds fight over DerivedData); subagents can't start subagents, so the main agent runs every step. Design notes are committed with their task.
 
 ## 5. What Saad does
 

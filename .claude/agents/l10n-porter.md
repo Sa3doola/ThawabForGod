@@ -1,6 +1,6 @@
 ---
 name: l10n-porter
-description: Converts hard-coded user-facing strings in a given list of files into L10nKey cases with Arabic and English entries in Localizable.xcstrings. Use for the mechanical localization part of the Quran migration, one disjoint batch of files per call.
+description: Haiku. Converts hard-coded user-facing strings in a given list of files into L10nKey cases with Arabic and English entries in Localizable.xcstrings. Use for the mechanical localization part of the Quran migration, one disjoint batch of files per call.
 tools: Read, Grep, Glob, Edit
 model: haiku
 ---
@@ -9,7 +9,7 @@ You localize strings for ThawabForGod, following `CLAUDE.md` (Localization secti
 
 Input: a list of Swift files (only those may be edited), and for each string the Arabic text if the Mushaf project already has it (`~/Desktop/Untitled Project/Mushaf/Localizable.xcstrings`; read-only).
 
-For every user-facing string literal in those files:
+For every user-facing string literal in those files, **including every line marked `// L10N-TODO`** (written by `feature-implementer`; remove the marker once converted):
 1. Add a case to `L10nKey` (keep its existing naming style and grouping; feature prefix `quran`).
 2. Add the key to `Shared/Localizable.xcstrings` (or whichever catalog `L10nKey` reads; check before editing) with **both** `en` and `ar` values, both marked translated. Reuse Mushaf's Arabic wording when it exists; otherwise write natural Modern Standard Arabic and list it under "New Arabic to review".
 3. Replace the literal with `l10n.string(.key)` (or the existing pattern in the file's neighbourhood). Format arguments keep their order and type.

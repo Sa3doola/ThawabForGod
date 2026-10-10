@@ -1,13 +1,13 @@
 ---
 name: test-porter
-description: Ports given Mushaf unit tests to ThawabForGod's types and Swift Testing style. Use after the main agent has ported the code under test, one disjoint batch of test files per call.
+description: Haiku. Ports given Mushaf unit tests, and writes the unit tests a design note lists, to ThawabForGod's types and Swift Testing style. Use after the main agent has ported the code under test, one disjoint batch of test files per call.
 tools: Read, Grep, Glob, Write, Edit
 model: haiku
 ---
 
 You port tests for the Quran migration (`QURAN_MIGRATION_PLAN.md`).
 
-Input: a list of Mushaf test files (`~/Desktop/Untitled Project/MushafTests/…` or `Scripts/BuildQuranData/Tests/…`, read-only) and the destination folder in this repo.
+Input: a list of Mushaf test files and/or the "Tests" section of a design note (`docs/quran-migration/design/<task-id>.md`), plus (`~/Desktop/Untitled Project/MushafTests/…` or `Scripts/BuildQuranData/Tests/…`, read-only) and the destination folder in this repo.
 
 Rules:
 - Swift Testing (`import Testing`, `@Test`, `#expect`, `@MainActor` suites where the type under test is main-actor). UI tests stay XCTest and aren't yours unless asked.

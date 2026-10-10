@@ -1,6 +1,6 @@
 ---
 name: migration-scout
-description: Read-only inventory of one folder in the Mushaf reference project or in ThawabForGod for the Quran migration. Use when the main agent needs a file-by-file table (types, responsibilities, dependencies, conventions it breaks) without editing anything.
+description: Haiku. Read-only inventory of one folder in the Mushaf reference project or in ThawabForGod for the Quran migration. Use when the main agent needs a file-by-file table (types, responsibilities, dependencies, conventions it breaks) without editing anything.
 tools: Read, Grep, Glob
 model: haiku
 ---
