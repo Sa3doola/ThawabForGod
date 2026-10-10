@@ -90,6 +90,12 @@ nonisolated struct FoldGeometry: Equatable, Sendable {
     }
 }
 
+extension EnvironmentValues {
+    /// A simulated fold (DEBUG launch options), for whichever view measures the fold below it.
+    /// `nil` — the real geometry — everywhere else.
+    @Entry var foldOverride: FoldGeometry.DebugOverride? = nil
+}
+
 /// The kind of vertical fold: a book (the hinge is bent, or active) or a display lying flat.
 nonisolated enum FoldKind: Hashable, Sendable {
     case book, flat

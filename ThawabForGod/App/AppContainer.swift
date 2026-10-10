@@ -142,6 +142,19 @@ final class AppContainer {
     /// the database anyway, rather than from a second query here at launch.
     let quranReaderSettings: QuranReaderSettings
 
+    /// Page measurements for the session, measured off the main actor and read synchronously by the
+    /// pages (T13). One per app, where Mushaf had a `static let shared`.
+    let quranPageMetrics = PageMetricsCache()
+
+    /// The Quran faces that registered: the full set where the QUL fonts were installed, KFGQPC
+    /// Hafs alone in a public clone.
+    var quranFaces: QuranFaces { .launch }
+
+    /// What a Mushaf page needs to draw, handed to the pager.
+    var mushafRenderServices: MushafRenderServices {
+        MushafRenderServices(pageFonts: quranPageFonts, metricsCache: quranPageMetrics)
+    }
+
     // MARK: Hadith
 
     let hadithRepository: any HadithRepositoring

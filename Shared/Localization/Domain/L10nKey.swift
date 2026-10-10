@@ -260,6 +260,27 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// The search screen's scopes; the first is `quranTitle`.
     case quranSearchScopeTranslations = "quran_search_scope_translations"
     case quranSearchScopeSurahNames = "quran_search_scope_surah_names"
+    /// The juz a Mushaf page is in, as its header and as a margin label — "Juz 7", `%@` the number.
+    case quranJuzNumber = "quran_juz_number"
+    /// The VoiceOver name of the custom content listing an ayah's margin labels.
+    case quranMargin = "quran_margin"
+    /// A hizb start in a Mushaf page's margin, `%@` the number — "Hizb 3".
+    case quranMarginHizb = "quran_margin_hizb"
+    /// A quarter of a hizb in the margin, `%@` the hizb — "¼ Hizb 3".
+    case quranMarginQuarterHizb = "quran_margin_quarter_hizb"
+    /// A half hizb in the margin, `%@` the hizb — "½ Hizb 3".
+    case quranMarginHalfHizb = "quran_margin_half_hizb"
+    /// Three quarters of a hizb in the margin, `%@` the hizb — "¾ Hizb 3".
+    case quranMarginThreeQuarterHizb = "quran_margin_three_quarter_hizb"
+    /// A sajdah marker in a Mushaf page's margin, beside its ayah.
+    case quranMarginSajdah = "quran_margin_sajdah"
+    /// A Mushaf page's footer — "Juz 7 · Page 142". `%1$@` is the juz, `%2$@` the page.
+    case quranPageFooter = "quran_page_footer"
+    /// VoiceOver for a Mushaf page's surah header, `%@` the surah name.
+    case quranSurahHeading = "quran_surah_heading"
+    /// VoiceOver for an ayah on a Mushaf page — "Al-Fatihah, ayah 2". `%1$@` the surah name,
+    /// `%2$@` the ayah number.
+    case quranSurahAyah = "quran_surah_ayah"
 
     // MARK: Tafsir
 

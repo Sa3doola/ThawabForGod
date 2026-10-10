@@ -4489,6 +4489,125 @@
         }
       }
     },
+    "quran_juz_number" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجزء %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juz %@"
+          }
+        }
+      }
+    },
+    "quran_margin" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الهامش"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Margin"
+          }
+        }
+      }
+    },
+    "quran_margin_half_hizb" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نصف الحزب %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "½ Hizb %@"
+          }
+        }
+      }
+    },
+    "quran_margin_hizb" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحزب %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hizb %@"
+          }
+        }
+      }
+    },
+    "quran_margin_quarter_hizb" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ربع الحزب %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¼ Hizb %@"
+          }
+        }
+      }
+    },
+    "quran_margin_sajdah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سجدة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sajdah"
+          }
+        }
+      }
+    },
+    "quran_margin_three_quarter_hizb" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ثلاثة أرباع الحزب %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¾ Hizb %@"
+          }
+        }
+      }
+    },
     "quran_meccan" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4519,6 +4638,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Medinan"
+          }
+        }
+      }
+    },
+    "quran_page_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجزء %1$@ · الصفحة %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juz %1$@ · Page %2$@"
           }
         }
       }
@@ -4706,6 +4842,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Surahs"
+          }
+        }
+      }
+    },
+    "quran_surah_ayah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@، الآية %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, ayah %2$@"
+          }
+        }
+      }
+    },
+    "quran_surah_heading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سورة %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surah %@"
           }
         }
       }
