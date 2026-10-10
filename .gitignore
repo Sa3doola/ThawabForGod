@@ -77,8 +77,10 @@ translation-en-sahih-international.sqlite
 tafsir-ar-muyassar.sqlite
 tafsir-en-mukhtasar.sqlite
 surah-info-*.sqlite
-# QUL fonts: the 604 QPC V2 page fonts, and the header, name and common faces.
-madaniV2/
+# QUL fonts: the 604 QPC V2 page fonts, and the header, name and common faces. The page-font
+# folder itself is committed, holding only its README, because the app target references it.
+**/madaniV2/*
+!**/madaniV2/README.md
 surah-header.ttf
 surah-name-v2.ttf
 quran-common.ttf
