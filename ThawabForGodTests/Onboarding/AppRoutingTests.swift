@@ -40,8 +40,8 @@ struct AppRoutingTests {
             persistence: try PersistenceController(inMemory: true),
             locationService: MockLocationService(),
             notificationService: MockNotificationService(),
-            // `BGTaskScheduler.shared.register(_:)` is a real system call with no fake to hand
-            // it instead — see the parameter's own documentation on `AppContainer.init`.
+            // Keeps this test's container from being published as the scheduler the host app's
+            // launch handler runs. See the parameter's own documentation on `AppContainer.init`.
             registersBackgroundRefresh: false
         )
     }

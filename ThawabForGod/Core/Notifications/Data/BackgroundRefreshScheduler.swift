@@ -30,17 +30,14 @@ import Foundation
 ///   2. Still on that tab, add a **Permitted background task scheduler identifiers** entry (or,
 ///      if Xcode only offers the raw key, add `BGTaskSchedulerPermittedIdentifiers` as an array
 ///      containing `"\(Self.taskIdentifier)"` under **Info** → **Custom iOS Target Properties**).
-/// `BGTaskScheduler.register(forTaskWithIdentifier:...)` **crashes at launch** if the
-/// identifier is not declared there, so do this before running a build that reaches
-/// `AppContainer.init()` with this scheduler wired in.
-///
-/// `@unchecked Sendable`: every stored property is `let`, and the one place a reference
-/// crosses off the main actor — the system's launch handler, invoked on a queue of its own
-/// choosing — only ever uses it to hop straight back onto `@MainActor` before touching
-/// anything. The same shape `SpyOnboardingRepository` and `RecordingPrayerTimeRepository`
-/// document as safe in the test target, applied here to a production type instead.
+/// `BGTaskScheduler.register(forTaskWithIdentifier:...)` returns `false` if the identifier is not
+/// declared there, and `registerLaunchHandler()` asserts on that in DEBUG, so do this before
+/// running a build that reaches `AppDelegate.application(_:didFinishLaunchingWithOptions:)`,
+/// which is where the handler is registered. In Release the `false` is silent. The fatal case
+/// is different: registering after launch has finished, or registering the same identifier
+/// twice, is an error the system treats as fatal.
 @MainActor
-final class BackgroundRefreshScheduler: @unchecked Sendable {
+final class BackgroundRefreshScheduler {
     /// Namespaced under the bundle identifier, the way `PrayerReminder`'s own stable
     /// identifiers are — this is the string that must match Xcode's permitted-identifiers list.
     static let taskIdentifier = "com.Sa3dola.ThawabForGod.refreshReminders"
@@ -51,28 +48,72 @@ final class BackgroundRefreshScheduler: @unchecked Sendable {
         self.notificationService = notificationService
     }
 
-    /// Registers the launch handler. Must run before the app finishes launching — called from
-    /// `AppContainer.init()`, the same "before any view exists" spot that configures TipKit,
-    /// and for the same reason: registering any later than that is what the system fatals on.
-    func register() {
-        BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: Self.taskIdentifier,
+    /// The scheduler the launch handler runs. Published by `AppContainer`, read when a task fires.
+    ///
+    /// Registration and the instance are separate on purpose. The system wants the handler
+    /// registered before launch finishes, and the container that owns this scheduler may not be
+    /// built by then, so the handler looks the scheduler up when a task arrives instead of
+    /// capturing one.
+    private(set) static var current: BackgroundRefreshScheduler?
+
+    /// Publishes `scheduler` as the one the launch handler runs. Only the composition root calls
+    /// this, and it skips the call in tests so a test's container is never the target of the
+    /// host app's handler.
+    static func makeCurrent(_ scheduler: BackgroundRefreshScheduler) {
+        current = scheduler
+    }
+
+    /// Registers the launch handler. Called once, from
+    /// `AppDelegate.application(_:didFinishLaunchingWithOptions:)`, which is the window the
+    /// system documents: `BGTaskScheduler` requires every launch handler to be registered before
+    /// the end of `applicationDidFinishLaunching`, and fatals on any later one.
+    ///
+    /// It must not depend on when `AppContainer` is built. With the current toolchain the
+    /// container can be built as late as the first scene's connection, which was observed to fall
+    /// after launch had finished, and registering from there was an intermittent launch crash.
+    ///
+    /// The block captures nothing. It runs on a queue of the system's choosing, so it hops to the
+    /// main actor and reads `current` there. It is `@Sendable` because the SDK does not say so
+    /// for it: written inside a main-actor function, an unannotated closure is taken to be
+    /// main-actor code as well, which is untrue of a block the system calls on its own queue.
+    static func registerLaunchHandler() {
+        // `false` means the identifier is missing from `BGTaskSchedulerPermittedIdentifiers`.
+        let registered = BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: taskIdentifier,
             using: nil
-        ) { [self] task in
+        ) { @Sendable task in
             guard let appRefreshTask = task as? BGAppRefreshTask else {
                 task.setTaskCompleted(success: false)
                 return
             }
             Task { @MainActor in
-                await self.run(appRefreshTask)
+                // No container has published a scheduler, for instance a background launch that
+                // connected no scene. The work did not happen, so say so rather than leave the
+                // task open, but book the next attempt first so the chain does not end here.
+                guard let scheduler = BackgroundRefreshScheduler.current else {
+                    BackgroundRefreshScheduler.scheduleNextRefresh()
+                    appRefreshTask.setTaskCompleted(success: false)
+                    return
+                }
+                await scheduler.run(appRefreshTask)
             }
         }
+        assert(
+            registered,
+            "Could not register \(taskIdentifier): add it to BGTaskSchedulerPermittedIdentifiers."
+        )
+    }
+
+    /// The instance form, kept because `RootView` and `run(_:)` call it on a scheduler. It
+    /// delegates because the launch handler needs to book a refresh when no instance exists.
+    func scheduleNextRefresh() {
+        Self.scheduleNextRefresh()
     }
 
     /// Submits the next request. Idempotent — the system replaces any pending request under the
-    /// same identifier — so `RootView` can call this after every foreground refill without
-    /// worrying about doubling up.
-    func scheduleNextRefresh() {
+    /// same identifier — so it can be called after every foreground refill, as `RootView` does
+    /// through the instance form, without worrying about doubling up.
+    static func scheduleNextRefresh() {
         let request = BGAppRefreshTaskRequest(identifier: Self.taskIdentifier)
         // A day out. The rolling window has ten days of headroom, so nothing is gained by
         // asking more often — and the system only ever honours this as a lower bound anyway,
@@ -91,7 +132,9 @@ final class BackgroundRefreshScheduler: @unchecked Sendable {
         scheduleNextRefresh()
 
         let workTask = Task { await notificationService.refreshSchedule() }
-        task.expirationHandler = { workTask.cancel() }
+        // `@Sendable` for the reason the launch block is: the system may call this on a thread
+        // of its own, and an unannotated closure here would be inferred main-actor code.
+        task.expirationHandler = { @Sendable in workTask.cancel() }
 
         await workTask.value
         task.setTaskCompleted(success: !workTask.isCancelled)

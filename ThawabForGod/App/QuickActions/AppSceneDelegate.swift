@@ -6,17 +6,30 @@
 #if os(iOS)
 import UIKit
 
-/// The application object, present for one reason: quick actions do not arrive through
-/// `onOpenURL`.
+/// The application object, present for two reasons.
 ///
-/// A widget tap is a URL and SwiftUI hands it straight to the view tree. A Home Screen shortcut
-/// is not a URL as far as the system is concerned — it is a `UIApplicationShortcutItem` delivered
-/// to a `UIWindowSceneDelegate`, and a SwiftUI app has no scene delegate unless it asks for one.
-/// This is the ask.
+/// The first is that quick actions do not arrive through `onOpenURL`. A widget tap is a URL and
+/// SwiftUI hands it straight to the view tree. A Home Screen shortcut is not a URL as far as the
+/// system is concerned — it is a `UIApplicationShortcutItem` delivered to a
+/// `UIWindowSceneDelegate`, and a SwiftUI app has no scene delegate unless it asks for one. This
+/// is the ask.
 ///
-/// Nothing else belongs here. The delegate supplies a scene configuration and stops; the
-/// routing is `AppContainer.open(_:)`'s, as it is for every other way into the app.
+/// The second is the background-refresh launch handler, which the system requires to be
+/// registered before launch finishes. `application(_:didFinishLaunchingWithOptions:)` is that
+/// window, and unlike `AppContainer.init()`, which can run as late as the first scene's
+/// connection, it is called once per process before any scene exists.
+///
+/// Nothing else belongs here. The delegate supplies a scene configuration and one registration;
+/// the routing is `AppContainer.open(_:)`'s, as it is for every other way into the app.
 final class AppDelegate: NSObject, UIApplicationDelegate {
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        BackgroundRefreshScheduler.registerLaunchHandler()
+        return true
+    }
 
     func application(
         _ application: UIApplication,

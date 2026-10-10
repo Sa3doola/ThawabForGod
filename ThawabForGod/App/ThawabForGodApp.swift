@@ -15,9 +15,11 @@ struct ThawabForGodApp: App {
     // Both platforms want an application delegate, and for related but not identical reasons.
     // iOS needs one so it can supply a scene configuration: a Home Screen quick action arrives
     // as a `UIApplicationShortcutItem` on a `UIWindowSceneDelegate`, and a SwiftUI app has no
-    // scene delegate unless it asks for one. macOS needs one because `applicationDockMenu(_:)`
-    // is the only way to put anything in the Dock menu. Neither delegate routes anything — see
-    // `DeepLinkInbox`.
+    // scene delegate unless it asks for one. It is also the launch callback from which the
+    // background-refresh handler is registered, because `container` (declared above) can be
+    // built as late as the first scene's connection, after launch has finished. macOS needs one
+    // because `applicationDockMenu(_:)` is the only way to put anything in the Dock menu.
+    // Neither delegate routes anything — see `DeepLinkInbox`.
     #if os(iOS)
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     #elseif os(macOS)
