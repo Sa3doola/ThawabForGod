@@ -132,6 +132,11 @@ final class AppContainer {
     let quranTafsir: any TafsirRepositoring
     let quranSurahInfo: any SurahInfoRepositoring
 
+    /// The 604 page fonts, registered a window at a time around the page on screen (T1). One for
+    /// the app, owned here rather than a global, because the registrations it tracks are the
+    /// process's.
+    let quranPageFonts: any FontPackStoring
+
     // MARK: Hadith
 
     let hadithRepository: any HadithRepositoring
@@ -328,6 +333,7 @@ final class AppContainer {
         self.quranTranslations = TranslationRepository(store: quranPacks, index: quranAyahIndex)
         self.quranTafsir = TafsirRepository(store: quranPacks, index: quranAyahIndex)
         self.quranSurahInfo = SurahInfoRepository(store: quranPacks)
+        self.quranPageFonts = FontPackStore()
 
         // The same three links again, over the two Sahihs. Another file and the same
         // `CorpusDatabase`, which is the point of that type taking a resource name and knowing

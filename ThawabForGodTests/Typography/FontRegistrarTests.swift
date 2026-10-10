@@ -65,13 +65,19 @@ struct FontRegistrarTests {
         #expect(found == ["Hafs.otf", "Plex.ttf"])
     }
 
-    /// The V2 faces are named `QCF2001`…`QCF2604`. After the app's own registration not one of them
-    /// may be available — on a machine with the full data bundled, this is the folder really being
-    /// skipped; without it, it still holds.
-    @Test func noPageFontIsRegisteredAtLaunch() {
-        FontRegistrar.registerBundledFonts()
+    /// The V2 faces are named `QCF2001`…`QCF2604`. Not one of the files the launch registers is
+    /// one of them — on a machine with the full data bundled, this is the real folder being skipped.
+    ///
+    /// Asked of the walk over the app bundle rather than of CoreText's process-wide list, which it
+    /// once was: `FontPackStoreTests` registers page fonts in this same process, in a suite that may
+    /// run alongside this one, so the process-wide list says nothing about the launch.
+    @Test func noPageFontIsRegisteredAtLaunch() throws {
+        let resources = try #require(Bundle.main.resourceURL)
 
-        let names = CTFontManagerCopyAvailablePostScriptNames() as? [String] ?? []
+        let names = FontRegistrar.fontURLs(under: resources).flatMap { url in
+            (CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor] ?? [])
+                .compactMap { CTFontDescriptorCopyAttribute($0, kCTFontNameAttribute) as? String }
+        }
 
         #expect(!names.isEmpty)
         #expect(!names.contains { $0.hasPrefix("QCF2") })
