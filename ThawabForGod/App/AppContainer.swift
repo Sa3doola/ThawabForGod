@@ -396,7 +396,16 @@ final class AppContainer {
         self.onboardingRepository = onboardingRepository
 
         // The launch decision, made once from the persisted flag.
+        #if DEBUG
+        // A scripted launch into the Quran reader (golden pages, UI tests, performance runs) starts
+        // on the Quran tab and past onboarding, for this launch only: nothing is written, so the
+        // flag is still unset next time.
+        let quranLaunch = QuranLaunchOptions.current.target != nil
+        let router = AppRouter(hasCompletedOnboarding: onboardingRepository.hasCompletedOnboarding || quranLaunch)
+        if quranLaunch { router.selectedTab = .quran }
+        #else
         let router = AppRouter(hasCompletedOnboarding: onboardingRepository.hasCompletedOnboarding)
+        #endif
         self.router = router
 
         self.onboardingViewModel = OnboardingViewModel(

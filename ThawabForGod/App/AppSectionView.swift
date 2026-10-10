@@ -61,6 +61,10 @@ struct AppSectionView: View {
     private var quran: some View {
         NavigationStack {
             QuranPlaceholderView()
+                #if DEBUG
+                // The ported renderer, before the reader screen exists to reach it (M4–M5).
+                .quranDebugEntry(container: container)
+                #endif
         }
     }
 
