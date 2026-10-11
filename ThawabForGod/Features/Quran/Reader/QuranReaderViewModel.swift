@@ -91,6 +91,15 @@ final class QuranReaderViewModel {
         return separatedLocation
     }
 
+    /// A target parked before the corpus loaded turned out to name nothing. Read once by
+    /// `takeRejectedParkedTarget()`; the coordinator uses it to take back a reader it pushed early.
+    @ObservationIgnored private var parkedTargetWasRejected = false
+
+    func takeRejectedParkedTarget() -> Bool {
+        defer { parkedTargetWasRejected = false }
+        return parkedTargetWasRejected
+    }
+
     // MARK: Load
 
     func load() async {
@@ -106,7 +115,7 @@ final class QuranReaderViewModel {
             phase = .ready(corpus)
             if let target = parkedTarget {
                 parkedTarget = nil
-                open(target)
+                if !open(target) { parkedTargetWasRejected = true }
             }
         } catch {
             guard loadTask == task else { return }
@@ -133,12 +142,15 @@ final class QuranReaderViewModel {
 
     /// Opens at a target in both modes at once, now if the corpus is loaded and else once it is.
     /// A target the corpus does not contain changes nothing.
-    func open(_ target: GoToTarget) {
+    /// Returns false when the target names nothing in the corpus (a stored reference that no longer
+    /// exists), so a caller does not push the reader to a place it did not move to.
+    @discardableResult
+    func open(_ target: GoToTarget) -> Bool {
         guard let corpus else {
             parkedTarget = target
-            return
+            return true
         }
-        guard let place = QuranReaderPlace.resolve(target, in: corpus) else { return }
+        guard let place = QuranReaderPlace.resolve(target, in: corpus) else { return false }
         if place.selectsAyah { mushaf.select(place.ayah) }
         if let page = place.page { mushaf.show(page: page) }
         // Before the surah: the surah is what re-evaluates the view that reads the location.
@@ -149,6 +161,7 @@ final class QuranReaderViewModel {
         } else {
             separatedSurah = place.ayah.surah
         }
+        return true
     }
 
     /// A tap on an ayah: selects it. Never clears: the panel the tap opens is closed from the panel,

@@ -137,8 +137,17 @@ final class QuranCoordinator {
     /// Applies `target` to the reader, then shows the reader. In that order.
     func open(_ target: GoToTarget) {
         closePanel()
-        reader.open(target)
+        guard reader.open(target) else { return }
         showReader()
+        // Before the corpus has loaded the target can only be parked, not checked, so the reader is
+        // pushed on trust. If the load then finds the target names nothing (a stale stored reference
+        // on a cold launch), the push is taken back rather than leaving the reader at the old place.
+        if reader.corpus == nil {
+            Task {
+                await reader.load()
+                if reader.takeRejectedParkedTarget() { path = [] }
+            }
+        }
     }
 
     /// Shows the reader where it was left.

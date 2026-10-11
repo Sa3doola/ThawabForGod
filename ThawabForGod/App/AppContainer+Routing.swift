@@ -40,6 +40,8 @@ extension AppContainer {
             quranCoordinator.popToRoot()
 
         case .quranVerse(let reference):
+            // A reference that names nothing leaves the reader where it was: the Quran tab is shown
+            // and the stack is not touched (a cold launch takes back its early push).
             router.selectedTab = .quran
             quranCoordinator.open(.ayah(reference))
         }
