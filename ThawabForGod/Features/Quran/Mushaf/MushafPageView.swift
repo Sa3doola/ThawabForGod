@@ -14,10 +14,9 @@ struct MushafPageView: View {
     let surahs: [Surah]
     let services: MushafRenderServices
     let selectedAyah: VerseReference?
-    /// Highlight colours of ayahs on this page.
-    var highlights: [VerseReference: HighlightColor] = [:]
-    /// An ayah on this page is bookmarked: a small ribbon hangs from the top outer corner.
-    var isBookmarked = false
+    /// The reader's marks on this page's ayahs. When one is bookmarked a small ribbon hangs from
+    /// the top outer corner.
+    var marks: QuranAyahMarkSnapshot = .empty
     /// Juz, hizb, quarter and sajdah labels for the outer margin (empty when hidden).
     var marginMarkers: [MushafMarginMarker] = []
     /// In a spread, the edge facing the other page; the page hugs it. `nil` centres the page.
@@ -42,7 +41,7 @@ struct MushafPageView: View {
                     surahs: surahs,
                     services: services,
                     selectedAyah: selectedAyah,
-                    highlights: highlights,
+                    marks: marks,
                     marginMarkers: marginMarkers,
                     marginWidth: Self.sideMargin,
                     onSelect: onSelect
@@ -51,7 +50,7 @@ struct MushafPageView: View {
             }
             .padding(.horizontal, Self.sideMargin)
             .overlay(alignment: ribbonAlignment) {
-                if isBookmarked { ribbon }
+                if marks.hasBookmark { ribbon }
             }
             // The printed page's proportions keep wide screens from stretching lines into huge
             // word gaps.

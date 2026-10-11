@@ -81,6 +81,13 @@ final class QuranCoordinator {
     var isPanelInspectorPresented = false
     /// "Read more": the full tafsir, a sheet over the panel.
     var isTafsirReaderPresented = false
+    /// The ayah whose note is being edited: a sheet the panel's content presents. Session state.
+    var noteEditorAyah: VerseReference?
+
+    /// Opens the note editor on `ayah`.
+    func editNote(_ ayah: VerseReference) {
+        noteEditorAyah = ayah
+    }
 
     /// Whether the reader is wide enough for the inspector. Set by the presentation modifier from
     /// the measured reader; an open panel moves between sheet and inspector when it changes.
@@ -88,7 +95,8 @@ final class QuranCoordinator {
         didSet {
             guard panelUsesInspector != oldValue else { return }
             isTafsirReaderPresented = false
-            if panelUsesInspector, isPanelSheetPresented {
+            noteEditorAyah = nil
+            if panelUsesInspector,isPanelSheetPresented {
                 isPanelSheetPresented = false
                 isPanelInspectorPresented = true
             } else if !panelUsesInspector, isPanelInspectorPresented {
@@ -132,6 +140,7 @@ final class QuranCoordinator {
         isPanelSheetPresented = false
         isPanelInspectorPresented = false
         isTafsirReaderPresented = false
+        noteEditorAyah = nil
     }
 
     /// Applies `target` to the reader, then shows the reader. In that order.

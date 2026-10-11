@@ -16,7 +16,8 @@ struct SeparatedAyahRow: View {
     let textSize: Double
     let translations: [AyahPanelTranslation]
     let isSelected: Bool
-    var highlight: HighlightColor?
+    /// The reader's marks; the row builds its own snapshot in `body` so the store is observed here.
+    var marks: QuranAyahMarks = .none
     let onTap: () -> Void
 
     @Environment(LocalizationManager.self) private var l10n
@@ -29,7 +30,10 @@ struct SeparatedAyahRow: View {
     @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
 
     var body: some View {
-        VStack(spacing: 0) {
+        // Called at the top level of this leaf's body, so the store's dictionaries are observed here.
+        let snapshot = marks.snapshot(of: [ayah.id])
+        let highlight = snapshot.highlight(ayah.id)
+        return VStack(spacing: 0) {
             Text(paragraph)
                 .readingFont(size: textSize)
                 .foregroundStyle(palette.text)
@@ -39,6 +43,9 @@ struct SeparatedAyahRow: View {
                 .padding(.horizontal, 8)
                 .background(highlight.map { palette.highlight($0) } ?? .clear, in: .rect(cornerRadius: 8))
                 .background(isSelected ? palette.selection : .clear, in: .rect(cornerRadius: 8))
+                .overlay(alignment: .topTrailing) {
+                    markIndicators(snapshot)
+                }
                 .contentShape(.rect)
                 .onTapGesture(perform: onTap)
             ForEach(translations) { item in
@@ -56,6 +63,25 @@ struct SeparatedAyahRow: View {
         .accessibilityValue(Text(verbatim: ([ayah.text] + translations.map(\.document.plainText)).joined(separator: "\n")))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction(.default, onTap)
+        .ayahMarksAccessibility(snapshot, ayah: ayah.id)
+    }
+
+    /// Note and bookmark icons at the row's outer top corner. Decorative: VoiceOver reads the marks
+    /// as custom content instead.
+    @ViewBuilder
+    private func markIndicators(_ snapshot: QuranAyahMarkSnapshot) -> some View {
+        let hasNote = snapshot.note(ayah.id) != nil
+        let isBookmarked = snapshot.isBookmarked(ayah.id)
+        if hasNote || isBookmarked {
+            HStack(spacing: 4) {
+                if hasNote { Image(systemName: "note.text") }
+                if isBookmarked { Image(systemName: "bookmark.fill") }
+            }
+            .appFont(.caption)
+            .foregroundStyle(palette.ornament)
+            .padding(4)
+            .accessibilityHidden(true)
+        }
     }
 
     /// The words, a no-break space, then the marker — one paragraph, so the marker wraps with its

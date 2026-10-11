@@ -18,6 +18,7 @@ import SwiftUI
 struct QuranReaderToolbar: ToolbarContent {
     let viewModel: QuranReaderViewModel
     let coordinator: QuranCoordinator
+    let userData: QuranUserDataStore
     /// A page colour: the bar is the page's while the reader is in front.
     let tint: Color
     /// Compact width: the mode toggle and the settings button share a More menu.
@@ -41,6 +42,11 @@ struct QuranReaderToolbar: ToolbarContent {
             }
             .tint(tint)
             .accessibilityIdentifier("quran.reader.search")
+        }
+        if viewModel.showsMushafPages {
+            ToolbarItem(placement: .primaryAction) {
+                QuranPageBookmarkButton(viewModel: viewModel, userData: userData, tint: tint)
+            }
         }
         if isCompact, viewModel.canSwitchDisplayMode {
             // At compact width the two secondary actions share one menu.
@@ -89,6 +95,46 @@ struct QuranReaderToolbar: ToolbarContent {
         }
         .tint(tint)
         .accessibilityIdentifier("quran.reader.modeToggle")
+    }
+}
+
+/// Bookmarks the Mushaf page on screen, by its first ayah.
+///
+/// The anchor is the first ayah that *starts* on the page, so a page opening mid-ayah toggles the
+/// next one and never touches an ayah bookmarked from the panel; a page with none starting on it
+/// (a build without page numbers) falls back to the first ayah drawn there. It reads the page and
+/// the store in its own `body`, so a page turn or a mark redraws this button and nothing above it.
+private struct QuranPageBookmarkButton: View {
+    let viewModel: QuranReaderViewModel
+    let userData: QuranUserDataStore
+    let tint: Color
+
+    @Environment(LocalizationManager.self) private var l10n
+
+    var body: some View {
+        let anchor = anchorAyah
+        let isBookmarked = anchor.map { userData.isBookmarked($0) } ?? false
+        Button {
+            if let anchor { userData.toggleBookmark(anchor) }
+        } label: {
+            Label(
+                isBookmarked
+                    ? l10n.string(.quranPageBookmarkRemove)
+                    : l10n.string(.quranPageBookmarkAdd),
+                systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
+            )
+        }
+        .tint(tint)
+        .disabled(anchor == nil)
+        .sensoryFeedback(.impact(weight: .light), trigger: isBookmarked) { old, new in !old && new }
+        .accessibilityIdentifier("quran.reader.pageBookmark")
+    }
+
+    private var anchorAyah: VerseReference? {
+        guard let corpus = viewModel.corpus else { return nil }
+        let number = viewModel.mushaf.page
+        guard let page = corpus.page(number) else { return nil }
+        return page.ayahs.first { corpus.pageNumber(for: $0) == number } ?? page.firstAyah
     }
 }
 

@@ -27,12 +27,24 @@ extension View {
         coordinator: QuranCoordinator,
         panel: AyahPanelViewModel,
         reader: QuranReaderViewModel,
+        userData: QuranUserDataStore,
         palette: ReadingPalette,
         faces: QuranFaces
     ) -> some View {
         modifier(
-            AyahPanelPresentation(coordinator: coordinator, panel: panel, reader: reader, palette: palette, faces: faces)
+            AyahPanelPresentation(
+                coordinator: coordinator, panel: panel, reader: reader, userData: userData, palette: palette, faces: faces
+            )
         )
+    }
+
+    /// The note editor's size where a sheet takes its content's: room on the Mac, nothing on iOS.
+    func quranNoteEditorFrame() -> some View {
+        #if os(macOS)
+        frame(minWidth: 460, idealWidth: 520, minHeight: 360, idealHeight: 420)
+        #else
+        self
+        #endif
     }
 }
 
@@ -42,6 +54,7 @@ private struct AyahPanelPresentation: ViewModifier {
     let coordinator: QuranCoordinator
     let panel: AyahPanelViewModel
     let reader: QuranReaderViewModel
+    let userData: QuranUserDataStore
     let palette: ReadingPalette
     let faces: QuranFaces
 
@@ -82,7 +95,7 @@ private struct AyahPanelPresentation: ViewModifier {
     /// The panel with the reader's palette and faces, set again because a sheet is not guaranteed
     /// to see values the reader computed rather than inherited.
     private func panelView(isInspector: Bool) -> some View {
-        AyahPanel(coordinator: coordinator, panel: panel, reader: reader, isInspector: isInspector)
+        AyahPanel(coordinator: coordinator, panel: panel, reader: reader, userData: userData, isInspector: isInspector)
             .environment(\.readingPalette, palette)
             .environment(\.quranFaces, faces)
     }

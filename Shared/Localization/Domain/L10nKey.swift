@@ -184,6 +184,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case nextWeekAction = "next_week_action"
     case todayAction = "today_action"
     case doneAction = "done_action"
+    /// The note editor's confirm button. Generic: nothing here says what is being saved.
+    case saveAction = "save_action"
+    /// The note editor's cancel button. Generic, as `saveAction` is.
+    case cancelAction = "cancel_action"
     case aboutThisPrayerAction = "about_this_prayer_action"
     case nightSectionTitle = "night_section_title"
     case middleOfNightLabel = "middle_of_night_label"
@@ -264,6 +268,25 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranBookmarksEmpty = "quran_bookmarks_empty"
     case quranBookmarkAdd = "quran_bookmark_add"
     case quranBookmarkRemove = "quran_bookmark_remove"
+    /// The VoiceOver name of a bookmark, as custom content. A noun, not the button's verb: Arabic
+    /// uses a different word for the thing kept than for the act of keeping it.
+    case quranBookmarkTitle = "quran_bookmark_title"
+    /// The VoiceOver value of a bookmarked ayah.
+    case quranBookmarked = "quran_bookmarked"
+    case quranPageBookmarkAdd = "quran_page_bookmark_add"
+    case quranPageBookmarkRemove = "quran_page_bookmark_remove"
+    /// The noun: the editor's VoiceOver label and the VoiceOver name of a note.
+    case quranNote = "quran_note"
+    case quranNoteAdd = "quran_note_add"
+    case quranNoteEdit = "quran_note_edit"
+    case quranNoteDelete = "quran_note_delete"
+    case quranNoteDeleteConfirm = "quran_note_delete_confirm"
+    case quranHighlight = "quran_highlight"
+    case quranHighlightRemove = "quran_highlight_remove"
+    case quranHighlightYellow = "quran_highlight_yellow"
+    case quranHighlightGreen = "quran_highlight_green"
+    case quranHighlightBlue = "quran_highlight_blue"
+    case quranHighlightPink = "quran_highlight_pink"
     case quranContinueReading = "quran_continue_reading"
     case quranSearchPrompt = "quran_search_prompt"
     /// The toolbar button and the search screen's title.

@@ -89,7 +89,7 @@ struct SeparatedReaderView: View {
                             textSize: settings.textSize,
                             translations: translations.translations(for: ayah.id),
                             isSelected: selectedAyah == ayah.id,
-                            highlight: marks.highlight(ayah.id)
+                            marks: marks
                         ) {
                             onSelect(ayah.id)
                         }

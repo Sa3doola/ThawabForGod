@@ -1068,6 +1068,20 @@
         }
       }
     },
+    "save_action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حفظ" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } }
+      }
+    },
+    "cancel_action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إلغاء" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
+      }
+    },
     "done_action" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4436,6 +4450,111 @@
             "value" : "Remove Bookmark"
           }
         }
+      }
+    },
+    "quran_bookmark_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "علامة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bookmark" } }
+      }
+    },
+    "quran_bookmarked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "عليها علامة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bookmarked" } }
+      }
+    },
+    "quran_page_bookmark_add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إضافة علامة على الصفحة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bookmark page" } }
+      }
+    },
+    "quran_page_bookmark_remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إزالة علامة الصفحة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove page bookmark" } }
+      }
+    },
+    "quran_note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "ملاحظة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Note" } }
+      }
+    },
+    "quran_note_add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إضافة ملاحظة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add note" } }
+      }
+    },
+    "quran_note_edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تعديل الملاحظة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit note" } }
+      }
+    },
+    "quran_note_delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حذف الملاحظة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete note" } }
+      }
+    },
+    "quran_note_delete_confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حذف هذه الملاحظة؟" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this note?" } }
+      }
+    },
+    "quran_highlight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تظليل" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Highlight" } }
+      }
+    },
+    "quran_highlight_remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إزالة التظليل" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove highlight" } }
+      }
+    },
+    "quran_highlight_yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "أصفر" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Yellow" } }
+      }
+    },
+    "quran_highlight_green" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "أخضر" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Green" } }
+      }
+    },
+    "quran_highlight_blue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "أزرق" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Blue" } }
+      }
+    },
+    "quran_highlight_pink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "وردي" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } }
       }
     },
     "quran_bookmarks_empty" : {

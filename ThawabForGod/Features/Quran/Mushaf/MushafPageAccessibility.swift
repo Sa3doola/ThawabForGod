@@ -85,6 +85,7 @@ struct MushafPageAccessibilityLayer: View {
     let surahs: [Surah]
     var marginMarkers: [MushafMarginMarker] = []
     let selectedAyah: VerseReference?
+    var marks: QuranAyahMarkSnapshot = .empty
     let frames: [MushafPageElement: CGRect]
     let onSelect: (VerseReference) -> Void
 
@@ -106,6 +107,7 @@ struct MushafPageAccessibilityLayer: View {
                             surahName: surahName(element),
                             margin: marginMarkers.filter { MushafPageElement.ayah($0.ayah) == element }.map(\.kind),
                             isSelected: element == selectedAyah.map(MushafPageElement.ayah),
+                            marks: marks,
                             onSelect: onSelect
                         ))
                         // Reading order, not on-screen position: VoiceOver would otherwise sort
@@ -138,6 +140,7 @@ private struct ElementAccessibility: ViewModifier {
     /// Margin labels that belong to this ayah, read as extra content.
     let margin: [MushafMarginMarker.Kind]
     let isSelected: Bool
+    let marks: QuranAyahMarkSnapshot
     let onSelect: (VerseReference) -> Void
 
     @Environment(LocalizationManager.self) private var l10n
@@ -172,6 +175,8 @@ private struct ElementAccessibility: ViewModifier {
                     AccessibilityCustomContentKey(Text(l10n.string(.quranMargin)), id: "margin"),
                     margin.isEmpty ? nil : Text(margin.map { MarginMarkerLabel.title($0, l10n: l10n) }.joined(separator: ", "))
                 )
+                // The reader's own bookmark, highlight and note, as more custom content.
+                .ayahMarksAccessibility(marks, ayah: reference)
         }
     }
 }

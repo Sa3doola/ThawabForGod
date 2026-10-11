@@ -101,7 +101,7 @@ final class QuranUserDataStore {
         QuranAyahMarks(
             highlight: { [self] in highlight(for: $0) },
             isBookmarked: { [self] in isBookmarked($0) },
-            hasNote: { [self] in note(for: $0) != nil }
+            noteText: { [self] in note(for: $0)?.text }
         )
     }
 

@@ -22,8 +22,8 @@ struct MushafPageContent: View {
     let surahs: [Surah]
     let services: MushafRenderServices
     let selectedAyah: VerseReference?
-    /// Highlight colours of ayahs on this page.
-    var highlights: [VerseReference: HighlightColor] = [:]
+    /// The reader's marks on this page's ayahs.
+    var marks: QuranAyahMarkSnapshot = .empty
     /// Labels for the outer margin (empty when the setting is off).
     var marginMarkers: [MushafMarginMarker] = []
     /// Width of the page's side margin, where the labels are centred.
@@ -115,6 +115,7 @@ struct MushafPageContent: View {
                 surahs: surahs,
                 marginMarkers: marginMarkers,
                 selectedAyah: selectedAyah,
+                marks: marks,
                 frames: elementFrames,
                 onSelect: onSelect
             )
@@ -176,7 +177,7 @@ struct MushafPageContent: View {
                 fontSize: metrics.fontSize,
                 isCentered: metrics.centeredLines.contains(line.number),
                 selectedAyah: selectedAyah,
-                highlights: highlights,
+                highlights: marks.highlights,
                 onSelect: onSelect
             )
         }

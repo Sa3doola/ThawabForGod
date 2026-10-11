@@ -236,11 +236,15 @@ struct MushafUnitView: View {
     @Environment(\.mushafTapHandling) private var tapHandling
 
     var body: some View {
+        // The marks are read here, at the top level of this leaf's body, so this view observes the
+        // store; the pages below get plain values. Nothing is read inside the lazy or geometry
+        // closures further down.
+        let pageMarks = marks.snapshot(of: (firstPage..<(firstPage + unit.pageCount)).flatMap { corpus.page($0)?.ayahs ?? [] })
         Group {
             switch unit {
-            case .spread: spread
-            case .single: pageView(firstPage, gutter: nil)
-            case .widthFit: widthFitted
+            case .spread: spread(pageMarks)
+            case .single: pageView(firstPage, gutter: nil, marks: pageMarks)
+            case .widthFit: widthFitted(pageMarks)
             }
         }
         // Taps on words and lines are measured here (edge zones); a tap anywhere else on the page
@@ -254,11 +258,11 @@ struct MushafUnitView: View {
 
     /// iPhone landscape: the page as wide as the screen and as tall as the page's proportions make
     /// it; the reader scrolls down within the page and swipes sideways to the next one.
-    private var widthFitted: some View {
+    private func widthFitted(_ marks: QuranAyahMarkSnapshot) -> some View {
         GeometryReader { proxy in
             let size = Self.widthFittedPageSize(width: min(proxy.size.width, maxPageWidth ?? .infinity), style: corpus.style)
             ScrollView(.vertical) {
-                pageView(firstPage, gutter: nil)
+                pageView(firstPage, gutter: nil, marks: marks)
                     .frame(width: size.width, height: size.height)
                     .frame(maxWidth: .infinity)
             }
@@ -274,24 +278,24 @@ struct MushafUnitView: View {
         CGSize(width: width, height: (width / style.pageAspectRatio).rounded())
     }
 
-    private var spread: some View {
+    private func spread(_ marks: QuranAyahMarkSnapshot) -> some View {
         // Laid out right-to-left: the first (odd) page is drawn on the right.
         HStack(spacing: 0) {
             if let fold {
                 // Facing pages share one width (the narrower side's) and hug the gutter, so an
                 // off-centre fold never gives them different line lengths.
                 let pageWidth = min(fold.leadingWidth, fold.trailingWidth)
-                pageView(firstPage, gutter: .trailing)
+                pageView(firstPage, gutter: .trailing, marks: marks)
                     .frame(width: pageWidth)
                     .frame(width: fold.leadingWidth, alignment: .trailing)
                 Color.clear
                     .frame(width: fold.gutterWidth)
-                pageView(firstPage + 1, gutter: .leading)
+                pageView(firstPage + 1, gutter: .leading, marks: marks)
                     .frame(width: pageWidth)
                     .frame(width: fold.trailingWidth, alignment: .leading)
             } else {
-                pageView(firstPage, gutter: .trailing)
-                pageView(firstPage + 1, gutter: .leading)
+                pageView(firstPage, gutter: .trailing, marks: marks)
+                pageView(firstPage + 1, gutter: .leading, marks: marks)
             }
         }
         .environment(\.mushafFontSizeCap, sharedFontSize)
@@ -299,9 +303,8 @@ struct MushafUnitView: View {
     }
 
     @ViewBuilder
-    private func pageView(_ number: Int, gutter: HorizontalAlignment?) -> some View {
+    private func pageView(_ number: Int, gutter: HorizontalAlignment?, marks: QuranAyahMarkSnapshot) -> some View {
         if let page = corpus.page(number) {
-            let ayahs = page.ayahs
             MushafPageView(
                 style: corpus.style,
                 page: page,
@@ -309,8 +312,7 @@ struct MushafUnitView: View {
                 surahs: corpus.surahs,
                 services: services,
                 selectedAyah: state.selectedAyah,
-                highlights: highlights(of: ayahs),
-                isBookmarked: ayahs.contains(where: marks.isBookmarked),
+                marks: marks,
                 marginMarkers: settings.showsMarginMarkers ? corpus.marginMarkers(page: number) : [],
                 gutterEdge: gutter,
                 onSelect: onSelect
@@ -318,13 +320,5 @@ struct MushafUnitView: View {
         } else {
             Color.clear
         }
-    }
-
-    private func highlights(of ayahs: [VerseReference]) -> [VerseReference: HighlightColor] {
-        var result: [VerseReference: HighlightColor] = [:]
-        for ayah in ayahs {
-            if let color = marks.highlight(ayah) { result[ayah] = color }
-        }
-        return result
     }
 }

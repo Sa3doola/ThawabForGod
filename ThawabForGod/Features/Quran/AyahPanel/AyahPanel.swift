@@ -19,6 +19,7 @@ struct AyahPanel: View {
     let coordinator: QuranCoordinator
     let panel: AyahPanelViewModel
     let reader: QuranReaderViewModel
+    let userData: QuranUserDataStore
     /// Shown as an inspector: no toolbar (previous / next / Close sit above the Arabic instead).
     let isInspector: Bool
 
@@ -29,7 +30,7 @@ struct AyahPanel: View {
         NavigationStack {
             if let id = coordinator.panelAyah, let ayah = reader.corpus?.ayah(id), let corpus = reader.corpus {
                 AyahPanelContent(
-                    ayah: ayah, corpus: corpus, coordinator: coordinator, panel: panel,
+                    ayah: ayah, corpus: corpus, coordinator: coordinator, panel: panel, userData: userData,
                     isInspector: isInspector, detent: $detent
                 )
             } else {
@@ -47,6 +48,7 @@ private struct AyahPanelContent: View {
     let corpus: QuranCorpus
     let coordinator: QuranCoordinator
     let panel: AyahPanelViewModel
+    let userData: QuranUserDataStore
     let isInspector: Bool
     @Binding var detent: PresentationDetent
 
@@ -80,12 +82,14 @@ private struct AyahPanelContent: View {
     private var language: AppLanguage { l10n.language }
 
     var body: some View {
-        ScrollView {
+        @Bindable var coordinator = coordinator
+        return ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 // A sheet has previous / next in its navigation bar; the inspector has no bar.
                 if isInspector { stepper }
                 arabic
                 actions
+                notePreview
                 sections
             }
             .padding(.horizontal)
@@ -115,6 +119,16 @@ private struct AyahPanelContent: View {
         }
         .onChange(of: arabicSize, initial: true) { _, size in
             arabicLineHeight = TextMeasurer.lineHeight(of: faces.platformFont(.ayahText, size: size)) + Self.arabicLineSpacing
+        }
+        .sheet(item: $coordinator.noteEditorAyah) { editing in
+            if let editedAyah = corpus.ayah(editing) {
+                NoteEditorView(ayah: editedAyah, reference: reference, userData: userData)
+                    // A new ayah is a new draft: the editor's text must not outlive the ayah it was for.
+                    .id(editedAyah.id)
+                    .environment(\.readingPalette, palette)
+                    .environment(\.quranFaces, faces)
+                    .quranNoteEditorFrame()
+            }
         }
     }
 
@@ -257,16 +271,26 @@ private struct AyahPanelContent: View {
     private var actions: some View {
         let text = shareText
         // Labels when they fit on one line (a small phone in Arabic is the tightest), icons otherwise.
+        // The last resort scrolls, so it survives accessibility type sizes.
         return ViewThatFits(in: .horizontal) {
             actionButtons(text: text, labelStyle: .titleAndIcon)
             actionButtons(text: text, labelStyle: .iconOnly)
+            ScrollView(.horizontal, showsIndicators: false) {
+                actionButtons(text: text, labelStyle: .iconOnly)
+            }
         }
         .buttonStyle(.panelAction)
         .sensoryFeedback(.success, trigger: didCopy) { _, copied in copied }
+        .sensoryFeedback(.impact(weight: .light), trigger: userData.isBookmarked(ayah.id)) { _, isBookmarked in
+            isBookmarked
+        }
     }
 
     private func actionButtons(text: String, labelStyle: some LabelStyle) -> some View {
-        HStack(spacing: 8) {
+        let isBookmarked = userData.isBookmarked(ayah.id)
+        let hasNote = userData.note(for: ayah.id) != nil
+        let highlight = userData.highlight(for: ayah.id)
+        return HStack(spacing: 8) {
             Button {
                 Pasteboard.copy(text)
                 didCopy = true
@@ -286,9 +310,72 @@ private struct AyahPanelContent: View {
                 }
             }
             .accessibilityIdentifier("quran.panel.share")
+            Button {
+                userData.toggleBookmark(ayah.id)
+            } label: {
+                Label {
+                    if isBookmarked {
+                        Text(l10n.string(.quranBookmarkRemove))
+                    } else {
+                        Text(l10n.string(.quranBookmarkAdd))
+                    }
+                } icon: {
+                    Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
+                }
+            }
+            .accessibilityIdentifier("quran.panel.bookmark")
+            Button {
+                coordinator.editNote(ayah.id)
+            } label: {
+                Label {
+                    if hasNote {
+                        Text(l10n.string(.quranNoteEdit))
+                    } else {
+                        Text(l10n.string(.quranNoteAdd))
+                    }
+                } icon: {
+                    Image(systemName: hasNote ? "note.text" : "note.text.badge.plus")
+                }
+            }
+            .accessibilityIdentifier("quran.panel.note")
+            Menu {
+                HighlightMenuItems(current: highlight) { userData.setHighlight($0, for: ayah.id) }
+            } label: {
+                Label {
+                    Text(l10n.string(.quranHighlight))
+                } icon: {
+                    Image(systemName: "circle.fill")
+                        .foregroundStyle(highlight.map { palette.highlight($0) } ?? palette.divider)
+                        .overlay { Circle().stroke(palette.ornament, lineWidth: 1) }
+                }
+            }
+            .menuStyle(.button)
+            .accessibilityIdentifier("quran.panel.highlight")
         }
         .labelStyle(labelStyle)
         .fixedSize()
+    }
+
+    /// The note, four lines at most. Tapping it edits.
+    @ViewBuilder
+    private var notePreview: some View {
+        if let note = userData.note(for: ayah.id) {
+            Button {
+                coordinator.editNote(ayah.id)
+            } label: {
+                Text(verbatim: note.text)
+                    .appFont(.body)
+                    .foregroundStyle(palette.text)
+                    .lineLimit(4)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(palette.divider.opacity(0.6), in: .rect(cornerRadius: 10))
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("quran.panel.notePreview")
+        }
     }
 
     // MARK: Sections

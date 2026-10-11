@@ -18,6 +18,9 @@ struct QuranReaderView: View {
     let viewModel: QuranReaderViewModel
     let coordinator: QuranCoordinator
     let panel: AyahPanelViewModel
+    /// The reader's bookmarks, notes and highlights. Only `userData.marks` is built here, which
+    /// reads nothing; the leaves that draw a mark read it.
+    let userData: QuranUserDataStore
     let translations: SeparatedTranslationsModel
     let surahInfo: SurahInfoViewModel
     let faces: QuranFaces
@@ -44,16 +47,17 @@ struct QuranReaderView: View {
             faces: faces,
             services: services,
             translations: translations,
+            marks: userData.marks,
             onSelect: { coordinator.showAyah($0) },
             onNextSurah: { coordinator.open(.surah($0)) },
             onShowSurahInfo: surahInfo.isAvailable ? { coordinator.showSurahInfo($0) } : nil
         )
-            .quranAyahPanel(coordinator: coordinator, panel: panel, reader: viewModel, palette: palette, faces: faces)
+            .quranAyahPanel(coordinator: coordinator, panel: panel, reader: viewModel, userData: userData, palette: palette, faces: faces)
             .navigationTitle(title)
             .toolbarTitleDisplayMode(.inline)
             .quranReaderHidesSystemBack()
             .toolbar {
-                QuranReaderToolbar(viewModel: viewModel, coordinator: coordinator, tint: palette.text, isCompact: isCompact)
+                QuranReaderToolbar(viewModel: viewModel, coordinator: coordinator, userData: userData, tint: palette.text, isCompact: isCompact)
             }
             .quranCompactWidth($isCompact)
             .sheet(isPresented: $coordinator.isSettingsSheetPresented) {
@@ -97,6 +101,7 @@ private struct QuranReaderContent: View {
     let faces: QuranFaces
     let services: MushafRenderServices
     let translations: SeparatedTranslationsModel
+    let marks: QuranAyahMarks
     let onSelect: (VerseReference) -> Void
     let onNextSurah: (Int) -> Void
     let onShowSurahInfo: ((Int) -> Void)?
@@ -130,6 +135,7 @@ private struct QuranReaderContent: View {
                 // phase, `showsMushafPages`), and the value wanted is the one current then.
                 separatedAyah: viewModel.separatedLocation,
                 separatedScrollRequest: viewModel.separatedScrollRequest,
+                marks: marks,
                 translations: translations,
                 onSelect: onSelect,
                 onSeparatedTopAyahChange: viewModel.separatedTopAyahDidChange,
