@@ -181,6 +181,10 @@ final class AppContainer {
     /// Hafs alone in a public clone.
     var quranFaces: QuranFaces { .launch }
 
+    /// The reader's bookmarks, notes, highlights and reading position, in memory and mirrored to
+    /// SwiftData. One for the app; loaded at the end of `init`.
+    let quranUserData: QuranUserDataStore
+
     /// What a Mushaf page needs to draw, handed to the pager.
     var mushafRenderServices: MushafRenderServices {
         MushafRenderServices(pageFonts: quranPageFonts, metricsCache: quranPageMetrics)
@@ -464,6 +468,13 @@ final class AppContainer {
             corpus: hadithRepository
         )
 
+        // One actor behind both protocols; the store is the only thing that holds it.
+        let quranUserDataRepository = QuranUserDataRepository(modelContainer: persistence.container)
+        self.quranUserData = QuranUserDataStore(
+            repository: quranUserDataRepository,
+            positions: quranUserDataRepository
+        )
+
         let prayerTrackerRepository = PrayerTrackerRepository(
             modelContainer: persistence.container
         )
@@ -565,6 +576,12 @@ final class AppContainer {
         // only what is already there. A no-op on every launch after, and a no-op in tests, whose
         // `settingsStore` is injected and never touches `UserDefaults` at all.
         SettingsGroupMigration.run()
+
+        // Last, so every collaborator exists; the store applies edits made before the load lands.
+        quranUserData.load()
+        #if DEBUG
+        quranUserData.applyDebugLaunchOptions(QuranLaunchOptions.current)
+        #endif
     }
 
     // MARK: Prayer calculation

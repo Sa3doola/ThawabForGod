@@ -11,6 +11,7 @@
 struct QuranAyahMarks {
     let highlight: (VerseReference) -> HighlightColor?
     let isBookmarked: (VerseReference) -> Bool
+    let hasNote: (VerseReference) -> Bool
 
-    static let none = QuranAyahMarks(highlight: { _ in nil }, isBookmarked: { _ in false })
+    static let none = QuranAyahMarks(highlight: { _ in nil }, isBookmarked: { _ in false }, hasNote: { _ in false })
 }

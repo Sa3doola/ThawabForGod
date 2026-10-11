@@ -66,6 +66,10 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
     /// `-quranLibrary surah|juz|hizb|page`: start on the Quran tab at the Library with that index
     /// selected. `page` falls back to Surah in a build without pages, as it does for a reader.
     var libraryTab: QuranLibraryTab?
+    /// `-quranResetUserData YES`: forget every bookmark, note and highlight.
+    var resetsUserData = false
+    /// `-quranSeedUserData YES`: add a fixed set of marks (after a reset, if both are given).
+    var seedsUserData = false
 
     /// The launch is scripted into the Quran tab: it names a reader target or a Library index.
     var isQuranLaunch: Bool { readerTarget != nil || libraryTab != nil }
@@ -114,6 +118,8 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
         startsImmersive = bool("quranImmersive") ?? false
         usesPublicData = values["quranData"]?.lowercased() == "public"
         libraryTab = values["quranLibrary"].flatMap(QuranLibraryTab.init(rawValue:))
+        resetsUserData = bool("quranResetUserData") ?? false
+        seedsUserData = bool("quranSeedUserData") ?? false
     }
 
     /// Where the launch asks the reader to open, if anywhere. A page wins over a surah; a surah
