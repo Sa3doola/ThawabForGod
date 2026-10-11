@@ -30,7 +30,14 @@ struct QuranCoordinatorTests {
             settings: QuranReaderSettings(settingsStore: InMemorySettingsStore()),
             allowsImmersive: true
         )
-        return (QuranCoordinator(reader: reader), reader)
+        let database = QuranTestData.publicDatabase
+        let index = QuranTestData.index(database)
+        let search = QuranSearchViewModel(
+            search: QuranSearchRepository(quran: database.corpus, store: ContentPackStore(directory: nil), index: index),
+            translations: TranslationRepository(store: ContentPackStore(directory: nil), index: index),
+            reader: reader
+        )
+        return (QuranCoordinator(reader: reader, search: search), reader)
     }
 
     // MARK: The path

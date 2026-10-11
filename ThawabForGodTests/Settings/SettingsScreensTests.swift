@@ -76,6 +76,19 @@ struct SettingsScreensTests {
             notifications: notifications
         )
         let tipsScreen = TipsSettingsViewModel(resetTips: ResetTipsUseCase(tips: tips))
+        let quranSettingsStore = QuranReaderSettings(settingsStore: store)
+        let quranIndex = QuranTestData.index(QuranTestData.publicDatabase)
+        let quranPacks = ContentPackStore(directory: nil)
+        let quranSettings = QuranSettingsViewModel(
+            settings: quranSettingsStore,
+            reader: QuranReaderViewModel(
+                repository: QuranTestData.repository(QuranTestData.publicDatabase),
+                settings: quranSettingsStore,
+                allowsImmersive: false
+            ),
+            translations: TranslationRepository(store: quranPacks, index: quranIndex),
+            tafsir: TafsirRepository(store: quranPacks, index: quranIndex)
+        )
 
         #if os(macOS)
         let screens = SettingsScreenModels(
@@ -86,6 +99,7 @@ struct SettingsScreensTests {
             reminders: remindersScreen,
             tips: tipsScreen,
             about: AboutViewModel(),
+            quranSettings: quranSettings,
             // Covered on its own in `MacSettingsViewModelTests`, which runs on both platforms
             // because nothing in that view model imports AppKit.
             macIntegration: MacSettingsViewModel(
@@ -102,7 +116,8 @@ struct SettingsScreensTests {
             prayerCalculation: prayerCalculation,
             reminders: remindersScreen,
             tips: tipsScreen,
-            about: AboutViewModel()
+            about: AboutViewModel(),
+            quranSettings: quranSettings
         )
         #endif
 
