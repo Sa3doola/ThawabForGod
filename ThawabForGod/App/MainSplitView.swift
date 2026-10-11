@@ -40,6 +40,12 @@ struct MainSplitView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 320)
         } detail: {
             AppSectionView(container: container, tab: container.router.selectedTab)
+                // Each section's stack is bound to a path of its own type (`[QuranRoute]`,
+                // `[HadithRoute]`, ...). The detail column keeps one navigation state, and handing
+                // it a stack with a different path type under the same identity traps with
+                // `AnyNavigationPath.Error.comparisonTypeMismatch`. A fresh identity per section
+                // gives each its own state; nothing is lost, since every path lives on its coordinator.
+                .id(container.router.selectedTab)
         }
         // `.balanced` rather than the default `.prominentDetail`: the sidebar is four or five
         // rows the reader picks from, not a panel that should shove the page aside to appear.
