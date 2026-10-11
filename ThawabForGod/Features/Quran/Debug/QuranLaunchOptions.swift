@@ -7,7 +7,7 @@
 import CoreGraphics
 import Foundation
 
-/// Launch arguments that put the Quran tab's real reader in a known state, for the UI tests, the golden-page
+/// Launch arguments that put the Quran tab's real reader, or its Library, in a known state, for the UI tests, the golden-page
 /// captures and the performance runs of the Mushaf port (QURAN_MIGRATION_PLAN.md, Q2).
 ///
 /// A slim version of Mushaf's 34 `-debug…` hooks, and **DEBUG only**: the whole type is compiled
@@ -16,6 +16,7 @@ import Foundation
 ///
 ///     -quranPage 50 -quranMode mushaf -quranTheme sepia -quranFollowSystem NO
 ///     -quranSurah 2 -quranAyah 255 -quranMode separated
+///     -quranLibrary juz
 ///
 /// Read from the process's arguments rather than the `UserDefaults` argument domain: the values are
 /// a scripted launch's, not preferences, and this project reads preferences through
@@ -62,6 +63,12 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
     var startsImmersive = false
     /// `-quranData public`: read the public (Tanzil) database even where the full one is bundled.
     var usesPublicData = false
+    /// `-quranLibrary surah|juz|hizb|page`: start on the Quran tab at the Library with that index
+    /// selected. `page` falls back to Surah in a build without pages, as it does for a reader.
+    var libraryTab: QuranLibraryTab?
+
+    /// The launch is scripted into the Quran tab: it names a reader target or a Library index.
+    var isQuranLaunch: Bool { readerTarget != nil || libraryTab != nil }
 
     /// The options this process was launched with.
     static let current = QuranLaunchOptions(arguments: ProcessInfo.processInfo.arguments)
@@ -106,6 +113,7 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
         pageThroughEvery = int("quranPageThroughEvery").flatMap { $0 > 0 ? $0 : nil } ?? 50
         startsImmersive = bool("quranImmersive") ?? false
         usesPublicData = values["quranData"]?.lowercased() == "public"
+        libraryTab = values["quranLibrary"].flatMap(QuranLibraryTab.init(rawValue:))
     }
 
     /// Where the launch asks the reader to open, if anywhere. A page wins over a surah; a surah

@@ -4,9 +4,11 @@
 //
 //  Helpers for the Quran tab's UI tests, adapted from the Mushaf project's `ToolbarActions.swift`.
 //
-//  How a launch works. The DEBUG `-quran…` options bypass onboarding and select the Quran tab, but
-//  only when they name a reader target (`-quranPage`, `-quranSurah`), so every launch below passes
-//  one. The path then starts as `[.reader]`; a test that wants the Library taps Library.
+//  How a launch works. The DEBUG `-quran…` options bypass onboarding and select the Quran tab when
+//  they name a reader target (`-quranPage`, `-quranSurah`: the path then starts as `[.reader]`, and
+//  a test that wants the Library taps Library) or a Library index (`-quranLibrary surah|juz|hizb|
+//  page`: the path is empty and the Library is in front). `launchQuran` is the first,
+//  `launchQuranLibrary` the second.
 //
 //  What is matched on. Controls by `accessibilityIdentifier` only (the toolbar's labels are being
 //  moved to L10nKeys). Two things have no identifier, by design (the note forbids one on a
@@ -27,8 +29,19 @@ extension XCUIApplication {
     /// Launches with the reset and follow-system options, English, and `options` (which must name a
     /// reader target: see the file header). On the Mac, without the windows of an earlier session.
     func launchQuran(_ options: [String]) {
+        launchScripted(options, language: .english)
+    }
+
+    /// Launches into the Library (no reader pushed) with `tab` selected, the reset and
+    /// follow-system options, and `options` (`-quranData public`, `-quranMode …`, `-AppleInterfaceStyle
+    /// Dark`, …). The orientation is set exactly as `launchQuran` sets it.
+    func launchQuranLibrary(_ tab: LibraryTab = .surah, _ options: [String] = [], language: TestLanguage = .english) {
+        launchScripted(["-quranLibrary", tab.rawValue] + options, language: language)
+    }
+
+    private func launchScripted(_ options: [String], language: TestLanguage) {
         launchArguments = [
-            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+            "-AppleLanguages", language.languages, "-AppleLocale", language.locale,
             "-quranResetSettings", "YES", "-quranFollowSystem", "NO",
         ] + options
         #if os(macOS)
@@ -348,32 +361,50 @@ extension XCTestCase {
     /// The numbers of the Library's surah rows currently on screen, from their identifiers.
     @MainActor
     func visibleSurahNumbers(in app: XCUIApplication) -> [Int] {
+        visibleLibraryNumbers(prefix: "surah", in: app)
+    }
+
+    /// The numbers of the Library's rows with identifiers `quran.library.<prefix>.<n>` that are on
+    /// screen (`surah`, `juz`, `hizb`, `quarter`, `page`), sorted.
+    @MainActor
+    func visibleLibraryNumbers(prefix: String, in app: XCUIApplication) -> [Int] {
         let window = app.windows.firstMatch.frame
-        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "quran.library.surah."))
+        let stem = "quran.library.\(prefix)."
+        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", stem))
         var numbers: [Int] = []
         for index in 0..<rows.count {
             let row = rows.element(boundBy: index)
             guard row.exists, window.intersects(row.frame),
-                  let number = Int(row.identifier.dropFirst("quran.library.surah.".count)) else { continue }
+                  let number = Int(row.identifier.dropFirst(stem.count)) else { continue }
             numbers.append(number)
         }
         return numbers.sorted()
     }
 
-    /// Scrolls the Library until the row of surah `number` is hittable, swiping towards it: forward
-    /// when it is past the last visible row, back when it is before the first. Bounded; on giving up
-    /// it fails and says which rows were visible.
+    /// Scrolls the Library until the row of surah `number` is hittable.
     @MainActor
     func scrollToSurahRow(_ number: Int, in app: XCUIApplication, maxScrolls: Int = 20, file: StaticString = #filePath, line: UInt = #line) {
+        scrollToLibraryRow(prefix: "surah", number, in: app, maxScrolls: maxScrolls, file: file, line: line)
+    }
+
+    /// Scrolls the Library until `quran.library.<prefix>.<number>` is hittable, swiping towards it:
+    /// forward when it is past the last visible row, back when it is before the first. Bounded; on
+    /// giving up it fails and says which rows were visible. For the Page grid pass a generous
+    /// `maxScrolls` (a screen holds a few dozen of the 604 cells).
+    @MainActor
+    func scrollToLibraryRow(prefix: String, _ number: Int, in app: XCUIApplication, maxScrolls: Int = 20, file: StaticString = #filePath, line: UInt = #line) {
         let list = app.libraryList
-        let row = app.surahRow(number)
+        let row = app.element(id: "quran.library.\(prefix).\(number)")
         var scrolls = 0
         while !(row.exists && row.isHittable) {
-            let visible = visibleSurahNumbers(in: app)
-            guard scrolls < maxScrolls, let first = visible.first, let last = visible.last else {
-                XCTFail("could not reach surah row \(number); visible rows when giving up: \(visibleSurahNumbers(in: app))", file: file, line: line)
+            let visible = visibleLibraryNumbers(prefix: prefix, in: app)
+            guard scrolls < maxScrolls else {
+                XCTFail("could not reach \(prefix) row \(number); visible rows when giving up: \(visible)", file: file, line: line)
                 return
             }
+            // Nothing of this kind on screen yet (only a Continue reading row): the target is below.
+            let first = visible.first ?? 0
+            let last = visible.last ?? 0
             let forward = number >= first && number <= last ? true : number > last
             #if os(macOS)
             list.scroll(byDeltaX: 0, deltaY: forward ? -300 : 300)
@@ -385,12 +416,218 @@ extension XCTestCase {
     }
 }
 
+// MARK: - The Library
+
+/// The raw values of `-quranLibrary`.
+enum LibraryTab: String {
+    case surah, juz, hizb, page
+
+    /// The segment's position in `quran.library.tabs` (the titles come from the catalog, so tests
+    /// select by position). Page is last, and only where the build has pages.
+    var position: Int {
+        switch self {
+        case .surah: 0
+        case .juz: 1
+        case .hizb: 2
+        case .page: 3
+        }
+    }
+}
+
+/// The interface language of a launch.
+enum TestLanguage {
+    case english, arabic
+
+    var languages: String { self == .english ? "(en)" : "(ar)" }
+    var locale: String { self == .english ? "en_US" : "ar_SA" }
+}
+
+extension XCUIApplication {
+    var libraryQuery: XCUIElement { element(id: "quran.library.query") }
+    var libraryGo: XCUIElement { element(id: "quran.library.go") }
+    var libraryClear: XCUIElement { element(id: "quran.library.clear") }
+    var libraryHint: XCUIElement { element(id: "quran.library.hint") }
+    var libraryError: XCUIElement { element(id: "quran.library.error") }
+    var libraryEmpty: XCUIElement { element(id: "quran.library.empty") }
+    var libraryTabs: XCUIElement { element(id: "quran.library.tabs") }
+    var libraryContinue: XCUIElement { element(id: "quran.library.continue") }
+    var surahInfoAction: XCUIElement { element(id: "quran.library.surahInfo") }
+    var surahInfoFacts: XCUIElement { element(id: "quran.surahInfo.facts") }
+    var surahInfoText: XCUIElement { element(id: "quran.surahInfo.text") }
+    func juzRow(_ number: Int) -> XCUIElement { element(id: "quran.library.juz.\(number)") }
+    func hizbRow(_ number: Int) -> XCUIElement { element(id: "quran.library.hizb.\(number)") }
+    func quarterRow(_ rub: Int) -> XCUIElement { element(id: "quran.library.quarter.\(rub)") }
+    func pageCell(_ number: Int) -> XCUIElement { element(id: "quran.library.page.\(number)") }
+
+    /// The segments of the picker, in order. A segment has no identifier of its own: they are the
+    /// buttons (iOS) or radio buttons (the Mac) inside the element that carries `quran.library.tabs`.
+    var libraryTabSegments: XCUIElementQuery {
+        libraryTabs.descendants(matching: .any).matching(
+            NSPredicate(format: "elementType == %d OR elementType == %d", XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.radioButton.rawValue)
+        )
+    }
+
+    /// How many index tabs the build shows: 3 without pages, 4 with them.
+    var libraryTabCount: Int { libraryTabSegments.count }
+
+    /// Whether this Library has the Page tab (the build has Mushaf pages).
+    var libraryHasPages: Bool { libraryTabCount == 4 }
+
+    /// Types into the field the way a reader does: tap (click on the Mac), then type; `submit` ends
+    /// with Return, which the field's `.submitLabel(.go)` turns into a go.
+    func typeInLibraryField(_ text: String, submit: Bool = false) {
+        libraryQuery.tapOrClick()
+        libraryQuery.typeText(text + (submit ? "\n" : ""))
+    }
+
+    /// Selects the index at `position` in the picker.
+    func selectLibraryTab(_ tab: LibraryTab) {
+        libraryTabSegments.element(boundBy: tab.position).tapOrClick()
+    }
+
+    /// Asks for a surah row's "Surah Info" action: a trailing swipe on iOS, the context menu on the
+    /// Mac (a swipe has no equivalent there). The action may not appear: that is the answer, not a
+    /// failure, where no pack serves the language.
+    func revealSurahInfoAction(on row: XCUIElement) {
+        #if os(macOS)
+        row.rightClick()
+        #else
+        row.swipeLeft()
+        #endif
+    }
+
+    /// The gestures that would reveal a surah-info action, for the flows that assert there is none:
+    /// both swipe directions on iOS (the trailing edge is the left in Arabic), the context click on
+    /// the Mac. No long press: where no context menu is attached it is just a press on the row's
+    /// button and opens the reader.
+    var surahInfoProbeCount: Int {
+        #if os(macOS)
+        1
+        #else
+        2
+        #endif
+    }
+
+    func performSurahInfoProbe(_ index: Int, on row: XCUIElement) {
+        #if os(macOS)
+        row.rightClick()
+        #else
+        if index == 0 { row.swipeLeft() } else { row.swipeRight() }
+        #endif
+    }
+
+    /// Goes back one screen: the navigation bar's leading button on iOS, the toolbar's on the Mac.
+    func tapBack() {
+        #if os(macOS)
+        toolbars.buttons.element(boundBy: 0).click()
+        #else
+        navigationBars.buttons.element(boundBy: 0).tap()
+        #endif
+    }
+
+    /// Discloses a hizb row's quarters: a tap on the disclosure indicator, which has no identifier.
+    /// It sits at the trailing edge of the row on iOS and the leading edge on the Mac, at the row's
+    /// vertical middle; the row's own button covers only the label, so the point is taken from the
+    /// list's frame.
+    func discloseHizb(_ number: Int) {
+        let row = hizbRow(number)
+        let list = libraryList.frame
+        #if os(macOS)
+        let x = list.minX + 14
+        #else
+        let x = list.maxX - 24
+        #endif
+        let origin = windows.firstMatch.frame
+        windows.firstMatch.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: x - origin.minX, dy: row.frame.midY - origin.minY)).tapOrClick()
+    }
+
+    /// Whether any Library row (surah, juz, hizb, quarter, page cell or the Continue reading row)
+    /// carries a label containing `text`. Matched on identifiers so the field's placeholder and the
+    /// hint line are not counted.
+    func libraryRowLabels(containing text: String) -> Int {
+        descendants(matching: .any).matching(NSPredicate(
+            format: "identifier MATCHES %@ AND label CONTAINS %@",
+            "quran\\.library\\.(surah|juz|hizb|quarter|page|continue)(\\..*)?", text
+        )).count
+    }
+}
+
+extension XCTestCase {
+    /// Waits until the Library has loaded: its picker and list are there. Fails on the failure screen.
+    @MainActor
+    func waitForLibrary(_ app: XCUIApplication, timeout: TimeInterval = 20, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(app.libraryTabs.waitForExistence(timeout: timeout), "the Library's picker", file: file, line: line)
+        XCTAssertTrue(app.libraryList.waitForExistence(timeout: timeout), "the Library's list", file: file, line: line)
+        XCTAssertFalse(app.readerRetry.exists, "the Quran data loaded (no Try again)", file: file, line: line)
+    }
+
+    /// Skips unless the Library has the Page tab (full data).
+    @MainActor
+    func requireLibraryPages(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) throws {
+        waitForLibrary(app, file: file, line: line)
+        try XCTSkipUnless(app.libraryHasPages, "This build has no Mushaf pages (public data): the Library has no Page tab.")
+    }
+
+    /// Opens surah `number` from the Library and waits for the reader.
+    @MainActor
+    func openSurahFromLibrary(_ number: Int, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        scrollToSurahRow(number, in: app, file: file, line: line)
+        app.surahRow(number).tapOrClick()
+        waitForReader(app, file: file, line: line)
+    }
+
+    /// A surah's name from a row's label ("number, name, place, ayahs…"): the second part.
+    @MainActor
+    func surahName(ofRow row: XCUIElement) -> String {
+        let parts = row.label.components(separatedBy: ", ")
+        return parts.count >= 2 ? parts[1] : row.label
+    }
+
+    /// What a juz, hizb or quarter row says it starts at: its label is "title, <name> <s>:<a>[, Page n]".
+    @MainActor
+    func startPlace(ofRow row: XCUIElement) -> (name: String, surah: Int, ayah: Int, page: Int?)? {
+        let parts = row.label.components(separatedBy: ", ")
+        guard parts.count >= 2,
+              let match = parts[1].range(of: #"^(.*) (\d+):(\d+)$"#, options: .regularExpression) else { return nil }
+        let reference = String(parts[1][match])
+        let pieces = reference.split(separator: " ")
+        guard let numbers = pieces.last?.split(separator: ":"), numbers.count == 2,
+              let surah = Int(numbers[0]), let ayah = Int(numbers[1]) else { return nil }
+        let name = pieces.dropLast().joined(separator: " ")
+        let page = row.label.range(of: #"Page (\d+)"#, options: .regularExpression)
+            .flatMap { Int(row.label[$0].dropFirst("Page ".count)) }
+        return (name, surah, ayah, page)
+    }
+
+    /// Waits until something on screen carries `text` in its label or value (a bar title, an ayah).
+    @MainActor
+    func waitForText(_ text: String, in app: XCUIApplication, timeout: TimeInterval = 15) -> Bool {
+        app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text))
+            .firstMatch.waitForExistence(timeout: timeout)
+    }
+
+    /// Waits until the field's clear button is gone (the field is empty) or there.
+    @MainActor
+    func waitForFieldText(_ present: Bool, in app: XCUIApplication, timeout: TimeInterval = 10) -> Bool {
+        present ? app.libraryClear.waitForExistence(timeout: timeout) : app.libraryClear.waitForNonExistence(timeout: timeout)
+    }
+
+    /// Waits until `element` is selected (a Page cell that is the reader's current page).
+    @MainActor
+    func waitUntilSelected(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
+}
+
 // MARK: - Screenshots
 
 extension XCTestCase {
     /// Attaches a screenshot named `<device>-<screen>-<theme>` and, when the runner has
-    /// `QURAN_SCREENSHOT_DIR` (pass `TEST_RUNNER_QURAN_SCREENSHOT_DIR=…/Screenshots/quran-migration/M5/M5.1`
-    /// to xcodebuild), also writes `<name>.png` there. The directory is git-ignored; simulator
+    /// `QURAN_SCREENSHOT_DIR` (pass `TEST_RUNNER_QURAN_SCREENSHOT_DIR=…/Screenshots/quran-migration/M5/<task>`
+    /// to xcodebuild; M5.2's is `M5/M5.2`), also writes `<name>.png` there. The directory is git-ignored; simulator
     /// runners share the host's file system. XCUITest cannot read a bar's colour, so these are for
     /// eyes, not assertions.
     @MainActor

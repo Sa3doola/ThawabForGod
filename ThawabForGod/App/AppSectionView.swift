@@ -55,7 +55,7 @@ struct AppSectionView: View {
         )
     }
 
-    /// The Quran: the Library at the root, and the reader pushed over it.
+    /// The Quran: the Library at the root, with the reader or a surah's introduction pushed over it.
     ///
     /// Driven from a typed path on `QuranCoordinator`, so a route from outside (a verse link, a
     /// quick action) can open the reader without reaching into the view tree. The reader view model
@@ -65,9 +65,10 @@ struct AppSectionView: View {
     private var quran: some View {
         @Bindable var coordinator = container.quranCoordinator
         let viewModel = container.quranReaderViewModel
+        let library = container.quranLibraryViewModel
 
         return NavigationStack(path: $coordinator.path) {
-            QuranLibraryView(viewModel: viewModel, coordinator: container.quranCoordinator)
+            QuranLibraryView(viewModel: library, coordinator: container.quranCoordinator)
                 .navigationDestination(for: QuranRoute.self) { route in
                     switch route {
                     case .reader:
@@ -80,9 +81,16 @@ struct AppSectionView: View {
                         #if DEBUG
                         .quranLaunchHooks(viewModel: viewModel, container: container)
                         #endif
+                    case .surahInfo(let surah):
+                        SurahInfoView(viewModel: container.quranSurahInfoViewModel, surah: surah)
                     }
                 }
         }
+        // The Library and surah info draw a QUL face too; until now only the reading surface set this.
+        .environment(\.quranFaces, container.quranFaces)
+        // On the stack, not only on the root: when the reader is the first screen of the session the
+        // index is built behind it, so the root's first frame already has its rows.
+        .task { await library.load(language: container.localizationManager.language) }
         .quranSectionChrome(coordinator: container.quranCoordinator, viewModel: viewModel)
     }
 

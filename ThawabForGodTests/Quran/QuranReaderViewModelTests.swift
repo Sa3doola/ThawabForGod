@@ -23,51 +23,6 @@ struct QuranReaderViewModelTests {
 
     // MARK: Doubles and helpers
 
-    /// A repository that reads the public database through the real code, counts the reads, and
-    /// fails on request.
-    actor CountingQuranRepository: QuranRepositoring {
-        private let base = QuranTestData.repository(QuranTestData.publicDatabase)
-        private(set) var capabilityReads = 0
-        private(set) var corpusReads = 0
-        private var failing = false
-
-        func setFailing(_ failing: Bool) {
-            self.failing = failing
-        }
-
-        func capabilities() throws -> QuranCapabilities {
-            capabilityReads += 1
-            if failing { throw StubError() }
-            return .text
-        }
-
-        func loadCorpus(style: MushafStyleID) async throws -> QuranCorpus {
-            corpusReads += 1
-            if failing { throw StubError() }
-            return try await base.loadCorpus(style: style)
-        }
-
-        func surahs(style: MushafStyleID) async throws -> [Surah] {
-            try await base.surahs(style: style)
-        }
-
-        func page(_ number: Int, style: MushafStyleID) async throws -> MushafPage {
-            try await base.page(number, style: style)
-        }
-
-        func ayahs(surah: Int, style: MushafStyleID) async throws -> [Ayah] {
-            try await base.ayahs(surah: surah, style: style)
-        }
-
-        func pageNumber(for ayah: VerseReference, style: MushafStyleID) async throws -> Int {
-            try await base.pageNumber(for: ayah, style: style)
-        }
-
-        func metadata(style: MushafStyleID) async throws -> QuranMetadata {
-            try await base.metadata(style: style)
-        }
-    }
-
     /// Every key the reader's settings own, read back from the store whatever type it was written as.
     /// The same helper `QuranReaderSettingsTests` uses; kept here because it is private there.
     private static func storedKeys(in store: InMemorySettingsStore) -> Set<SettingsKey> {

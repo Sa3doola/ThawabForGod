@@ -118,5 +118,55 @@ struct QuranLaunchOptionsTests {
         #expect(settings.theme == .dark)
         #expect(settings.displayMode == .separated)
     }
+
+    // MARK: -quranLibrary and isQuranLaunch (M5.2)
+
+    @Test func quranLibraryNamesAnIndex() {
+        #expect(QuranLaunchOptions(arguments: ["-quranLibrary", "juz"]).libraryTab == .juz)
+    }
+
+    /// Each raw value names its own index, `page` included (it falls back to Surah in a build without pages).
+    @Test func everyLibraryIndexHasItsOwnValue() {
+        for tab in QuranLibraryTab.allCases {
+            #expect(QuranLaunchOptions(arguments: ["-quranLibrary", tab.rawValue]).libraryTab == tab)
+        }
+        #expect(QuranLaunchOptions(arguments: ["-quranLibrary", "page"]).libraryTab == .page)
+    }
+
+    @Test func anUnknownLibraryIndexHasNoTab() {
+        #expect(QuranLaunchOptions(arguments: ["-quranLibrary", "verse"]).libraryTab == nil)
+        #expect(QuranLaunchOptions(arguments: ["-quranLibrary"]).libraryTab == nil)
+    }
+
+    @Test func aLibraryTabAloneIsAQuranLaunch() {
+        let options = QuranLaunchOptions(arguments: ["-quranLibrary", "surah"])
+        #expect(options.libraryTab == .surah)
+        #expect(options.readerTarget == nil)
+        #expect(options.isQuranLaunch)
+    }
+
+    @Test func aReaderTargetAloneIsAQuranLaunch() {
+        let options = QuranLaunchOptions(arguments: ["-quranPage", "50"])
+        #expect(options.libraryTab == nil)
+        #expect(options.readerTarget == .page(50))
+        #expect(options.isQuranLaunch)
+    }
+
+    @Test func aLibraryTabAndAReaderTargetTogetherAreAQuranLaunch() {
+        let options = QuranLaunchOptions(arguments: ["-quranLibrary", "hizb", "-quranSurah", "2"])
+        #expect(options.libraryTab == .hizb)
+        #expect(options.readerTarget == .surah(2))
+        #expect(options.isQuranLaunch)
+    }
+
+    @Test func aLaunchWithNeitherIsNotAQuranLaunch() {
+        #expect(!QuranLaunchOptions(arguments: []).isQuranLaunch)
+        #expect(!QuranLaunchOptions(arguments: ["-AppleLanguages", "(en)"]).isQuranLaunch)
+    }
+
+    /// An index name this build does not know names nothing, so it does not start the Quran tab either.
+    @Test func anUnknownLibraryIndexIsNotAQuranLaunch() {
+        #expect(!QuranLaunchOptions(arguments: ["-quranLibrary", "verse"]).isQuranLaunch)
+    }
 }
 #endif

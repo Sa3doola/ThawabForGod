@@ -146,6 +146,14 @@ final class AppContainer {
     /// tab's root and the reader. Touches no disk until its first `load()`.
     let quranReaderViewModel: QuranReaderViewModel
 
+    /// Whether surah info exists in this interface language, and the introduction being read. One
+    /// for the section, over the reader's corpus.
+    let quranSurahInfoViewModel: SurahInfoViewModel
+
+    /// The Library's indexes, field and tab: one for the section, built before any view so a
+    /// rebuilt view tree finds them as they were left.
+    let quranLibraryViewModel: QuranLibraryViewModel
+
     /// Page measurements for the session, measured off the main actor and read synchronously by the
     /// pages (T13). One per app, where Mushaf had a `static let shared`.
     let quranPageMetrics = PageMetricsCache()
@@ -366,8 +374,19 @@ final class AppContainer {
         self.quranSearch = QuranSearchRepository(quran: quranDatabase.corpus, store: quranPacks, index: quranAyahIndex)
         self.quranTranslations = TranslationRepository(store: quranPacks, index: quranAyahIndex)
         self.quranTafsir = TafsirRepository(store: quranPacks, index: quranAyahIndex)
-        self.quranSurahInfo = SurahInfoRepository(store: quranPacks)
+        let quranSurahInfo = SurahInfoRepository(store: quranPacks)
+        self.quranSurahInfo = quranSurahInfo
         self.quranPageFonts = FontPackStore()
+        #if DEBUG
+        // A scripted launch's reader choices are written before the settings object, the view models
+        // or any view exist, through the settings type itself so the key mapping stays in one place.
+        // The throwaway object is told the build can do everything, so `-quranMode mushaf` is stored
+        // like a reader's choice; the real object then reads it and judges it against what the
+        // database turns out to carry.
+        if QuranLaunchOptions.current.isQuranLaunch {
+            QuranLaunchOptions.current.apply(to: QuranReaderSettings(settingsStore: settingsStore, capabilities: [.text, .mushafPages]))
+        }
+        #endif
         let quranReaderSettings = QuranReaderSettings(settingsStore: settingsStore)
         self.quranReaderSettings = quranReaderSettings
         let quranReaderViewModel = QuranReaderViewModel(
@@ -375,6 +394,9 @@ final class AppContainer {
             settings: quranReaderSettings
         )
         self.quranReaderViewModel = quranReaderViewModel
+        let quranSurahInfoViewModel = SurahInfoViewModel(repository: quranSurahInfo, reader: quranReaderViewModel)
+        self.quranSurahInfoViewModel = quranSurahInfoViewModel
+        self.quranLibraryViewModel = QuranLibraryViewModel(reader: quranReaderViewModel, surahInfo: quranSurahInfoViewModel)
         self.quranCoordinator = QuranCoordinator(reader: quranReaderViewModel)
 
         // The same three links again, over the two Sahihs. Another file and the same
@@ -423,7 +445,7 @@ final class AppContainer {
         // A scripted launch into the Quran reader (golden pages, UI tests, performance runs) starts
         // on the Quran tab and past onboarding, for this launch only: nothing is written, so the
         // flag is still unset next time.
-        let quranLaunch = QuranLaunchOptions.current.readerTarget != nil
+        let quranLaunch = QuranLaunchOptions.current.isQuranLaunch
         let router = AppRouter(hasCompletedOnboarding: onboardingRepository.hasCompletedOnboarding || quranLaunch)
         if quranLaunch { router.selectedTab = .quran }
         #else
@@ -494,6 +516,8 @@ final class AppContainer {
         // stored properties because it uses `self`; the place itself is applied by
         // `QuranLaunchHooks`, in order, once the reader has loaded.
         if QuranLaunchOptions.current.readerTarget != nil { quranCoordinator.openReader() }
+        // A request, judged by the view model's own getter once the index exists.
+        if let tab = QuranLaunchOptions.current.libraryTab { quranLibraryViewModel.tab = tab }
         #endif
 
         // An install that predates the App Group has its preferences in the process's own

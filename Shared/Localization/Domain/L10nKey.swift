@@ -235,8 +235,6 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// The reader's leading button, which returns to the chapter and part list. Not `libraryTitle`,
     /// which is Home's menu and reads differently in Arabic.
     case quranLibrary = "quran_library"
-    case quranSectionSurahs = "quran_section_surahs"
-    case quranSectionJuz = "quran_section_juz"
     /// Precedes a number — "Juz 7", "جزء ٧" — rather than carrying one, because the digits go
     /// through `LocalizationManager` and a format string would take that away from it.
     case quranJuzLabel = "quran_juz_label"
@@ -287,6 +285,51 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// VoiceOver for an ayah on a Mushaf page — "Al-Fatihah, ayah 2". `%1$@` the surah name,
     /// `%2$@` the ayah number.
     case quranSurahAyah = "quran_surah_ayah"
+
+    // The Library: the field, its example and failures, the index picker and its tabs, the rows
+
+    /// The field's placeholder on a build with Mushaf pages.
+    case quranFieldPlaceholderPages = "quran_field_placeholder_pages"
+    /// The field's placeholder on the public build, where there are no pages to type.
+    case quranFieldPlaceholderSurahs = "quran_field_placeholder_surahs"
+    /// The field's clear button, read by VoiceOver.
+    case quranClear = "quran_clear"
+    /// The button that goes to what was typed.
+    case quranGo = "quran_go"
+    /// The example line under the field. Four arguments, each already formatted by the caller: the
+    /// first example (a page or a surah), the ayah reference, the juz number and the hizb number.
+    case quranExample = "quran_example"
+    /// The failure for a number that names nothing, on a build with Mushaf pages.
+    case quranNotFoundPages = "quran_not_found_pages"
+    /// The failure for a number that names nothing, on the public build.
+    case quranNotFoundSurahs = "quran_not_found_surahs"
+    /// The failure for a page asked of the public build, which has none.
+    case quranPagesUnavailable = "quran_pages_unavailable"
+    /// The empty state of a filtered surah list.
+    case quranNoSurahMatch = "quran_no_surah_match"
+    /// The picker's VoiceOver label. Not `quranLibrary`: same Arabic, different English.
+    case quranIndex = "quran_index"
+    /// The four index tabs, in the order the Library shows them.
+    case quranTabSurah = "quran_tab_surah"
+    case quranTabJuz = "quran_tab_juz"
+    case quranTabHizb = "quran_tab_hizb"
+    case quranTabPage = "quran_tab_page"
+    /// Followed by a count, already formatted — "Ayahs: 286" — on a surah row.
+    case quranAyahsLabel = "quran_ayahs_label"
+    /// A page's number as a label, `%@` the number — "Page 293".
+    case quranPageNumber = "quran_page_number"
+
+    // The surah-info screen: its action, its four facts and the text it has none of
+
+    /// The swipe and context-menu action that opens a surah's introduction.
+    case quranSurahInfo = "quran_surah_info"
+    case quranSurahInfoRevelation = "quran_surah_info_revelation"
+    case quranSurahInfoAyahs = "quran_surah_info_ayahs"
+    case quranSurahInfoPages = "quran_surah_info_pages"
+    /// The juz a surah starts in. Its value is a `quranJuzNumber`.
+    case quranSurahInfoStartsIn = "quran_surah_info_starts_in"
+    /// Shown where the interface language has no surah-info pack.
+    case quranSurahInfoUnavailable = "quran_surah_info_unavailable"
 
     // MARK: Tafsir
 

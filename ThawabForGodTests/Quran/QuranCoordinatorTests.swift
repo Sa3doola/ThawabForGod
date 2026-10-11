@@ -159,6 +159,99 @@ struct QuranCoordinatorTests {
         #expect(reader.separatedSurah == 2)
         #expect(reader.location == VerseReference(surah: 2, verse: 255))
     }
+
+    // MARK: Surah info (M5.2)
+
+    /// Pushed from a Library row with nothing else on the path: surah info alone above the root.
+    @Test func showSurahInfoFromTheRootPushesIt() {
+        let (coordinator, _) = makeCoordinator()
+
+        coordinator.showSurahInfo(18)
+
+        #expect(coordinator.path == [.surahInfo(18)])
+        #expect(!coordinator.isReaderOnTop)
+    }
+
+    /// Asking for the screen already in front pushes nothing.
+    @Test func showSurahInfoTwiceGivesItOnce() {
+        let (coordinator, _) = makeCoordinator()
+
+        coordinator.showSurahInfo(18)
+        coordinator.showSurahInfo(18)
+
+        #expect(coordinator.path == [.surahInfo(18)])
+    }
+
+    /// From the reader, surah info sits above it, and the reader is still the first screen on the path.
+    @Test func showSurahInfoWithTheReaderOpenSitsAboveIt() {
+        let (coordinator, _) = makeCoordinator()
+        coordinator.open(.surah(2))
+
+        coordinator.showSurahInfo(18)
+
+        #expect(coordinator.path == [.reader, .surahInfo(18)])
+        #expect(!coordinator.isReaderOnTop)
+    }
+
+    /// Opening the reader from surah info replaces the stack with the reader: one reader, nothing above it.
+    @Test func openFromSurahInfoReplacesTheStackWithTheReader() {
+        let (coordinator, _) = makeCoordinator()
+        coordinator.showSurahInfo(18)
+
+        coordinator.open(.surah(2))
+
+        #expect(coordinator.path == [.reader])
+        #expect(coordinator.isReaderOnTop)
+    }
+
+    @Test func popToRootEmptiesSurahInfoToo() {
+        let (coordinator, _) = makeCoordinator()
+        coordinator.open(.surah(2))
+        coordinator.showSurahInfo(18)
+
+        coordinator.popToRoot()
+
+        #expect(coordinator.path.isEmpty)
+    }
+
+    // MARK: Continue reading (M5.2)
+
+    @Test func aFreshCoordinatorCannotContinueReading() {
+        let (coordinator, _) = makeCoordinator()
+        #expect(!coordinator.canContinueReading, "there is no place yet")
+    }
+
+    /// The reader is on the path, so there is nothing to continue to; the same holds under surah info.
+    @Test func continueReadingIsOfferedOnlyWhileTheReaderIsOffTheStack() {
+        let (coordinator, _) = makeCoordinator()
+        coordinator.open(.surah(2))
+        #expect(!coordinator.canContinueReading)
+
+        coordinator.showSurahInfo(18)
+        #expect(!coordinator.canContinueReading, "the reader is still on the path, under surah info")
+    }
+
+    @Test func continueReadingIsOfferedAfterThePopToRoot() {
+        let (coordinator, _) = makeCoordinator()
+        coordinator.open(.surah(2))
+
+        coordinator.popToRoot()
+
+        #expect(coordinator.canContinueReading)
+    }
+
+    /// Surah info pushed alone, after the reader was shown and popped, keeps the place: the reader is not
+    /// on the path, and it was shown in this process.
+    @Test func continueReadingSurvivesSurahInfoPushedAlone() {
+        let (coordinator, _) = makeCoordinator()
+        coordinator.open(.surah(2))
+        coordinator.popToRoot()
+
+        coordinator.showSurahInfo(18)
+
+        #expect(coordinator.path == [.surahInfo(18)])
+        #expect(coordinator.canContinueReading)
+    }
 }
 
 /// The external routes that land in the Quran tab, driven through a real container.
