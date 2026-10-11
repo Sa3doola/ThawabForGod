@@ -15,6 +15,7 @@ Rules:
 - Numbers shown to the user go through `LocalizationManager`. Quran text uses `Text(verbatim:)` and is never modified.
 - Follow the isolation in the note. Heavy work off the main actor. No `@unchecked Sendable`/`nonisolated(unsafe)` without a comment saying why.
 - `#if os` only in platform glue files. No `print`. No new packages. Never edit `project.pbxproj` (new files are picked up by synchronized groups).
+- Lean mode: keep your report under 25 lines; don't paste code back.
 - Add `.accessibilityIdentifier("quran.<screen>.<element>")` to anything the note's UI flows tap.
 - Don't run builds or tests; the main agent does.
 

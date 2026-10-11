@@ -19,4 +19,6 @@ Check, in this order:
 5. **Project rules**: `AppContainer` injection, coordinator navigation, `Theme`/`AppColor`, `L10nKey`, `LocalizationManager` digits, `SettingsStore` writing only chosen keys, `Shared/` stays dependency-light, no hand-edited `project.pbxproj`.
 6. **Tests**: do they prove the acceptance checks, or only that code runs?
 
+**Budget (lean mode):** read the diff and only the files it touches; at most 40 lines of output; one pass. Point 6 (tests) is skipped: there are no automated tests in lean mode, so judge instead whether the design note's manual checklist covers the risky paths.
+
 Return a list, each item with `file:line`, grouped as **Blocking** (must fix before commit), **Should fix** (fix now unless the main agent gives a reason), **Later** (goes in the stop report). End with "Approve" or "Changes needed". Keep it short; no praise, no restating the diff.

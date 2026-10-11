@@ -82,6 +82,18 @@ Agent definitions are written in `docs/quran-migration/agents/` and copied to `.
 
 A tiny task (a one-file fix) may use a three-line design note and skip step 2 and the UI tests, but never skips steps 1, 4, 7. Rules: parallel subagents only on disjoint files; **only the main agent runs `xcodebuild`** (parallel builds fight over DerivedData); subagents can't start subagents, so the main agent runs every step. Design notes are committed with their task.
 
+### Lean mode (current, from M5.2a, 2026-10-11)
+
+The full pipeline used most of a week's usage in M5.0-M5.2, mostly on 400-1,000-line design notes and simulator test/screenshot runs. Until Saad switches it back:
+
+- **Main session on Sonnet** (`/model sonnet`). Opus is used only through `quran-architect` and `quran-reviewer`.
+- **Per task:** architect (opus, note ≤ 120 lines) → at most 3 `feature-implementer`s (sonnet) → `l10n-porter` (haiku) → **build only** (iOS simulator + macOS; no test runs) → `rules-checker` (haiku) → `quran-reviewer` (opus, ≤ 40 lines, one pass; a second pass only if it found Blocking items) → commit.
+- **Skipped:** `test-porter`, `ui-test-writer`, running unit or UI tests, screenshots, golden pages. **Saad tests** from the checklist in each design note and reports back. `migration-scout` only for a Mushaf folder not inventoried yet.
+- Build output is filtered (`xcodebuild … -quiet 2>&1 | grep -E "error:|warning:" | head -40`) so logs don't fill the context.
+- Small fixes (one or two files) skip the architect and go straight implement → build → rules-checker → reviewer.
+- The commit body keeps the `Agents:` line and adds `Tests: not run (lean mode); Saad's checklist in design/<task>.md`.
+- Tests that no longer compile after a change are fixed by the main agent only if the app target's build needs it; otherwise they're listed for Saad's test pass.
+
 ## 5. What Saad does
 
 1. Review each milestone's stop report and screenshots before starting the next.
