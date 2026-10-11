@@ -13,7 +13,10 @@ nonisolated enum AyahPanelLayout {
         #if os(macOS)
         true
         #else
-        !isCompact && size.width > size.height
+        // Never on iOS: an `.inspector` attached to the reader, which is pushed inside the split
+        // view's detail column, pops the reader as soon as it is pushed (found on an iPad simulator).
+        // The sheet is the panel there, at every width.
+        false
         #endif
     }
 }
@@ -56,9 +59,8 @@ private struct AyahPanelPresentation: ViewModifier {
             .sheet(isPresented: $coordinator.isPanelSheetPresented) {
                 panelView(isInspector: false)
             }
-            .inspector(isPresented: $coordinator.isPanelInspectorPresented) {
+            .quranPanelInspector(isPresented: $coordinator.isPanelInspectorPresented) {
                 panelView(isInspector: true)
-                    .inspectorColumnWidth(min: 320, ideal: 380, max: 480)
             }
             // After the inspector, so it measures the reader at full width. Measured inside, the
             // inspector's own column would narrow the reader, flip the layout and close it again.
@@ -83,5 +85,19 @@ private struct AyahPanelPresentation: ViewModifier {
         AyahPanel(coordinator: coordinator, panel: panel, reader: reader, isInspector: isInspector)
             .environment(\.readingPalette, palette)
             .environment(\.quranFaces, faces)
+    }
+}
+
+private extension View {
+    /// The inspector, on the Mac only. See `AyahPanelLayout.usesInspector`.
+    @ViewBuilder
+    func quranPanelInspector<Panel: View>(isPresented: Binding<Bool>, @ViewBuilder panel: () -> Panel) -> some View {
+        #if os(macOS)
+        inspector(isPresented: isPresented) {
+            panel().inspectorColumnWidth(min: 320, ideal: 380, max: 480)
+        }
+        #else
+        self
+        #endif
     }
 }
