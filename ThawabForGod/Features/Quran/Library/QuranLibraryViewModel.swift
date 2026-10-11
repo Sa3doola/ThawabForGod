@@ -99,6 +99,16 @@ final class QuranLibraryViewModel {
         !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    /// The trimmed field text when it is Arabic words the text search can take; nil otherwise. A
+    /// name in Latin letters, a number or an address is the go-to's, not the search's.
+    var textSearchSuggestion: String? {
+        guard case .name = input else { return nil }
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasArabic = text.unicodeScalars.contains { (0x0600...0x06FF).contains($0.value) }
+        guard hasArabic, QuranSearchQuery(text, scope: .quran) != nil else { return nil }
+        return text
+    }
+
     var hasSurahInfo: Bool { surahInfo.isAvailable }
 
     /// The reader's place right now. Reads state the reader changes on every page turn, so a `body`

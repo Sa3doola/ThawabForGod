@@ -13,6 +13,8 @@ nonisolated enum QuranRoute: Hashable, Sendable {
     /// A surah's introduction, pushed from a Library row. Offered only where a surah-info pack
     /// exists in the interface language.
     case surahInfo(Int)
+    /// Search. No payload: the text, scope and results live on `QuranSearchViewModel`.
+    case search
 }
 
 /// Where the Quran tab is, kept outside the view tree like every other section's.
@@ -40,8 +42,11 @@ final class QuranCoordinator {
     /// Not state of the coordinator: nothing should observe it for the reader's sake.
     @ObservationIgnored private let reader: QuranReaderViewModel
 
-    init(reader: QuranReaderViewModel) {
+    @ObservationIgnored private let search: QuranSearchViewModel
+
+    init(reader: QuranReaderViewModel, search: QuranSearchViewModel) {
         self.reader = reader
+        self.search = search
     }
 
     /// The reader has been pushed at least once in this process, so there is a place to go back to.
@@ -57,6 +62,14 @@ final class QuranCoordinator {
     /// Pushes a surah's introduction, unless it is already the screen in front.
     func showSurahInfo(_ surah: Int) {
         if path.last != .surahInfo(surah) { path.append(.surahInfo(surah)) }
+    }
+
+    /// Pushes Search, unless it is already the screen in front. A prefill replaces the text and
+    /// resets the scope to the Arabic text. The reader, if on the stack, stays `path[0]`.
+    func showSearch(prefill: String? = nil) {
+        closePanel()
+        if let prefill { search.prefill(prefill) }
+        if path.last != .search { path.append(.search) }
     }
 
     // MARK: Ayah panel

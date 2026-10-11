@@ -11,10 +11,8 @@ import Testing
 /// build) and QUL's KFGQPC Hafs (the full build). Highlighting re-folds each displayed word and
 /// compares it with the query, so it has to work on either encoding of the same verse.
 ///
-/// It is also where the one known gap is pinned. The index is over the imla'i spelling and the
-/// screen shows the Uthmani, so a word whose two spellings fold apart is *found* but not
-/// *highlighted* — the search is right, the mark is missing. A change that closes the gap will
-/// fail `aWordSpelledDifferentlyInUthmaniIsFoundButNotMarked` on purpose.
+/// The index is over the imla'i spelling and the screen shows the Uthmani, so a word whose two
+/// spellings fold apart is marked through a highlight-only reading of the dagger alef.
 struct QuranSearchHighlightTests {
 
     static let databases = [QuranTestData.publicDatabase] + (QuranTestData.hasFullData ? [QuranTestData.fullDatabase] : [])
@@ -67,10 +65,10 @@ struct QuranSearchHighlightTests {
         #expect(try highlighted("فرعون", in: text).isEmpty)
     }
 
-    /// The gap, pinned: السماوات finds 2:164 — the index is imla'i — but the Uthmani ٱلسَّمَٰوَٰتِ
-    /// folds to السموت, so nothing is marked.
+    /// The former gap, closed: السماوات finds 2:164 — the index is imla'i — and the Uthmani
+    /// ٱلسَّمَٰوَٰتِ, which folds to السموت, is marked through the highlight-only dagger-alef reading.
     @Test(arguments: databases)
-    func aWordSpelledDifferentlyInUthmaniIsFoundButNotMarked(_ database: QuranDatabase) async throws {
+    func aWordSpelledDifferentlyInUthmaniIsFoundAndMarked(_ database: QuranDatabase) async throws {
         let verse = VerseReference(surah: 2, verse: 164)
         let query = try #require(QuranSearchQuery("السماوات", scope: .quran))
         let search = QuranSearchRepository(quran: database.corpus, store: ContentPackStore(directory: nil), index: QuranTestData.index(database))
@@ -79,6 +77,6 @@ struct QuranSearchHighlightTests {
         let text = try await text(of: verse, in: database)
 
         #expect(found.exact.contains(verse))
-        #expect(QuranSearchHighlight.arabicRanges(in: text, query: query).isEmpty)
+        #expect(!QuranSearchHighlight.arabicRanges(in: text, query: query).isEmpty)
     }
 }

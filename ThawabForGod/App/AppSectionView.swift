@@ -86,6 +86,12 @@ struct AppSectionView: View {
                         #endif
                     case .surahInfo(let surah):
                         SurahInfoView(viewModel: container.quranSurahInfoViewModel, surah: surah)
+                    case .search:
+                        QuranSearchView(
+                            viewModel: container.quranSearchViewModel,
+                            coordinator: container.quranCoordinator,
+                            settings: container.quranReaderSettings
+                        )
                     }
                 }
         }

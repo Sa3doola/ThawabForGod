@@ -31,6 +31,15 @@ struct QuranReaderToolbar: ToolbarContent {
             .tint(tint)
             .accessibilityIdentifier("quran.reader.library")
         }
+        ToolbarItem(placement: .primaryAction) {
+            Button {
+                coordinator.showSearch()
+            } label: {
+                QuranToolbarLabel(key: .quranSearch, systemImage: "magnifyingglass")
+            }
+            .tint(tint)
+            .accessibilityIdentifier("quran.reader.search")
+        }
         if viewModel.canSwitchDisplayMode {
             ToolbarItem(placement: .primaryAction) {
                 displayModeButton

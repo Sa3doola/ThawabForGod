@@ -17,8 +17,6 @@ nonisolated enum QuranSearchScope: String, CaseIterable, Identifiable, Sendable 
     case quran
     /// The bundled translation packs (`pack_fts`).
     case translations
-    /// Surah names, Arabic or English, and numbers.
-    case surahNames
 
     var id: Self { self }
 
@@ -26,7 +24,6 @@ nonisolated enum QuranSearchScope: String, CaseIterable, Identifiable, Sendable 
         switch self {
         case .quran: .quranTitle
         case .translations: .quranSearchScopeTranslations
-        case .surahNames: .quranSearchScopeSurahNames
         }
     }
 }
@@ -122,6 +119,15 @@ nonisolated struct QuranSearchQuery: Hashable, Sendable {
         }
         return false
     }
+
+    /// Like `matches(foldedArabicWord:)` but with no prefix reading: the word, or one of its stems,
+    /// must equal a query word. For highlight-only respellings, which have no index behind them to
+    /// justify a prefix (إلا must not mark إِلَٰهَ just because "الاه" starts with "الا").
+    func matches(exactlyFoldedArabicWord word: String) -> Bool {
+        if tokens.contains(word) { return true }
+        let stems = ArabicPrefixStemmer.stems(of: word)
+        return tokens.contains { Self.usesStems($0) && stems.contains($0) }
+    }
 }
 
 /// Arabic results: ayahs where every word matched in its own form first, then those found only
@@ -141,8 +147,9 @@ nonisolated struct QuranSearchResult: Hashable, Sendable {
 ///
 /// **It re-folds the displayed words**, because the index's offsets mean nothing in the displayed
 /// text: the index is over the imla'i spelling, the screen shows the Uthmani. So a word whose two
-/// spellings fold differently is found but not highlighted — ٱلسَّمَٰوَٰتِ folds to السموت, not to
-/// the السماوات a reader types. Pinned by `QuranSearchHighlightTests`.
+/// spellings fold differently would be found but not marked — ٱلسَّمَٰوَٰتِ folds to السموت, not to
+/// the السماوات a reader types — so a word with a dagger alef is also read in imla'i spelling
+/// (`matchesUthmaniVariant`), by exact match only. Pinned by `QuranSearchHighlightTests`.
 nonisolated enum QuranSearchHighlight {
     /// Ranges of the Hafs words whose normalized form, or one of its stems, matches (Arabic scope).
     /// Words are separated by spaces in the Hafs text.
@@ -154,12 +161,51 @@ nonisolated enum QuranSearchHighlight {
             let word = text[start..<end]
             if !word.isEmpty {
                 // A Hafs word folds to one search word (its marks and pause signs are dropped).
-                let folded = QuranSearchQuery.words(ArabicNormalizer.normalize(String(word))).joined()
-                if query.matches(foldedArabicWord: folded) { ranges.append(start..<end) }
+                let raw = String(word)
+                let folded = QuranSearchQuery.words(ArabicNormalizer.normalize(raw)).joined()
+                if query.matches(foldedArabicWord: folded) || matchesUthmaniVariant(raw, query: query) {
+                    ranges.append(start..<end)
+                }
             }
             start = end < text.endIndex ? text.index(after: end) : end
         }
         return ranges
+    }
+
+    /// Highlight only: the Uthmani spellings of a word with a dagger alef (U+0670) written the way
+    /// imla'i writes it, so ٱلسَّمَٰوَٰتِ is marked for the السماوات a reader types. The index and
+    /// `ArabicNormalizer` are untouched (T3); this adds readings, it never removes today's.
+    private static func matchesUthmaniVariant(_ word: String, query: QuranSearchQuery) -> Bool {
+        guard word.unicodeScalars.contains("\u{0670}") else { return false }
+        return [false, true].contains { replacesWaw in
+            let folded = QuranSearchQuery.words(ArabicNormalizer.normalize(uthmaniVariant(word, dagger: replacesWaw))).joined()
+            return query.matches(exactlyFoldedArabicWord: folded)
+        }
+    }
+
+    /// The word with each dagger alef spelled out. After ى it is dropped (موسىٰ → موسى); elsewhere
+    /// it becomes ا. With `wawBecomesAlef`, a dagger after و turns that و into ا (صلوٰة → صلاة)
+    /// instead of following it (سماوٰت → سماوات); both readings exist, so the caller tries both.
+    private static func uthmaniVariant(_ word: String, dagger wawBecomesAlef: Bool) -> String {
+        var scalars: [Unicode.Scalar] = []
+        for scalar in word.unicodeScalars {
+            guard scalar == "\u{0670}" else {
+                scalars.append(scalar)
+                continue
+            }
+            let baseIndex = scalars.lastIndex { $0.properties.generalCategory != .nonspacingMark }
+            let base: Unicode.Scalar? = baseIndex.map { scalars[$0] }
+            if base == "\u{0649}" {
+                continue
+            } else if base == "\u{0648}", wawBecomesAlef, let baseIndex {
+                scalars[baseIndex] = "\u{0627}"
+            } else {
+                scalars.append("\u{0627}")
+            }
+        }
+        var view = String.UnicodeScalarView()
+        view.append(contentsOf: scalars)
+        return String(view)
     }
 
     /// Ranges of the words of a translation that match (case and diacritics ignored).

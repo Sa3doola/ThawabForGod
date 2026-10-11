@@ -257,13 +257,29 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranBookmarkRemove = "quran_bookmark_remove"
     case quranContinueReading = "quran_continue_reading"
     case quranSearchPrompt = "quran_search_prompt"
-    case quranSearchChapters = "quran_search_chapters"
-    case quranSearchVerses = "quran_search_verses"
-    case quranSearchEmpty = "quran_search_empty"
-    case quranSearchHint = "quran_search_hint"
+    /// The toolbar button and the search screen's title.
+    case quranSearch = "quran_search"
+    /// The search field's prompt in the Quran scope.
+    case quranSearchPromptArabic = "quran_search_prompt_arabic"
+    /// The search field's prompt in the translations scope.
+    case quranSearchPromptTranslations = "quran_search_prompt_translations"
+    case quranSearchKeepTyping = "quran_search_keep_typing"
+    case quranSearchTooShort = "quran_search_too_short"
+    /// `%@` the number of results, already formatted.
+    case quranSearchResultCount = "quran_search_result_count"
+    /// `%@` the number of ayahs found only through attached letters, already formatted.
+    case quranSearchAttached = "quran_search_attached"
+    case quranSearchAttachedNote = "quran_search_attached_note"
+    /// The idle description when translations are installed.
+    case quranSearchEmptyDescription = "quran_search_empty_description"
+    /// The idle description when only the Arabic text is searchable.
+    case quranSearchEmptyDescriptionArabic = "quran_search_empty_description_arabic"
+    case quranSearchNoResults = "quran_search_no_results"
+    case quranSearchFailed = "quran_search_failed"
+    /// `%@` the query, isolated by the caller so an English interface does not reorder it.
+    case quranSearchInAyahs = "quran_search_in_ayahs"
     /// The search screen's scopes; the first is `quranTitle`.
     case quranSearchScopeTranslations = "quran_search_scope_translations"
-    case quranSearchScopeSurahNames = "quran_search_scope_surah_names"
     /// The juz a Mushaf page is in, as its header and as a margin label — "Juz 7", `%@` the number.
     case quranJuzNumber = "quran_juz_number"
     /// The VoiceOver name of the custom content listing an ayah's margin labels.

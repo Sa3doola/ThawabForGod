@@ -5084,53 +5084,155 @@
         }
       }
     },
-    "quran_search_chapters" : {
+    "quran_search" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "السور"
+            "value" : "البحث"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chapters"
+            "value" : "Search"
           }
         }
       }
     },
-    "quran_search_empty" : {
+    "quran_search_attached" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "لا توجد سورة أو آية تطابق ذلك."
+            "value" : "بحروف متصلة: %@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No chapter or verse matches that."
+            "value" : "With attached letters: %@"
           }
         }
       }
     },
-    "quran_search_hint" : {
+    "quran_search_attached_note" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ابحث بجزء من الآية، أو باسم السورة."
+            "value" : "الكلمة متصلة في أولها بالواو أو الفاء أو الباء أو اللام أو الكاف."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search by a fragment of a verse, or by a chapter's name."
+            "value" : "The word with و، ف، ب، ل or ك joined to its front."
+          }
+        }
+      }
+    },
+    "quran_search_empty_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابحث عن كلمات في النص العربي أو في الترجمات."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find words in the Arabic text or in a translation."
+          }
+        }
+      }
+    },
+    "quran_search_empty_description_arabic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابحث عن كلمات في النص العربي."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find words in the Arabic text."
+          }
+        }
+      }
+    },
+    "quran_search_failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر البحث."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search could not run."
+          }
+        }
+      }
+    },
+    "quran_search_in_ayahs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ابحث في الآيات عن «%@»"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search ayahs for “%@”"
+          }
+        }
+      }
+    },
+    "quran_search_keep_typing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تابع الكتابة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep typing"
+          }
+        }
+      }
+    },
+    "quran_search_no_results" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد آية تطابق ذلك."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ayah matches that."
           }
         }
       }
@@ -5152,19 +5254,70 @@
         }
       }
     },
-    "quran_search_scope_surah_names" : {
+    "quran_search_prompt_arabic" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "أسماء السور"
+            "value" : "كلمات عربية"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Surah names"
+            "value" : "Arabic words"
+          }
+        }
+      }
+    },
+    "quran_search_prompt_translations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كلمات في ترجمة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Words in a translation"
+          }
+        }
+      }
+    },
+    "quran_search_result_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النتائج: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results: %@"
+          }
+        }
+      }
+    },
+    "quran_search_too_short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتب حرفين على الأقل."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type at least two letters."
           }
         }
       }
@@ -5182,23 +5335,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Translations"
-          }
-        }
-      }
-    },
-    "quran_search_verses" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الآيات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verses"
           }
         }
       }

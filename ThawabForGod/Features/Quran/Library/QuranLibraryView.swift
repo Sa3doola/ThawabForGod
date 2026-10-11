@@ -27,6 +27,16 @@ struct QuranLibraryView: View {
             .background(theme.background)
             .navigationTitle(l10n.string(.quranTitle))
             .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        coordinator.showSearch()
+                    } label: {
+                        Label(l10n.string(.quranSearch), systemImage: "magnifyingglass")
+                    }
+                    .accessibilityIdentifier("quran.library.search")
+                }
+            }
             .task(id: l10n.language) { await viewModel.load(language: l10n.language) }
     }
 

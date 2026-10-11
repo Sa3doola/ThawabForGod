@@ -161,6 +161,10 @@ final class AppContainer {
     /// rebuilt view tree finds them as they were left.
     let quranLibraryViewModel: QuranLibraryViewModel
 
+    /// Search's text, scope and results: one for the section, so they survive opening a result and
+    /// the view tree being rebuilt.
+    let quranSearchViewModel: QuranSearchViewModel
+
     /// Page measurements for the session, measured off the main actor and read synchronously by the
     /// pages (T13). One per app, where Mushaf had a `static let shared`.
     let quranPageMetrics = PageMetricsCache()
@@ -407,7 +411,13 @@ final class AppContainer {
         self.quranSurahInfoViewModel = quranSurahInfoViewModel
         self.quranAyahPanelViewModel = AyahPanelViewModel(translations: quranTranslations, tafsir: quranTafsir)
         self.quranLibraryViewModel = QuranLibraryViewModel(reader: quranReaderViewModel, surahInfo: quranSurahInfoViewModel)
-        self.quranCoordinator = QuranCoordinator(reader: quranReaderViewModel)
+        let quranSearchViewModel = QuranSearchViewModel(
+            search: self.quranSearch,
+            translations: quranTranslations,
+            reader: quranReaderViewModel
+        )
+        self.quranSearchViewModel = quranSearchViewModel
+        self.quranCoordinator = QuranCoordinator(reader: quranReaderViewModel, search: quranSearchViewModel)
 
         // The same three links again, over the two Sahihs. Another file and the same
         // `CorpusDatabase`, which is the point of that type taking a resource name and knowing

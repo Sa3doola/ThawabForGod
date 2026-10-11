@@ -96,6 +96,20 @@ struct QuranLibraryHeader: View {
                 .appFont(.footnote)
                 .foregroundStyle(theme.danger)
                 .accessibilityIdentifier("quran.library.error")
+        } else if let suggestion = viewModel.textSearchSuggestion {
+            Button {
+                isFocused = false
+                coordinator.showSearch(prefill: suggestion)
+                viewModel.didOpen()
+            } label: {
+                // The query is isolated (FSI ... PDI) so an English interface does not reorder it.
+                Text(l10n.string(.quranSearchInAyahs, "\u{2068}\(suggestion)\u{2069}"))
+                    .appFont(.footnote)
+                    .multilineTextAlignment(.leading)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(theme.accent)
+            .accessibilityIdentifier("quran.library.searchAyahs")
         } else {
             Text(exampleLine)
                 .appFont(.footnote)
