@@ -17,6 +17,7 @@ import SwiftUI
 struct QuranReaderView: View {
     let viewModel: QuranReaderViewModel
     let coordinator: QuranCoordinator
+    let panel: AyahPanelViewModel
     let faces: QuranFaces
     let services: MushafRenderServices
 
@@ -31,7 +32,13 @@ struct QuranReaderView: View {
 
     var body: some View {
         let palette = theme.reading(viewModel.settings.resolvedTheme(systemColorScheme: colorScheme))
-        QuranReaderContent(viewModel: viewModel, faces: faces, services: services)
+        QuranReaderContent(
+            viewModel: viewModel,
+            faces: faces,
+            services: services,
+            onSelect: { coordinator.showAyah($0) }
+        )
+            .quranAyahPanel(coordinator: coordinator, panel: panel, reader: viewModel, palette: palette, faces: faces)
             .navigationTitle(title)
             .toolbarTitleDisplayMode(.inline)
             .quranReaderHidesSystemBack()
@@ -73,6 +80,7 @@ private struct QuranReaderContent: View {
     let viewModel: QuranReaderViewModel
     let faces: QuranFaces
     let services: MushafRenderServices
+    let onSelect: (VerseReference) -> Void
 
     @Environment(\.theme) private var theme
 
@@ -103,7 +111,7 @@ private struct QuranReaderContent: View {
                 // phase, `showsMushafPages`), and the value wanted is the one current then.
                 separatedAyah: viewModel.separatedLocation,
                 separatedScrollRequest: viewModel.separatedScrollRequest,
-                onSelect: viewModel.select,
+                onSelect: onSelect,
                 onSeparatedTopAyahChange: viewModel.separatedTopAyahDidChange
             )
         }

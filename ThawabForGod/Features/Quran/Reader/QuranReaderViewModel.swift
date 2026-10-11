@@ -151,15 +151,12 @@ final class QuranReaderViewModel {
         }
     }
 
-    /// A tap on an ayah: selects it, or clears it if it already was. M5.3 adds the panel.
+    /// A tap on an ayah: selects it. Never clears: the panel the tap opens is closed from the panel,
+    /// and the selection stays after it closes, as in Mushaf.
     func select(_ ayah: VerseReference) {
-        if mushaf.selectedAyah == ayah {
-            mushaf.select(nil)
-        } else {
-            mushaf.select(ayah)
-            // Read from there, as Mushaf does.
-            if !showsMushafPages { separatedLocation = ayah }
-        }
+        mushaf.select(ayah)
+        // Read from there, as Mushaf does.
+        if !showsMushafPages { separatedLocation = ayah }
     }
 
     /// Switches modes keeping the reader's place, and writes nothing but the mode:

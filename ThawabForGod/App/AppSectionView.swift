@@ -75,6 +75,7 @@ struct AppSectionView: View {
                         QuranReaderView(
                             viewModel: viewModel,
                             coordinator: container.quranCoordinator,
+                            panel: container.quranAyahPanelViewModel,
                             faces: container.quranFaces,
                             services: container.mushafRenderServices
                         )

@@ -59,8 +59,58 @@ final class QuranCoordinator {
         if path.last != .surahInfo(surah) { path.append(.surahInfo(surah)) }
     }
 
+    // MARK: Ayah panel
+
+    /// The ayah the panel is about. Kept after the panel closes, so there is no blank frame while
+    /// the sheet animates out. Read only by `AyahPanel`.
+    private(set) var panelAyah: VerseReference?
+    var isPanelSheetPresented = false
+    var isPanelInspectorPresented = false
+    /// "Read more": the full tafsir, a sheet over the panel.
+    var isTafsirReaderPresented = false
+
+    /// Whether the reader is wide enough for the inspector. Set by the presentation modifier from
+    /// the measured reader; an open panel moves between sheet and inspector when it changes.
+    var panelUsesInspector = false {
+        didSet {
+            guard panelUsesInspector != oldValue else { return }
+            isTafsirReaderPresented = false
+            if panelUsesInspector, isPanelSheetPresented {
+                isPanelSheetPresented = false
+                isPanelInspectorPresented = true
+            } else if !panelUsesInspector, isPanelInspectorPresented {
+                isPanelInspectorPresented = false
+                isPanelSheetPresented = true
+            }
+        }
+    }
+
+    /// A tap on an ayah: selects it and opens the panel on it.
+    func showAyah(_ ayah: VerseReference) {
+        reader.select(ayah)
+        panelAyah = ayah
+        if panelUsesInspector {
+            isPanelInspectorPresented = true
+        } else {
+            isPanelSheetPresented = true
+        }
+    }
+
+    /// Prev / next in the panel: the panel moves first, then the page or list follows it.
+    func stepPanel(to ayah: VerseReference) {
+        panelAyah = ayah
+        reader.open(.ayah(ayah))
+    }
+
+    func closePanel() {
+        isPanelSheetPresented = false
+        isPanelInspectorPresented = false
+        isTafsirReaderPresented = false
+    }
+
     /// Applies `target` to the reader, then shows the reader. In that order.
     func open(_ target: GoToTarget) {
+        closePanel()
         reader.open(target)
         showReader()
     }
@@ -71,6 +121,7 @@ final class QuranCoordinator {
     }
 
     func popToRoot() {
+        closePanel()
         path = []
     }
 

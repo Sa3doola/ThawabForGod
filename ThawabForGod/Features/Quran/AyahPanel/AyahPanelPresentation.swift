@@ -1,0 +1,87 @@
+//
+//  AyahPanelPresentation.swift
+//  ThawabForGod
+//
+
+import SwiftUI
+
+/// Where the ayah panel goes: an inspector beside the page where the reader is wide (iPad
+/// landscape, the Mac), a sheet everywhere else. Mushaf's rule, measured on the reader view, which
+/// is the detail column, rather than on the screen.
+nonisolated enum AyahPanelLayout {
+    static func usesInspector(size: CGSize, isCompact: Bool) -> Bool {
+        #if os(macOS)
+        true
+        #else
+        !isCompact && size.width > size.height
+        #endif
+    }
+}
+
+extension View {
+    /// Presents the ayah panel over the reader, driven by the coordinator's flags.
+    func quranAyahPanel(
+        coordinator: QuranCoordinator,
+        panel: AyahPanelViewModel,
+        reader: QuranReaderViewModel,
+        palette: ReadingPalette,
+        faces: QuranFaces
+    ) -> some View {
+        modifier(
+            AyahPanelPresentation(coordinator: coordinator, panel: panel, reader: reader, palette: palette, faces: faces)
+        )
+    }
+}
+
+/// A modifier, not code in `QuranReaderView.body`: the flags are read here, so opening the panel
+/// does not re-run the reader's body (design note M5.1).
+private struct AyahPanelPresentation: ViewModifier {
+    let coordinator: QuranCoordinator
+    let panel: AyahPanelViewModel
+    let reader: QuranReaderViewModel
+    let palette: ReadingPalette
+    let faces: QuranFaces
+
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
+    @State private var readerSize: CGSize = .zero
+
+    func body(content: Content) -> some View {
+        @Bindable var coordinator = coordinator
+        content
+            .onChange(of: usesInspector, initial: true) { _, wide in
+                coordinator.panelUsesInspector = wide
+            }
+            .sheet(isPresented: $coordinator.isPanelSheetPresented) {
+                panelView(isInspector: false)
+            }
+            .inspector(isPresented: $coordinator.isPanelInspectorPresented) {
+                panelView(isInspector: true)
+                    .inspectorColumnWidth(min: 320, ideal: 380, max: 480)
+            }
+            // After the inspector, so it measures the reader at full width. Measured inside, the
+            // inspector's own column would narrow the reader, flip the layout and close it again.
+            .onGeometryChange(for: CGSize.self) { $0.size } action: { readerSize = $0 }
+    }
+
+    private var usesInspector: Bool {
+        AyahPanelLayout.usesInspector(size: readerSize, isCompact: isCompact)
+    }
+
+    private var isCompact: Bool {
+        #if os(iOS)
+        horizontalSizeClass == .compact
+        #else
+        false
+        #endif
+    }
+
+    /// The panel with the reader's palette and faces, set again because a sheet is not guaranteed
+    /// to see values the reader computed rather than inherited.
+    private func panelView(isInspector: Bool) -> some View {
+        AyahPanel(coordinator: coordinator, panel: panel, reader: reader, isInspector: isInspector)
+            .environment(\.readingPalette, palette)
+            .environment(\.quranFaces, faces)
+    }
+}

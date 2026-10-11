@@ -150,6 +150,10 @@ final class AppContainer {
     /// for the section, over the reader's corpus.
     let quranSurahInfoViewModel: SurahInfoViewModel
 
+    /// The ayah panel's packs, translations and tafsir: one for the section, so the packs load once
+    /// and the picked tafsir survives the view tree being rebuilt.
+    let quranAyahPanelViewModel: AyahPanelViewModel
+
     /// The Library's indexes, field and tab: one for the section, built before any view so a
     /// rebuilt view tree finds them as they were left.
     let quranLibraryViewModel: QuranLibraryViewModel
@@ -396,6 +400,7 @@ final class AppContainer {
         self.quranReaderViewModel = quranReaderViewModel
         let quranSurahInfoViewModel = SurahInfoViewModel(repository: quranSurahInfo, reader: quranReaderViewModel)
         self.quranSurahInfoViewModel = quranSurahInfoViewModel
+        self.quranAyahPanelViewModel = AyahPanelViewModel(translations: quranTranslations, tafsir: quranTafsir)
         self.quranLibraryViewModel = QuranLibraryViewModel(reader: quranReaderViewModel, surahInfo: quranSurahInfoViewModel)
         self.quranCoordinator = QuranCoordinator(reader: quranReaderViewModel)
 

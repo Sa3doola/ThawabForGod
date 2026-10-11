@@ -331,6 +331,20 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// Shown where the interface language has no surah-info pack.
     case quranSurahInfoUnavailable = "quran_surah_info_unavailable"
 
+    // The ayah panel: its actions, its section picker and a translation's footnotes
+
+    case quranPanelShowWhole = "quran_panel_show_whole"
+    case quranPanelPreviousAyah = "quran_panel_previous_ayah"
+    case quranPanelNextAyah = "quran_panel_next_ayah"
+    case quranPanelClose = "quran_panel_close"
+    case quranPanelCopy = "quran_panel_copy"
+    case quranPanelCopied = "quran_panel_copied"
+    case quranPanelShare = "quran_panel_share"
+    case quranPanelTranslation = "quran_panel_translation"
+    case quranPanelSection = "quran_panel_section"
+    /// A translation's footnote, `%@` the number — "Footnote 3". Also its VoiceOver name.
+    case quranPanelFootnote = "quran_panel_footnote"
+
     // MARK: Tafsir
 
     case tafsirTitle = "tafsir_title"
@@ -340,6 +354,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// Precedes a number — "On verse 255" — rather than carrying one, so the digits go through
     /// `LocalizationManager` instead of a format string.
     case tafsirVerseLabel = "tafsir_verse_label"
+    /// The panel's Tafsir section for a group of ayahs, `%@` the range — "Tafsir of ayahs 2:3–5".
+    case quranTafsirOfAyahs = "quran_tafsir_of_ayahs"
+    /// Opens the whole tafsir entry from the panel's collapsed text.
+    case quranTafsirReadMore = "quran_tafsir_read_more"
 
     // MARK: The reading panel
 
