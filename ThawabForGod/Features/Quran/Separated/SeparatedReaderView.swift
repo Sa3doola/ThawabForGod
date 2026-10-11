@@ -67,6 +67,7 @@ struct SeparatedReaderView: View {
     private struct TranslationKey: Hashable {
         let surah: Int
         let isShown: Bool
+        let enabled: [ContentPackID]?
     }
 
     var body: some View {
@@ -104,8 +105,12 @@ struct SeparatedReaderView: View {
                 .padding(.horizontal)
             }
             .scrollPosition(id: $topAyah, anchor: .top)
-            .task(id: TranslationKey(surah: surah.number, isShown: settings.showsTranslationInSeparated)) {
-                await translations.load(surah: surah.number, isShown: settings.showsTranslationInSeparated)
+            .task(id: TranslationKey(
+                surah: surah.number, isShown: settings.showsTranslationInSeparated, enabled: settings.enabledTranslations
+            )) {
+                await translations.load(
+                    surah: surah.number, isShown: settings.showsTranslationInSeparated, enabled: settings.enabledTranslations
+                )
                 // Jump to the requested ayah once, after the translations have settled so rows above
                 // it do not grow afterwards. `scrollTo` also reaches rows the lazy stack has not
                 // built yet (`scrollPosition(id:)` ignores its initial value).

@@ -68,6 +68,7 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case settingsVersionLabel = "settings_version_label"
     case settingsSourcesTitle = "settings_sources_title"
     case settingsSourcesFooter = "settings_sources_footer"
+    case settingsQuranSection = "settings_quran_section"
 
     // MARK: Attribution
 
@@ -94,6 +95,12 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case sourceAmiriAttribution = "source_amiri_attribution"
     case sourceKFGQPCTitle = "source_kfgqpc_title"
     case sourceKFGQPCAttribution = "source_kfgqpc_attribution"
+    case sourceQuranMushafTitle = "source_quran_mushaf_title"
+    case sourceQuranMushafAttribution = "source_quran_mushaf_attribution"
+    case sourceQULFontsTitle = "source_qul_fonts_title"
+    case sourceQULFontsAttribution = "source_qul_fonts_attribution"
+    /// The section of the Sources screen that lists the bundled translations and tafsirs.
+    case sourcePacksSection = "source_packs_section"
     /// What a row with a bundled licence file offers to open.
     case sourceReadLicence = "source_read_licence"
 
@@ -235,6 +242,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// The reader's leading button, which returns to the chapter and part list. Not `libraryTitle`,
     /// which is Home's menu and reads differently in Arabic.
     case quranLibrary = "quran_library"
+    /// The overflow menu at compact width, which holds the mode toggle and the reader settings.
+    case quranMore = "quran_more"
     /// Precedes a number — "Juz 7", "جزء ٧" — rather than carrying one, because the digits go
     /// through `LocalizationManager` and a format string would take that away from it.
     case quranJuzLabel = "quran_juz_label"
@@ -378,6 +387,32 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranTafsirOfAyahs = "quran_tafsir_of_ayahs"
     /// Opens the whole tafsir entry from the panel's collapsed text.
     case quranTafsirReadMore = "quran_tafsir_read_more"
+
+    // MARK: Quran settings
+
+    /// The Translations & Tafsir screen, named the same from the settings form and from Settings.
+    case quranPacksTitle = "quran_packs_title"
+    case quranPacksTranslations = "quran_packs_translations"
+    case quranPacksTranslationsFooter = "quran_packs_translations_footer"
+    case quranPacksTafsir = "quran_packs_tafsir"
+    case quranPacksTafsirFooter = "quran_packs_tafsir_footer"
+    /// The default-tafsir picker's first row: the first enabled tafsir in the app's language.
+    case quranPacksAutomatic = "quran_packs_automatic"
+    case quranPacksDefaultTafsir = "quran_packs_default_tafsir"
+    case quranPacksDefaultTafsirFooter = "quran_packs_default_tafsir_footer"
+
+    case quranSettingsDisplayMode = "quran_settings_display_mode"
+    case quranSettingsDisplayFooter = "quran_settings_display_footer"
+    case quranSettingsTranslationUnderAyah = "quran_settings_translation_under_ayah"
+    case quranSettingsTheme = "quran_settings_theme"
+    case quranSettingsFollowDark = "quran_settings_follow_dark"
+    case quranSettingsTextFooter = "quran_settings_text_footer"
+    case quranSettingsMushafPages = "quran_settings_mushaf_pages"
+    case quranSettingsMarginMarkers = "quran_settings_margin_markers"
+    case quranSettingsMarginMarkersFooter = "quran_settings_margin_markers_footer"
+    case quranSettingsLandscape = "quran_settings_landscape"
+    case quranSettingsOpenFlat = "quran_settings_open_flat"
+    case quranSettingsSources = "quran_settings_sources"
 
     // MARK: The reading panel
 

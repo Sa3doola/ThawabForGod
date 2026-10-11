@@ -17,7 +17,7 @@ import SwiftUI
 /// the same list the content does, so a set that gets verified loses its warning by having its
 /// `noteKey` removed.
 struct SourcesView: View {
-    let sources: [AttributionSource]
+    let viewModel: AboutViewModel
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
@@ -27,14 +27,52 @@ struct SourcesView: View {
     @State private var openLicence: AttributionSource?
 
     var body: some View {
-        List(sources) { source in
-            SourceRow(source: source) { openLicence = source }
+        List {
+            ForEach(viewModel.sources) { source in
+                SourceRow(source: source) { openLicence = source }
+            }
+
+            if !viewModel.quranPacks.isEmpty {
+                Section(header: Text(l10n.string(.sourcePacksSection))) {
+                    ForEach(viewModel.quranPacks) { pack in
+                        PackRow(pack: pack)
+                    }
+                }
+            }
         }
         .background(theme.background)
         .navigationTitle(l10n.string(.settingsSourcesTitle))
+        .task { await viewModel.loadQuranSources() }
         .sheet(item: $openLicence) { source in
             LicenceTextView(source: source)
         }
+    }
+}
+
+/// One bundled translation or tafsir pack: its name, its author and its licence as the pack's own
+/// table states it. The licence is data, so it is shown verbatim and not translated.
+private struct PackRow: View {
+    let pack: ContentPack
+
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: pack.name(in: l10n.language))
+                .appFont(.headline)
+                .foregroundStyle(theme.textPrimary)
+
+            Text(verbatim: pack.author(in: l10n.language))
+                .appFont(.subheadline)
+                .foregroundStyle(theme.textSecondary)
+
+            Text(verbatim: pack.license)
+                .appFont(.footnote)
+                .foregroundStyle(theme.textSecondary)
+        }
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -160,7 +198,7 @@ private struct LicenceTextView: View {
     let settingsStore = InMemorySettingsStore()
 
     NavigationStack {
-        SourcesView(sources: AttributionSource.all)
+        SourcesView(viewModel: AboutViewModel())
     }
     .themed(ThemeManager(settingsStore: settingsStore))
     .localized(

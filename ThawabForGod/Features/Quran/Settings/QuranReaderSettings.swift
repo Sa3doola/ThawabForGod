@@ -54,6 +54,12 @@ final class QuranReaderSettings {
     private(set) var showsTranslationInSeparated: Bool
     private(set) var phoneLandscape: PhoneLandscapeLayout
     private(set) var flatOpen: FlatOpenLayout
+    /// The translations the reader switched on, in order. `nil`: never chosen, so every installed
+    /// pack. `[]` is a choice (all off).
+    private(set) var enabledTranslations: [ContentPackID]?
+    private(set) var enabledTafsirs: [ContentPackID]?
+    /// The tafsir the panel opens on; `nil` is Automatic.
+    private(set) var defaultTafsir: ContentPackID?
 
     @ObservationIgnored private let settingsStore: any SettingsStore
 
@@ -74,6 +80,9 @@ final class QuranReaderSettings {
         showsTranslationInSeparated = settingsStore.bool(for: .quranShowsTranslationInSeparated) ?? true
         phoneLandscape = settingsStore.string(for: .quranPhoneLandscape).flatMap(PhoneLandscapeLayout.init(rawValue:)) ?? .fallback
         flatOpen = settingsStore.string(for: .quranFlatOpen).flatMap(FlatOpenLayout.init(rawValue:)) ?? .fallback
+        enabledTranslations = Self.decodeIDs(settingsStore.string(for: .quranEnabledTranslations))
+        enabledTafsirs = Self.decodeIDs(settingsStore.string(for: .quranEnabledTafsirs))
+        defaultTafsir = settingsStore.string(for: .quranDefaultTafsir).map { ContentPackID(rawValue: $0) }
     }
 
     /// Records what the database turned out to carry. Writes nothing: a stored Mushaf choice in a
@@ -166,6 +175,22 @@ final class QuranReaderSettings {
         settingsStore.set(flatOpen.rawValue, for: .quranFlatOpen)
     }
 
+    func setEnabledTranslations(_ ids: [ContentPackID]) {
+        enabledTranslations = ids
+        settingsStore.set(Self.encodeIDs(ids), for: .quranEnabledTranslations)
+    }
+
+    func setEnabledTafsirs(_ ids: [ContentPackID]) {
+        enabledTafsirs = ids
+        settingsStore.set(Self.encodeIDs(ids), for: .quranEnabledTafsirs)
+    }
+
+    /// `nil` is Automatic and removes the key.
+    func setDefaultTafsir(_ id: ContentPackID?) {
+        defaultTafsir = id
+        settingsStore.set(id?.rawValue, for: .quranDefaultTafsir)
+    }
+
     /// Back to "no preference": every key this type owns is removed, not overwritten with today's
     /// default, so the reader follows whatever default the build they run next has.
     func reset() {
@@ -184,15 +209,32 @@ final class QuranReaderSettings {
         showsTranslationInSeparated = true
         phoneLandscape = .fallback
         flatOpen = .fallback
+        enabledTranslations = nil
+        enabledTafsirs = nil
+        defaultTafsir = nil
     }
 
     /// The keys this type reads and writes, by the type each is stored as: the lists `reset()`
     /// clears, and the ones the tests check against a store that started empty.
-    static let stringKeys: [SettingsKey] = [.quranDisplayMode, .quranReaderTheme, .readerFont, .quranPhoneLandscape, .quranFlatOpen]
+    static let stringKeys: [SettingsKey] = [
+        .quranDisplayMode, .quranReaderTheme, .readerFont, .quranPhoneLandscape, .quranFlatOpen,
+        .quranEnabledTranslations, .quranEnabledTafsirs, .quranDefaultTafsir,
+    ]
     static let boolKeys: [SettingsKey] = [
         .quranFollowsSystemAppearance, .readerKeepsScreenAwake, .quranShowsMarginMarkers, .quranShowsTranslationInSeparated,
     ]
     static let doubleKeys: [SettingsKey] = [.readerTextSize]
+
+    /// A JSON `[String]`; a missing or corrupt value is `nil` ("all installed"), never `[]`.
+    private static func decodeIDs(_ json: String?) -> [ContentPackID]? {
+        guard let data = json?.data(using: .utf8),
+              let ids = try? JSONDecoder().decode([String].self, from: data) else { return nil }
+        return ids.map { ContentPackID(rawValue: $0) }
+    }
+
+    private static func encodeIDs(_ ids: [ContentPackID]) -> String? {
+        (try? JSONEncoder().encode(ids.map(\.rawValue))).flatMap { String(data: $0, encoding: .utf8) }
+    }
 
     /// Non-finite falls to the default rather than either bound: a stored value that is not a
     /// number is corruption, not a choice.

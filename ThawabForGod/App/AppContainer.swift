@@ -157,6 +157,14 @@ final class AppContainer {
     /// and the picked tafsir survives the view tree being rebuilt.
     let quranAyahPanelViewModel: AyahPanelViewModel
 
+    /// The Quran preferences form's model: one instance serves Settings → Quran and the reader's
+    /// settings sheet, so both show the same selections.
+    let quranSettingsViewModel: QuranSettingsViewModel
+
+    /// What the app is built from, with the Quran's sources read from this build's database and
+    /// packs. One for the app, used by Settings and by the reader's sheet.
+    let aboutViewModel: AboutViewModel
+
     /// The Library's indexes, field and tab: one for the section, built before any view so a
     /// rebuilt view tree finds them as they were left.
     let quranLibraryViewModel: QuranLibraryViewModel
@@ -409,7 +417,18 @@ final class AppContainer {
         self.quranReaderViewModel = quranReaderViewModel
         let quranSurahInfoViewModel = SurahInfoViewModel(repository: quranSurahInfo, reader: quranReaderViewModel)
         self.quranSurahInfoViewModel = quranSurahInfoViewModel
-        self.quranAyahPanelViewModel = AyahPanelViewModel(translations: quranTranslations, tafsir: quranTafsir)
+        self.quranAyahPanelViewModel = AyahPanelViewModel(
+            translations: quranTranslations,
+            tafsir: quranTafsir,
+            settings: quranReaderSettings
+        )
+        self.quranSettingsViewModel = QuranSettingsViewModel(
+            settings: quranReaderSettings,
+            reader: quranReaderViewModel,
+            translations: quranTranslations,
+            tafsir: quranTafsir
+        )
+        self.aboutViewModel = AboutViewModel(quran: quranRepository, packs: quranPacks)
         self.quranLibraryViewModel = QuranLibraryViewModel(reader: quranReaderViewModel, surahInfo: quranSurahInfoViewModel)
         let quranSearchViewModel = QuranSearchViewModel(
             search: self.quranSearch,
@@ -616,7 +635,8 @@ final class AppContainer {
             prayerCalculation: prayerCalculation,
             reminders: reminders,
             tips: tips,
-            about: AboutViewModel(),
+            about: aboutViewModel,
+            quranSettings: quranSettingsViewModel,
             macIntegration: MacSettingsViewModel(
                 preferences: menuBarPreferences,
                 loginItem: launchAtLogin,
@@ -632,7 +652,8 @@ final class AppContainer {
             prayerCalculation: prayerCalculation,
             reminders: reminders,
             tips: tips,
-            about: AboutViewModel()
+            about: aboutViewModel,
+            quranSettings: quranSettingsViewModel
         )
         #endif
         cachedSettingsScreens = screens

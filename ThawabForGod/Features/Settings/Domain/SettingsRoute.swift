@@ -19,6 +19,9 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
     case languageAndFormat
     case prayerCalculation
     case reminders
+
+    /// The Quran reader's preferences: mode, theme, fonts, packs.
+    case quran
     case tips
 
     /// The menu bar, the Dock icon and launch at login. macOS only — see `isAvailable`.
@@ -30,8 +33,14 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
     /// is a fact *about* the app rather than a subject of its own.
     case sources
 
-    /// The rows the root shows. `sources` is not among them: it is one level further in.
-    static let root: [SettingsRoute] = allCases.filter { $0 != .sources && $0.isAvailable }
+    /// Reached from `quran`: which translations and tafsirs are on, and in what order.
+    case quranPacks
+
+    /// The rows the root shows. `sources` and `quranPacks` are not among them: they are one level
+    /// further in.
+    static let root: [SettingsRoute] = allCases.filter {
+        $0 != .sources && $0 != .quranPacks && $0.isAvailable
+    }
 
     /// Whether this build has the screen at all.
     ///
@@ -49,7 +58,7 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
             #endif
 
         case .homeCustomization, .appearance, .languageAndFormat, .prayerCalculation,
-             .reminders, .tips, .about, .sources:
+             .reminders, .quran, .tips, .about, .sources, .quranPacks:
             true
         }
     }
@@ -61,10 +70,12 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .languageAndFormat: .settingsFormatSection
         case .prayerCalculation: .settingsCalculationSection
         case .reminders: .settingsRemindersSection
+        case .quran: .settingsQuranSection
         case .tips: .settingsTipsSection
         case .macIntegration: .settingsMacSection
         case .about: .settingsAboutSection
         case .sources: .settingsSourcesTitle
+        case .quranPacks: .quranPacksTitle
         }
     }
 
@@ -76,6 +87,8 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .languageAndFormat: "textformat"
         case .prayerCalculation: "sun.and.horizon"
         case .reminders: "bell"
+        case .quran: "book"
+        case .quranPacks: "books.vertical"
         case .tips: "lightbulb"
         case .macIntegration: "menubar.rectangle"
         case .about: "info.circle"

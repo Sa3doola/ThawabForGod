@@ -92,6 +92,20 @@ struct SettingsView: View {
         case .reminders:
             RemindersSettingsView(viewModel: container.reminders)
 
+        case .quran:
+            QuranSettingsForm(
+                viewModel: container.quranSettings,
+                onShowPacks: { coordinator.show(.quranPacks) },
+                onShowSources: { coordinator.show(.sources) }
+            )
+            // Reads what the database can draw, so the Mushaf rows are right before the Quran tab
+            // has ever been opened.
+            .task { await container.quranSettings.load() }
+
+        case .quranPacks:
+            ContentPacksView(viewModel: container.quranSettings)
+                .task { await container.quranSettings.load() }
+
         case .tips:
             TipsSettingsView(viewModel: container.tips)
 
@@ -104,7 +118,7 @@ struct SettingsView: View {
             AboutView(viewModel: container.about) { coordinator.show(.sources) }
 
         case .sources:
-            SourcesView(sources: container.about.sources)
+            SourcesView(viewModel: container.about)
         }
     }
 }
@@ -124,6 +138,7 @@ protocol SettingsScreens {
     var reminders: RemindersSettingsViewModel { get }
     var tips: TipsSettingsViewModel { get }
     var about: AboutViewModel { get }
+    var quranSettings: QuranSettingsViewModel { get }
 
     /// macOS only, because the screen behind it is — `SettingsRoute.macIntegration` is filtered
     /// out of the root on iOS, so nothing there ever asks for this.

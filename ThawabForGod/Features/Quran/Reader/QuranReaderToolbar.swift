@@ -20,6 +20,8 @@ struct QuranReaderToolbar: ToolbarContent {
     let coordinator: QuranCoordinator
     /// A page colour: the bar is the page's while the reader is in front.
     let tint: Color
+    /// Compact width: the mode toggle and the settings button share a More menu.
+    let isCompact: Bool
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
@@ -40,11 +42,39 @@ struct QuranReaderToolbar: ToolbarContent {
             .tint(tint)
             .accessibilityIdentifier("quran.reader.search")
         }
-        if viewModel.canSwitchDisplayMode {
+        if isCompact, viewModel.canSwitchDisplayMode {
+            // At compact width the two secondary actions share one menu.
             ToolbarItem(placement: .primaryAction) {
-                displayModeButton
+                Menu {
+                    displayModeButton
+                    settingsButton
+                } label: {
+                    QuranToolbarLabel(key: .quranMore, systemImage: "ellipsis")
+                }
+                .tint(tint)
+                .accessibilityIdentifier("quran.reader.more")
+            }
+        } else {
+            // Wide, or compact with nothing to share a menu with (the public build has no second mode).
+            if viewModel.canSwitchDisplayMode {
+                ToolbarItem(placement: .primaryAction) {
+                    displayModeButton
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                settingsButton
             }
         }
+    }
+
+    private var settingsButton: some View {
+        Button {
+            coordinator.showSettings()
+        } label: {
+            QuranToolbarLabel(key: .readerOptionsTitle, systemImage: "textformat.size")
+        }
+        .tint(tint)
+        .accessibilityIdentifier("quran.reader.settings")
     }
 
     private var displayModeButton: some View {

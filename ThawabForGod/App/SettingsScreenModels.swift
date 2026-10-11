@@ -20,6 +20,7 @@ struct SettingsScreenModels: SettingsScreens {
     let reminders: RemindersSettingsViewModel
     let tips: TipsSettingsViewModel
     let about: AboutViewModel
+    let quranSettings: QuranSettingsViewModel
 
     /// macOS only, matching `SettingsScreens`. There is no screen behind it on iOS and
     /// `SettingsRoute.macIntegration` never reaches the root there.

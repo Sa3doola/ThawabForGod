@@ -15,6 +15,8 @@ final class SeparatedTranslationsModel {
     /// The surah whose load (on or off) has finished; nil before the first.
     private(set) var settledSurah: Int?
     @ObservationIgnored private var settledShown: Bool?
+    /// The enabled list the settled load used (`nil`: every installed pack).
+    @ObservationIgnored private var settledEnabled: [ContentPackID]?
     /// Parsed translations of `settledSurah`, per ayah, in pack order.
     private var byAyah: [VerseReference: [AyahPanelTranslation]] = [:]
 
@@ -29,24 +31,28 @@ final class SeparatedTranslationsModel {
     }
 
     /// Latest call wins; checks `Task.isCancelled` and the asked surah before applying. Off: clears and settles.
-    func load(surah: Int, isShown: Bool) async {
+    ///
+    /// - Parameter enabled: the reader's enabled translations in order; `nil` is every installed one.
+    func load(surah: Int, isShown: Bool, enabled: [ContentPackID]?) async {
         requestedSurah = surah
         // A rebuilt list finds its surah already loaded, so a restore does not wait on the database.
-        if settledSurah == surah, settledShown == isShown { return }
+        if settledSurah == surah, settledShown == isShown, settledEnabled == enabled { return }
         guard isShown else {
             byAyah = [:]
             settledSurah = surah
             settledShown = false
+            settledEnabled = enabled
             return
         }
 
-        let packs: [ContentPack]
+        let installedPacks: [ContentPack]
         if let installed {
-            packs = installed
+            installedPacks = installed
         } else {
-            packs = await repository.installed()
-            installed = packs
+            installedPacks = await repository.installed()
+            installed = installedPacks
         }
+        let packs = ContentPackSelection.enabledPacks(installed: installedPacks, enabled: enabled)
 
         // One query per pack; a pack that throws is skipped.
         var loaded: [(pack: ContentPack, texts: [VerseReference: TranslationText])] = []
@@ -63,6 +69,7 @@ final class SeparatedTranslationsModel {
         byAyah = parsed
         settledSurah = surah
         settledShown = true
+        settledEnabled = enabled
     }
 
     /// Builds each ayah's documents off the main actor: up to 286 rows times every installed pack.

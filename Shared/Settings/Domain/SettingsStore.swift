@@ -58,6 +58,13 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case quranPhoneLandscape
     /// `FlatOpenLayout`. Unset: a spread.
     case quranFlatOpen
+    /// The enabled translations, in order: a JSON `[String]` of pack ids. Unset (or unreadable):
+    /// every installed one. An empty list is a real choice — all off.
+    case quranEnabledTranslations
+    /// The enabled tafsirs, in order: a JSON `[String]` of pack ids. Unset: every installed one.
+    case quranEnabledTafsirs
+    /// The tafsir the panel opens on. Unset: automatic.
+    case quranDefaultTafsir
 
     /// How large the adhkar are set. **Its own key rather than `readerTextSize`**, deliberately:
     /// the Quran is read in long sittings on a page the reader chose a paper for, and a dhikr is

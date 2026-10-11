@@ -79,7 +79,9 @@ struct AppSectionView: View {
                             translations: container.quranSeparatedTranslations,
                             surahInfo: container.quranSurahInfoViewModel,
                             faces: container.quranFaces,
-                            services: container.mushafRenderServices
+                            services: container.mushafRenderServices,
+                            settingsModel: container.quranSettingsViewModel,
+                            about: container.aboutViewModel
                         )
                         #if DEBUG
                         .quranLaunchHooks(viewModel: viewModel, container: container)

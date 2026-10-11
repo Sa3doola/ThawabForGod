@@ -102,6 +102,8 @@ final class QuranCoordinator {
     func showAyah(_ ayah: VerseReference) {
         reader.select(ayah)
         panelAyah = ayah
+        // The settings sheet lets taps through to the page; two sheets cannot be up at once.
+        isSettingsSheetPresented = false
         if panelUsesInspector {
             isPanelInspectorPresented = true
         } else {
@@ -113,6 +115,17 @@ final class QuranCoordinator {
     func stepPanel(to ayah: VerseReference) {
         panelAyah = ayah
         reader.open(.ayah(ayah))
+    }
+
+    // MARK: Reader settings
+
+    /// The reader's settings sheet. Session state, not a path case: it closes on relaunch.
+    var isSettingsSheetPresented = false
+
+    /// Opens the settings sheet. The panel closes first: an iPhone cannot show two sheets at once.
+    func showSettings() {
+        closePanel()
+        isSettingsSheetPresented = true
     }
 
     func closePanel() {

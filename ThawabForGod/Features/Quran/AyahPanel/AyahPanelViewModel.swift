@@ -56,38 +56,50 @@ final class AyahPanelViewModel {
     var requestedSection: AyahPanelSection = .translation
     var pickedTafsir: ContentPackID?
 
+    /// The enabled translation ids `translations` was loaded for. With `translationsAyah`, the cache
+    /// key: turning a pack off or on is a miss, so Copy never carries a translation just switched off.
+    private var translationsIDs: [ContentPackID] = []
+    private let settings: QuranReaderSettings
+
     @ObservationIgnored private var packsLoaded = false
     /// The ayah and tafsir the latest `load` asked for: a result is applied only if these still match.
     @ObservationIgnored private var askedAyah: VerseReference?
     @ObservationIgnored private var askedTafsir: ContentPackID?
 
-    init(translations: any TranslationRepositoring, tafsir: any TafsirRepositoring) {
+    init(translations: any TranslationRepositoring, tafsir: any TafsirRepositoring, settings: QuranReaderSettings) {
         self.translationRepository = translations
         self.tafsirRepository = tafsir
+        self.settings = settings
     }
 
-    /// The translations of `ayah`, or none while another ayah's are still on hand: text is never
-    /// paired with a neighbour's Arabic, on screen or in Copy.
+    /// The translations of `ayah`, or none while another ayah's (or another selection's) are still
+    /// on hand: text is never paired with a neighbour's Arabic, on screen or in Copy.
     func translations(for ayah: VerseReference) -> [AyahPanelTranslation] {
-        translationsAyah == ayah ? translations : []
+        translationsAyah == ayah && translationsIDs == enabledTranslations().map(\.id) ? translations : []
     }
 
     // MARK: Sections
 
-    /// Every installed tafsir until M5.6 adds the enabled list.
+    /// The installed translations the reader has switched on, in their order.
+    func enabledTranslations() -> [ContentPack] {
+        ContentPackSelection.enabledPacks(installed: translationPacks, enabled: settings.enabledTranslations)
+    }
+
+    /// The installed tafsirs the reader has switched on, in their order.
     func enabledTafsirs() -> [ContentPack] {
-        TafsirChoice.enabled(installed: tafsirPacks, enabled: nil)
+        TafsirChoice.enabled(installed: tafsirPacks, enabled: settings.enabledTafsirs)
     }
 
     func currentTafsir(language: AppLanguage) -> ContentPack? {
         TafsirChoice.current(
-            enabled: enabledTafsirs(), picked: pickedTafsir, defaultTafsir: nil, appLanguage: language.rawValue)
+            enabled: enabledTafsirs(), picked: pickedTafsir, defaultTafsir: settings.defaultTafsir,
+            appLanguage: language.rawValue)
     }
 
-    /// Translation only if a translation pack is installed; Tafsir only if there is a tafsir.
+    /// Translation only if an enabled translation exists; Tafsir only if there is an enabled tafsir.
     func sections(language: AppLanguage) -> [AyahPanelSection] {
         var result: [AyahPanelSection] = []
-        if !translationPacks.isEmpty { result.append(.translation) }
+        if !enabledTranslations().isEmpty { result.append(.translation) }
         if currentTafsir(language: language) != nil { result.append(.tafsir) }
         return result
     }
@@ -118,19 +130,23 @@ final class AyahPanelViewModel {
     }
 
     private func loadTranslations(ayah: VerseReference) async {
-        guard translationsAyah != ayah else { return }
-        guard !translationPacks.isEmpty else {
+        let packs = enabledTranslations()
+        let ids = packs.map(\.id)
+        guard translationsAyah != ayah || translationsIDs != ids else { return }
+        guard !packs.isEmpty else {
             translations = []
+            translationsIDs = ids
             translationsAyah = ayah
             return
         }
-        let packs = translationPacks
         do {
-            let texts = try await translationRepository.text(for: ayah, packs: packs.map(\.id))
-            guard askedAyah == ayah else { return }
-            translations = texts.compactMap { text in
-                packs.first { $0.id == text.pack }.map { AyahPanelTranslation(pack: $0, document: TranslationDocument(text)) }
+            let texts = try await translationRepository.text(for: ayah, packs: ids)
+            guard askedAyah == ayah, !Task.isCancelled, ids == enabledTranslations().map(\.id) else { return }
+            // In the reader's order, not the repository's.
+            translations = packs.compactMap { pack in
+                texts.first { $0.pack == pack.id }.map { AyahPanelTranslation(pack: pack, document: TranslationDocument($0)) }
             }
+            translationsIDs = ids
             translationsAyah = ayah
         } catch {
             guard askedAyah == ayah else { return }

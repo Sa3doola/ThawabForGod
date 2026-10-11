@@ -52,7 +52,40 @@ nonisolated extension AttributionSource {
     /// `URL(string:)!` is force-unwrapped on purpose: these are literals in this file, so a nil
     /// is a typo made by whoever edits it and belongs at the top of the first launch, not in a
     /// silently empty row.
-    static let all: [AttributionSource] = [
+    static let all: [AttributionSource] = all(includingMushafData: false)
+
+    /// The list for a build. With `includingMushafData` (a database that carries Mushaf pages) the
+    /// Tanzil Quran row gives way to the KFGQPC text and layout, and the QUL fonts are added.
+    /// Both are `licenceUnsettled` until the requests to KFGQPC and QUL are answered: saying so is
+    /// the honest version. A Tanzil-only build never names either.
+    static func all(includingMushafData: Bool) -> [AttributionSource] {
+        var list = base
+        guard includingMushafData, let index = list.firstIndex(where: { $0.id == "quran" }) else {
+            return list
+        }
+        list[index] = AttributionSource(
+            id: "quran-mushaf",
+            titleKey: .sourceQuranMushafTitle,
+            attributionKey: .sourceQuranMushafAttribution,
+            licenceKey: .licenceUnsettled,
+            noteKey: nil,
+            url: URL(string: "https://qul.tarteel.ai")!
+        )
+        list.insert(
+            AttributionSource(
+                id: "qul-fonts",
+                titleKey: .sourceQULFontsTitle,
+                attributionKey: .sourceQULFontsAttribution,
+                licenceKey: .licenceUnsettled,
+                noteKey: nil,
+                url: URL(string: "https://qul.tarteel.ai")!
+            ),
+            at: index + 1
+        )
+        return list
+    }
+
+    private static let base: [AttributionSource] = [
         // First, and with no note: unlike everything below it, the Quran text is not
         // best-effort data this project reshaped and hopes is right. Tanzil publish it as
         // verified and monitored, it is used verbatim, and their terms require the source to

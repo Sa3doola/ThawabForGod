@@ -151,7 +151,12 @@ struct MushafPagerView: View {
             isCompactWidth: isCompactWidth,
             isCompactHeight: isCompactHeight,
             phoneLandscape: settings.phoneLandscape,
-            flatOpen: settings.flatOpen
+            flatOpen: settings.flatOpen,
+            spreadFit: MushafSpreadFit(
+                pageAspectRatio: corpus.style.pageAspectRatio,
+                linesPerPage: corpus.style.linesPerPage,
+                slotHeightEm: RendererMetrics.glyphPerPage.slotHeightEm
+            )
         )
     }
 }

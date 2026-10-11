@@ -30,15 +30,19 @@ nonisolated enum MushafPageUnit: Hashable, Sendable {
     ///    flat and the reader prefers one large page.
     /// 2. A compact height (iPhone landscape, Pro Max included): one page fitted to the width, or a
     ///    spread if the reader chose two pages.
-    /// 3. A regular width at least 1.2 × the height (iPad landscape, a wide Mac window): a spread.
+    /// 3. A regular width at least 1.2 × the height (iPad landscape, a wide Mac window): a spread,
+    ///    unless `spreadFit` says the text would be set below its floor, when it is one page.
     /// 4. Otherwise one page fitted to the screen.
+    ///
+    /// Rules 1 and 2 are the reader's own choices (a fold, a landscape preference) and ignore the floor.
     static func resolve(
         size: CGSize,
         fold: FoldKind? = nil,
         isCompactWidth: Bool = false,
         isCompactHeight: Bool = false,
         phoneLandscape: PhoneLandscapeLayout = .onePage,
-        flatOpen: FlatOpenLayout = .spread
+        flatOpen: FlatOpenLayout = .spread,
+        spreadFit: MushafSpreadFit? = nil
     ) -> MushafPageUnit {
         switch fold {
         case .book: return .spread
@@ -48,7 +52,10 @@ nonisolated enum MushafPageUnit: Hashable, Sendable {
         if isCompactHeight {
             return phoneLandscape == .twoPages ? .spread : .widthFit
         }
-        if !isCompactWidth, size.width >= size.height * spreadAspectRatio { return .spread }
+        if !isCompactWidth, size.width >= size.height * spreadAspectRatio {
+            if let spreadFit, spreadFit.estimatedFontSize(in: size) < MushafSpreadFit.minimumFontSize { return .single }
+            return .spread
+        }
         return .single
     }
 
@@ -56,5 +63,26 @@ nonisolated enum MushafPageUnit: Hashable, Sendable {
     /// printed Madinah Mushaf).
     func unitStart(for page: Int) -> Int {
         pageCount == 2 ? page - (page - 1) % 2 : page
+    }
+}
+
+/// What it takes to estimate the text size a spread would give, so rule 3 can fall back to one page
+/// when two would set the words too small to read. Pure arithmetic over the style's numbers.
+nonisolated struct MushafSpreadFit: Hashable, Sendable {
+    let pageAspectRatio: CGFloat
+    let linesPerPage: Int
+    /// The renderer's line-slot height in ems. Pass the larger renderer's, so the estimate leans
+    /// towards one page rather than towards unreadable text.
+    let slotHeightEm: CGFloat
+
+    /// Below this a spread gives way to one page.
+    static let minimumFontSize: CGFloat = 18
+
+    /// Font size in points for two pages in `size`: each page is as tall as the height allows or as
+    /// the half-width allows, whichever is less.
+    func estimatedFontSize(in size: CGSize) -> CGFloat {
+        guard pageAspectRatio > 0, linesPerPage > 0, slotHeightEm > 0 else { return 0 }
+        let pageHeight = min(size.height, size.width / 2 / pageAspectRatio)
+        return pageHeight / CGFloat(linesPerPage) / slotHeightEm
     }
 }

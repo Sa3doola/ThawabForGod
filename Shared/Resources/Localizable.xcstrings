@@ -4761,6 +4761,23 @@
         }
       }
     },
+    "quran_more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المزيد"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
     "quran_next_surah" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4842,6 +4859,142 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opens %@"
+          }
+        }
+      }
+    },
+    "quran_packs_automatic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تلقائي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic"
+          }
+        }
+      }
+    },
+    "quran_packs_default_tafsir" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التفسير الافتراضي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default tafsir"
+          }
+        }
+      }
+    },
+    "quran_packs_default_tafsir_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُفتح لوحة الآية بهذا التفسير. يختار «تلقائي» أول تفسير مفعّل بلغة التطبيق."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The ayah panel opens with this tafsir. Automatic picks the first enabled tafsir in the app's language."
+          }
+        }
+      }
+    },
+    "quran_packs_tafsir" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التفسير"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tafsir"
+          }
+        }
+      }
+    },
+    "quran_packs_tafsir_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسحب لتغيير ترتيب التفاسير في قائمة لوحة الآية."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to change the order of the tafsir picker in the ayah panel."
+          }
+        }
+      }
+    },
+    "quran_packs_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الترجمات والتفاسير"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Translations & Tafsir"
+          }
+        }
+      }
+    },
+    "quran_packs_translations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الترجمات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Translations"
+          }
+        }
+      }
+    },
+    "quran_packs_translations_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسحب لتغيير الترتيب في لوحة الآية وفي الآيات المنفصلة. جميع الترجمات مضمّنة في التطبيق؛ لا يُنزَّل شيء."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to change the order in the ayah panel and in separated verses. All translations are included in the app; nothing is downloaded."
           }
         }
       }
@@ -5352,6 +5505,210 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bookmarks"
+          }
+        }
+      }
+    },
+    "quran_settings_display_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعرض الآيات المنفصلة الترجمات المفعّلة تحت كل آية. صفحات المصحف لا تعرضها؛ اضغط على آية لقراءة ترجمتها."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separated verses show the enabled translations under each ayah. Mushaf pages never do; tap an ayah to read its translation."
+          }
+        }
+      }
+    },
+    "quran_settings_display_mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "طريقة العرض"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display mode"
+          }
+        }
+      }
+    },
+    "quran_settings_follow_dark" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدام المظهر الداكن في الوضع الداكن"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Dark theme in Dark Mode"
+          }
+        }
+      }
+    },
+    "quran_settings_landscape" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الوضع الأفقي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Landscape"
+          }
+        }
+      }
+    },
+    "quran_settings_margin_markers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "علامات الأجزاء والأحزاب والسجدات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juz, hizb and sajdah markers"
+          }
+        }
+      }
+    },
+    "quran_settings_margin_markers_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تظهر في الهامش الخارجي لصفحات المصحف، بجانب السطر الذي يبدأ فيه جزء أو حزب أو ربع، وبجانب كل سجدة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markers are shown in the outer margin of Mushaf pages, beside the line where a juz, hizb or quarter begins and beside each sajdah."
+          }
+        }
+      }
+    },
+    "quran_settings_mushaf_pages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "صفحات المصحف"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mushaf pages"
+          }
+        }
+      }
+    },
+    "quran_settings_open_flat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عند الفتح بالكامل"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open flat"
+          }
+        }
+      }
+    },
+    "quran_settings_sources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المصادر والتراخيص"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources & licences"
+          }
+        }
+      }
+    },
+    "quran_settings_text_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُطبَّق على الآيات المفصولة. في وضع المصحف تُعرض كل صفحة بحجم الشاشة دائمًا."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applies to separated verses. Mushaf mode always fits each page to the screen."
+          }
+        }
+      }
+    },
+    "quran_settings_theme" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المظهر"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme"
+          }
+        }
+      }
+    },
+    "quran_settings_translation_under_ayah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الترجمة تحت كل آية"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Translation under each ayah"
           }
         }
       }
@@ -6580,6 +6937,23 @@
         }
       }
     },
+    "settings_quran_section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "القرآن"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quran"
+          }
+        }
+      }
+    },
     "settings_reminders_denied" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7090,6 +7464,23 @@
         }
       }
     },
+    "source_packs_section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حزم القرآن"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quran packs"
+          }
+        }
+      }
+    },
     "source_plex_attribution" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7124,6 +7515,40 @@
         }
       }
     },
+    "source_qul_fonts_attribution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خطوط ترويسة السورة وأسماء السور، عبر QUL (ترتيل)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surah header and surah name fonts, via QUL (Tarteel)."
+          }
+        }
+      }
+    },
+    "source_qul_fonts_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خطوط ترويسة السور وأسمائها"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surah header and name fonts"
+          }
+        }
+      }
+    },
     "source_quran_attribution" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7137,6 +7562,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tanzil Project — Uthmani text, version 1.1"
+          }
+        }
+      }
+    },
+    "source_quran_mushaf_attribution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نص حفص العثماني وتخطيط مصحف المدينة من مجمع الملك فهد (KFGQPC)، عبر QUL (ترتيل)."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "King Fahd Complex (KFGQPC) Uthmani Hafs text and Madina mushaf layout, via QUL (Tarteel)."
+          }
+        }
+      }
+    },
+    "source_quran_mushaf_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نص القرآن وتخطيط صفحات المصحف"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quran text and page layout"
           }
         }
       }

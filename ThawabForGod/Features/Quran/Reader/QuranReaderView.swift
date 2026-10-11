@@ -22,6 +22,8 @@ struct QuranReaderView: View {
     let surahInfo: SurahInfoViewModel
     let faces: QuranFaces
     let services: MushafRenderServices
+    let settingsModel: QuranSettingsViewModel
+    let about: AboutViewModel
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
@@ -31,8 +33,11 @@ struct QuranReaderView: View {
     /// restoring them is something the code says rather than only something preference scoping
     /// implies.
     @State private var isOnScreen = false
+    /// Mirrors the horizontal size class (always false on the Mac); see `quranCompactWidth`.
+    @State private var isCompact = false
 
     var body: some View {
+        @Bindable var coordinator = coordinator
         let palette = theme.reading(viewModel.settings.resolvedTheme(systemColorScheme: colorScheme))
         QuranReaderContent(
             viewModel: viewModel,
@@ -48,7 +53,11 @@ struct QuranReaderView: View {
             .toolbarTitleDisplayMode(.inline)
             .quranReaderHidesSystemBack()
             .toolbar {
-                QuranReaderToolbar(viewModel: viewModel, coordinator: coordinator, tint: palette.text)
+                QuranReaderToolbar(viewModel: viewModel, coordinator: coordinator, tint: palette.text, isCompact: isCompact)
+            }
+            .quranCompactWidth($isCompact)
+            .sheet(isPresented: $coordinator.isSettingsSheetPresented) {
+                QuranReaderSettingsSheet(viewModel: settingsModel, about: about)
             }
             .quranReaderBars(palette, isActive: isOnScreen && isReady)
             .quranImmersiveBars(hidden: isOnScreen && viewModel.isImmersive(voiceOverRunning: voiceOverRunning))

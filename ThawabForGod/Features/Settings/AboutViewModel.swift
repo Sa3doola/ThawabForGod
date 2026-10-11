@@ -11,11 +11,22 @@ import Observation
 @MainActor
 final class AboutViewModel {
     @ObservationIgnored private let bundle: Bundle
+    @ObservationIgnored private let quran: (any QuranRepositoring)?
+    @ObservationIgnored private let packStore: (any ContentPackStoring)?
 
-    /// - Parameter bundle: where the version is read from. Injected so a test does not assert
-    ///   against whatever the test host happens to be versioned as.
-    init(bundle: Bundle = .main) {
+    /// - Parameters:
+    ///   - bundle: where the version is read from. Injected so a test does not assert against
+    ///     whatever the test host happens to be versioned as.
+    ///   - quran: what this build's Quran database can draw. `nil` keeps the default list.
+    ///   - packs: the translation and tafsir packs bundled in this build.
+    init(
+        bundle: Bundle = .main,
+        quran: (any QuranRepositoring)? = nil,
+        packs: (any ContentPackStoring)? = nil
+    ) {
         self.bundle = bundle
+        self.quran = quran
+        self.packStore = packs
     }
 
     /// The marketing version, with the build behind it — `1.0 (12)`.
@@ -31,5 +42,22 @@ final class AboutViewModel {
     }
 
     /// Every bundled data set and dependency, for the attribution screen.
-    var sources: [AttributionSource] { AttributionSource.all }
+    /// Starts as the default list and changes once `loadQuranSources()` has asked the build what
+    /// the Quran database carries.
+    private(set) var sources: [AttributionSource] = AttributionSource.all
+
+    /// The bundled translation, tafsir and surah-info packs, each with its own licence.
+    private(set) var quranPacks: [ContentPack] = []
+
+    /// Reads this build's capabilities and packs. The Mushaf data rows are listed only where the
+    /// database carries Mushaf pages, never by the name of the file.
+    func loadQuranSources() async {
+        if let quran {
+            let capabilities = (try? await quran.capabilities()) ?? []
+            sources = AttributionSource.all(includingMushafData: capabilities.supportsMushafPages)
+        }
+        if let packStore {
+            quranPacks = await packStore.installed()
+        }
+    }
 }

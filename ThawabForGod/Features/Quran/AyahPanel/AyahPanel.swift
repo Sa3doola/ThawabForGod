@@ -73,6 +73,7 @@ private struct AyahPanelContent: View {
     private struct LoadKey: Hashable {
         let ayah: VerseReference
         let tafsir: ContentPackID?
+        let translations: [ContentPackID]
     }
 
     private var arabicSize: CGFloat { isInspector ? inspectorArabicSize : sheetArabicSize }
@@ -105,7 +106,10 @@ private struct AyahPanelContent: View {
                 }
             }
         }
-        .task(id: LoadKey(ayah: ayah.id, tafsir: panel.currentTafsir(language: language)?.id)) {
+        .task(id: LoadKey(
+            ayah: ayah.id, tafsir: panel.currentTafsir(language: language)?.id,
+            translations: panel.enabledTranslations().map(\.id)
+        )) {
             didCopy = false
             await panel.load(ayah: ayah.id, language: language)
         }
