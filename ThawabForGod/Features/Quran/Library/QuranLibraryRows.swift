@@ -24,11 +24,14 @@ struct QuranLibrarySurahRowView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(spacing: AppSpacing.md) {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.xs))
+            : AnyLayout(HStackLayout(spacing: AppSpacing.md))
+        return layout {
             Text(l10n.string(row.surah.number, grouped: false))
                 .appFont(.subheadline, weight: .semibold)
                 .foregroundStyle(theme.accent)
-                .frame(minWidth: 32)
+                .frame(minWidth: 32, alignment: dynamicTypeSize.isAccessibilitySize ? .leading : .center)
             detail
         }
         .padding(.vertical, 2)
@@ -36,8 +39,9 @@ struct QuranLibrarySurahRowView: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// The name block and the trailing column. At an accessibility size the trailing column moves
-    /// under the name, since beside it the name would be left a few characters wide.
+    /// The name block and the trailing column. At an accessibility size everything stacks (number,
+    /// names, details), since beside the number the name would be left a few characters wide and
+    /// its words would break mid-word.
     private var detail: some View {
         let layout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.xs))
@@ -56,14 +60,27 @@ struct QuranLibrarySurahRowView: View {
             Text(verbatim: row.surah.name(in: l10n.language))
                 .appFont(.headline)
                 .foregroundStyle(theme.textPrimary)
-            HStack(spacing: AppSpacing.xs) {
-                Text(row.surah.revelationPlace == .makkah ? l10n.string(.quranMeccan) : l10n.string(.quranMedinan))
+            detailsLine
+                .appFont(.subheadline)
+                .foregroundStyle(theme.textSecondary)
+        }
+    }
+
+    /// Place and length. Beside each other normally; one per line at an accessibility size, each
+    /// kept whole so a word is never split to fit.
+    private var detailsLine: some View {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+            : AnyLayout(HStackLayout(spacing: AppSpacing.xs))
+        return layout {
+            Text(row.surah.revelationPlace == .makkah ? l10n.string(.quranMeccan) : l10n.string(.quranMedinan))
+                .fixedSize(horizontal: false, vertical: true)
+            if !dynamicTypeSize.isAccessibilitySize {
                 Text(verbatim: "·")
                     .accessibilityHidden(true)
-                Text(l10n.string(.quranAyahsLabel, l10n.string(row.surah.ayahCount, grouped: false)))
             }
-            .appFont(.subheadline)
-            .foregroundStyle(theme.textSecondary)
+            Text(l10n.string(.quranAyahsLabel, l10n.string(row.surah.ayahCount, grouped: false)))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -92,9 +109,13 @@ struct QuranLibraryStartRowView: View {
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.xs))
+            : AnyLayout(HStackLayout())
+        return layout {
             VStack(alignment: .leading, spacing: 2) {
                 Text(Self.title(row, l10n: l10n))
                     .appFont(.headline)
@@ -103,7 +124,9 @@ struct QuranLibraryStartRowView: View {
                     .appFont(.subheadline)
                     .foregroundStyle(theme.textSecondary)
             }
-            Spacer(minLength: AppSpacing.sm)
+            if !dynamicTypeSize.isAccessibilitySize {
+                Spacer(minLength: AppSpacing.sm)
+            }
             if let page = row.page {
                 QuranLibraryPageLabel(page: page)
             }
@@ -162,10 +185,14 @@ struct QuranContinueReadingRow: View {
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        Button(action: action) {
-            HStack {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.xs))
+            : AnyLayout(HStackLayout())
+        return Button(action: action) {
+            layout {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(l10n.string(.quranContinueReading))
                         .appFont(.headline)
@@ -174,7 +201,9 @@ struct QuranContinueReadingRow: View {
                         .appFont(.subheadline)
                         .foregroundStyle(theme.textSecondary)
                 }
-                Spacer(minLength: AppSpacing.sm)
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Spacer(minLength: AppSpacing.sm)
+                }
                 if let page = resume.page {
                     QuranLibraryPageLabel(page: page)
                 }
