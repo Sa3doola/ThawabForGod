@@ -35,27 +35,47 @@ struct SeparatedReaderView: View {
     let onSelect: (VerseReference) -> Void
     /// The ayah now at the top of the viewport, as the reader scrolls.
     var onTopAyahChange: (VerseReference) -> Void = { _ in }
+    /// Every installed translation of this surah, shown under each ayah. Read only here.
+    let translations: SeparatedTranslationsModel
+    /// The surah after this one; `nil` at An-Nas, where there is no footer.
+    var nextSurah: Surah? = nil
+    var onNextSurah: (Int) -> Void = { _ in }
+    /// `nil`: no Surah Info menu on the banner.
+    var onShowSurahInfo: ((Int) -> Void)? = nil
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(QuranReaderSettings.self) private var settings
     @Environment(\.readingPalette) private var palette
+    @Environment(\.quranFaces) private var faces
+    @Environment(\.readingStyle) private var style
+    /// The interface's direction, read before the Quran's right-to-left override below, so the
+    /// footer can be laid out the way the rest of the app is.
+    @Environment(\.layoutDirection) private var interfaceDirection
+    /// The multiplier `readingFont(size:)` applies, for the stretches whose face is named inside an
+    /// attributed string and the translations' size.
+    @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
 
     /// Ayah at the top of the viewport.
     @State private var topAyah: VerseReference?
+    /// Whether the initial jump has happened; it happens once, after the translations settle.
+    @State private var didJump = false
 
     /// Widest the surah header gets on iPad and the Mac.
     private static let headerMaxWidth: CGFloat = 560
+
+    /// What the translations depend on: reload for another surah or the toggle.
+    private struct TranslationKey: Hashable {
+        let surah: Int
+        let isShown: Bool
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    SeparatedSurahBanner(surah: surah, name: surah.name(in: l10n.language))
-                        .frame(maxWidth: Self.headerMaxWidth)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                    banner
                     if surah.hasBasmalaLine {
-                        Text(verbatim: basmala)
+                        Text(basmalaText)
                             .readingFont(size: settings.textSize)
                             .foregroundStyle(palette.text)
                             .frame(maxWidth: .infinity)
@@ -66,6 +86,7 @@ struct SeparatedReaderView: View {
                             ayah: ayah,
                             surahName: surah.name(in: l10n.language),
                             textSize: settings.textSize,
+                            translations: translations.translations(for: ayah.id),
                             isSelected: selectedAyah == ayah.id,
                             highlight: marks.highlight(ayah.id)
                         ) {
@@ -73,14 +94,23 @@ struct SeparatedReaderView: View {
                         }
                         .id(ayah.id)
                     }
+                    // A sibling with no `.id`: the scroll position is typed `VerseReference`.
+                    if let nextSurah {
+                        SeparatedSurahFooter(next: nextSurah) { onNextSurah(nextSurah.number) }
+                            .environment(\.layoutDirection, interfaceDirection)
+                    }
                 }
                 .scrollTargetLayout()
                 .padding(.horizontal)
             }
             .scrollPosition(id: $topAyah, anchor: .top)
-            .task {
-                // Jump to the requested ayah once; `scrollTo` also reaches rows the lazy stack has
-                // not built yet (`scrollPosition(id:)` ignores its initial value).
+            .task(id: TranslationKey(surah: surah.number, isShown: settings.showsTranslationInSeparated)) {
+                await translations.load(surah: surah.number, isShown: settings.showsTranslationInSeparated)
+                // Jump to the requested ayah once, after the translations have settled so rows above
+                // it do not grow afterwards. `scrollTo` also reaches rows the lazy stack has not
+                // built yet (`scrollPosition(id:)` ignores its initial value).
+                guard !Task.isCancelled, !didJump else { return }
+                didJump = true
                 guard topAyah == nil, let initialAyah, initialAyah.verse > 1 else { return }
                 await Task.yield()
                 proxy.scrollTo(initialAyah, anchor: .top)
@@ -96,6 +126,37 @@ struct SeparatedReaderView: View {
         .onChange(of: topAyah) { _, ayah in
             if let ayah { onTopAyahChange(ayah) }
         }
+    }
+
+    /// The banner, with the Surah Info menu when the build has surah information.
+    @ViewBuilder
+    private var banner: some View {
+        let base = SeparatedSurahBanner(surah: surah, name: surah.name(in: l10n.language))
+            .frame(maxWidth: Self.headerMaxWidth)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+        if let onShowSurahInfo {
+            let number = surah.number
+            base
+                .contextMenu {
+                    Button { onShowSurahInfo(number) } label: {
+                        Label(l10n.string(.quranSurahInfo), systemImage: "info.circle")
+                    }
+                }
+                .accessibilityAction(named: Text(l10n.string(.quranSurahInfo))) { onShowSurahInfo(number) }
+        } else {
+            base
+        }
+    }
+
+    /// The basmala through the same drawing-only fallback as the rows; the characters are untouched.
+    private var basmalaText: AttributedString {
+        QuranAyahText.attributed(
+            basmala,
+            face: style.font,
+            scaledSize: settings.textSize * Double(typeScale),
+            hafsIsRegistered: faces.contains(.ayahText)
+        )
     }
 }
 
@@ -116,76 +177,5 @@ private struct SeparatedSurahBanner: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
-    }
-}
-
-/// One ayah: its words in the reader's face and size, then its end-of-ayah marker.
-private struct SeparatedAyahRow: View {
-    let ayah: Ayah
-    let surahName: String
-    let textSize: Double
-    let isSelected: Bool
-    var highlight: HighlightColor?
-    let onTap: () -> Void
-
-    @Environment(LocalizationManager.self) private var l10n
-    @Environment(\.readingPalette) private var palette
-    @Environment(\.quranFaces) private var faces
-    @Environment(\.readingStyle) private var style
-    /// The multiplier `readingFont(size:)` applies to the words, so the marker and the fallback
-    /// stretches — whose faces are named inside the attributed string, where that modifier cannot
-    /// reach — grow with them.
-    @ScaledMetric(relativeTo: .title3) private var typeScale: CGFloat = 1
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Text(paragraph)
-                .readingFont(size: textSize)
-                .foregroundStyle(palette.text)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 14)
-                .padding(.horizontal, 8)
-                .background(highlight.map { palette.highlight($0) } ?? .clear, in: .rect(cornerRadius: 8))
-                .background(isSelected ? palette.selection : .clear, in: .rect(cornerRadius: 8))
-                .contentShape(.rect)
-                .onTapGesture(perform: onTap)
-            Rectangle()
-                .fill(palette.divider)
-                .frame(height: 1)
-        }
-        // One VoiceOver element per ayah: the reference, then the Arabic.
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(l10n.string(.quranSurahAyah, surahName, l10n.string(ayah.id.verse, grouped: false))))
-        .accessibilityValue(Text(verbatim: ayah.text))
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-        .accessibilityAction(.default, onTap)
-    }
-
-    /// The words, a no-break space, then the marker — one paragraph, so the marker wraps with its
-    /// ayah and a line never starts with a lone number.
-    ///
-    /// **The marker is always KFGQPC Hafs, whichever face the words are in.** The marker's text is
-    /// the ayah number in Arabic-Indic digits, which Hafs draws as one ornamented end-of-ayah glyph;
-    /// Amiri would draw three bare digits. The words carry no font of their own and take the reader's
-    /// face from `readingFont(size:)`, except the few stretches KFGQPC Hafs cannot draw (the
-    /// silent-letter mark of the public text), which `QuranAyahText` names as Amiri Quran. The
-    /// characters are the stored ones either way; only the marker and those stretches name a face.
-    private var paragraph: AttributedString {
-        let scaledSize = textSize * Double(typeScale)
-        var text = QuranAyahText.attributed(
-            ayah.text,
-            face: style.font,
-            scaledSize: scaledSize,
-            hafsIsRegistered: faces.contains(.ayahText)
-        )
-        guard !ayah.marker.isEmpty else { return text }
-        var marker = AttributedString(ayah.marker)
-        marker.font = faces.contains(.ayahText)
-            ? ReaderFont.kfgqpcHafs.font(size: scaledSize)
-            : nil
-        text.append(AttributedString("\u{00A0}"))
-        text.append(marker)
-        return text
     }
 }

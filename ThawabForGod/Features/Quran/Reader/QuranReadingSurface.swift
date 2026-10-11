@@ -25,8 +25,11 @@ struct QuranReadingSurface: View {
     /// A jump inside the surah on screen; a different surah is a new list, opened at `separatedAyah`.
     var separatedScrollRequest: SeparatedScrollRequest? = nil
     var marks: QuranAyahMarks = .none
+    let translations: SeparatedTranslationsModel
     let onSelect: (VerseReference) -> Void
     var onSeparatedTopAyahChange: (VerseReference) -> Void = { _ in }
+    var onNextSurah: (Int) -> Void = { _ in }
+    var onShowSurahInfo: ((Int) -> Void)? = nil
 
     @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.theme) private var theme
@@ -68,7 +71,11 @@ struct QuranReadingSurface: View {
                     initialAyah: separatedAyah,
                     scrollRequest: separatedScrollRequest,
                     onSelect: onSelect,
-                    onTopAyahChange: onSeparatedTopAyahChange
+                    onTopAyahChange: onSeparatedTopAyahChange,
+                    translations: translations,
+                    nextSurah: corpus.surah(separatedSurah + 1),
+                    onNextSurah: onNextSurah,
+                    onShowSurahInfo: onShowSurahInfo
                 )
                 // A new surah starts at its own top rather than at the last one's scroll offset.
                 .id(separatedSurah)

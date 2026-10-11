@@ -76,6 +76,8 @@ struct AppSectionView: View {
                             viewModel: viewModel,
                             coordinator: container.quranCoordinator,
                             panel: container.quranAyahPanelViewModel,
+                            translations: container.quranSeparatedTranslations,
+                            surahInfo: container.quranSurahInfoViewModel,
                             faces: container.quranFaces,
                             services: container.mushafRenderServices
                         )

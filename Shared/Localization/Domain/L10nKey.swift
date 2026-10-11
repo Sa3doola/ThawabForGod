@@ -285,6 +285,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// VoiceOver for an ayah on a Mushaf page — "Al-Fatihah, ayah 2". `%1$@` the surah name,
     /// `%2$@` the ayah number.
     case quranSurahAyah = "quran_surah_ayah"
+    /// The button at the end of a surah in separated mode, leading to the next one.
+    case quranNextSurah = "quran_next_surah"
+    /// That button's VoiceOver hint, `%@` the next surah's name — "Opens Al-Baqarah".
+    case quranOpensSurah = "quran_opens_surah"
 
     // The Library: the field, its example and failures, the index picker and its tabs, the rows
 

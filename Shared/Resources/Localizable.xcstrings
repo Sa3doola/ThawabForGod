@@ -4761,6 +4761,23 @@
         }
       }
     },
+    "quran_next_surah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "السورة التالية"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next surah"
+          }
+        }
+      }
+    },
     "quran_no_surah_match" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4808,6 +4825,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No such surah, ayah, juz or hizb"
+          }
+        }
+      }
+    },
+    "quran_opens_surah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يفتح %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens %@"
           }
         }
       }

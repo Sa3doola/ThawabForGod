@@ -18,6 +18,8 @@ struct QuranReaderView: View {
     let viewModel: QuranReaderViewModel
     let coordinator: QuranCoordinator
     let panel: AyahPanelViewModel
+    let translations: SeparatedTranslationsModel
+    let surahInfo: SurahInfoViewModel
     let faces: QuranFaces
     let services: MushafRenderServices
 
@@ -36,7 +38,10 @@ struct QuranReaderView: View {
             viewModel: viewModel,
             faces: faces,
             services: services,
-            onSelect: { coordinator.showAyah($0) }
+            translations: translations,
+            onSelect: { coordinator.showAyah($0) },
+            onNextSurah: { coordinator.open(.surah($0)) },
+            onShowSurahInfo: surahInfo.isAvailable ? { coordinator.showSurahInfo($0) } : nil
         )
             .quranAyahPanel(coordinator: coordinator, panel: panel, reader: viewModel, palette: palette, faces: faces)
             .navigationTitle(title)
@@ -48,6 +53,8 @@ struct QuranReaderView: View {
             .quranReaderBars(palette, isActive: isOnScreen && isReady)
             .quranImmersiveBars(hidden: isOnScreen && viewModel.isImmersive(voiceOverRunning: voiceOverRunning))
             .task { await viewModel.load() }
+            // The Library prepares this too; a reader opened without it (launch option, link) must not lack the menu.
+            .task { await surahInfo.prepare(language: l10n.language) }
             // Hiding the system back button also removes VoiceOver's two-finger scrub, so give it back.
             .accessibilityAction(.escape) { coordinator.popToRoot() }
             .onChange(of: voiceOverRunning) { _, running in
@@ -80,7 +87,10 @@ private struct QuranReaderContent: View {
     let viewModel: QuranReaderViewModel
     let faces: QuranFaces
     let services: MushafRenderServices
+    let translations: SeparatedTranslationsModel
     let onSelect: (VerseReference) -> Void
+    let onNextSurah: (Int) -> Void
+    let onShowSurahInfo: ((Int) -> Void)?
 
     @Environment(\.theme) private var theme
 
@@ -111,8 +121,11 @@ private struct QuranReaderContent: View {
                 // phase, `showsMushafPages`), and the value wanted is the one current then.
                 separatedAyah: viewModel.separatedLocation,
                 separatedScrollRequest: viewModel.separatedScrollRequest,
+                translations: translations,
                 onSelect: onSelect,
-                onSeparatedTopAyahChange: viewModel.separatedTopAyahDidChange
+                onSeparatedTopAyahChange: viewModel.separatedTopAyahDidChange,
+                onNextSurah: onNextSurah,
+                onShowSurahInfo: onShowSurahInfo
             )
         }
     }

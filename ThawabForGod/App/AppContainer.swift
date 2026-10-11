@@ -131,6 +131,9 @@ final class AppContainer {
     let quranTranslations: any TranslationRepositoring
     let quranTafsir: any TafsirRepositoring
     let quranSurahInfo: any SurahInfoRepositoring
+    /// The translations separated mode draws under each ayah: one for the section, so a rebuilt
+    /// list finds its surah already loaded.
+    let quranSeparatedTranslations: SeparatedTranslationsModel
 
     /// The 604 page fonts, registered a window at a time around the page on screen (T1). One for
     /// the app, owned here rather than a global, because the registrations it tracks are the
@@ -376,7 +379,9 @@ final class AppContainer {
         self.quranRepository = quranRepository
         self.quranPacks = quranPacks
         self.quranSearch = QuranSearchRepository(quran: quranDatabase.corpus, store: quranPacks, index: quranAyahIndex)
-        self.quranTranslations = TranslationRepository(store: quranPacks, index: quranAyahIndex)
+        let quranTranslations = TranslationRepository(store: quranPacks, index: quranAyahIndex)
+        self.quranTranslations = quranTranslations
+        self.quranSeparatedTranslations = SeparatedTranslationsModel(repository: quranTranslations)
         self.quranTafsir = TafsirRepository(store: quranPacks, index: quranAyahIndex)
         let quranSurahInfo = SurahInfoRepository(store: quranPacks)
         self.quranSurahInfo = quranSurahInfo
