@@ -87,16 +87,6 @@ nonisolated struct HijriDateTimeline: Sendable {
     /// exactly the same three choices — digits, language, accent. The clock format is along for
     /// the ride; nothing here draws a time.
     private func currentStyle() -> NextPrayerSnapshot.Style {
-        let language = AppLanguage.current()
-
-        return NextPrayerSnapshot.Style(
-            numberSystem: settingsStore.string(for: .numberSystem)
-                .flatMap(NumberSystem.init(rawValue:)) ?? .preferred(for: language),
-            clockFormat: settingsStore.string(for: .clockFormat)
-                .flatMap(ClockFormat.init(rawValue:)) ?? .fallback,
-            accent: settingsStore.string(for: .accentPalette)
-                .flatMap(AccentPalette.init(rawValue:)) ?? .fallback,
-            language: language
-        )
+        .current(from: settingsStore)
     }
 }

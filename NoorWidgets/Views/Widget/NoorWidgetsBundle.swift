@@ -27,5 +27,7 @@ struct NoorWidgetsBundle: WidgetBundle {
         PrayerCountdownWidget()
         AllPrayersWidget()
         HijriDateWidget()
+        QuranContinueReadingWidget()
+        QuranAyahOfTheDayWidget()
     }
 }

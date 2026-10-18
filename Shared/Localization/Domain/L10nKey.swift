@@ -372,6 +372,25 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// The hint under the tabletop reader's page, shown until an ayah is tapped.
     case quranTabletopHint = "quran_tabletop_hint"
 
+    // The Quran's home-screen widgets: the gallery's names and descriptions, the empty states, and the
+    // VoiceOver labels of an ayah
+
+    /// The continue-reading widget's gallery description.
+    case quranWidgetContinueDescription = "quran_widget_continue_description"
+    /// The ayah-of-the-day widget's gallery name.
+    case quranWidgetAyahName = "quran_widget_ayah_name"
+    /// The ayah-of-the-day widget's gallery description.
+    case quranWidgetAyahDescription = "quran_widget_ayah_description"
+    /// The continue-reading widget before anything has been read.
+    case quranWidgetContinueEmpty = "quran_widget_continue_empty"
+    /// The ayah-of-the-day widget before the app has been opened to load its data.
+    case quranWidgetAyahEmpty = "quran_widget_ayah_empty"
+    /// A single ayah's VoiceOver label — "Al-Fatihah, ayah 2". `%1$@` the surah name, `%2$@` the ayah.
+    case quranWidgetAyahLabel = "quran_widget_ayah_label"
+    /// A range of ayahs' VoiceOver label — "Al-Baqarah, ayahs 1 to 5". `%1$@` the surah name, `%2$@`
+    /// the first ayah, `%3$@` the last.
+    case quranWidgetAyahRangeLabel = "quran_widget_ayah_range_label"
+
     // The Library: the field, its example and failures, the index picker and its tabs, the rows
 
     /// The field's placeholder on a build with Mushaf pages.

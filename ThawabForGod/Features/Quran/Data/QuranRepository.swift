@@ -178,11 +178,10 @@ nonisolated struct QuranRepository: QuranRepositoring {
         return QuranMetadata(juz: juz, hizb: hizb, rub: rub, sajdahs: sajdahs)
     }
 
-    /// The end marker the full build stores as a `word`: the verse number in Arabic-Indic digits,
-    /// which KFGQPC Hafs draws as one ornamented sign. Data, not display — the reader's own digit
-    /// setting is for the numbers the app writes, and this is a glyph of the Mushaf's.
+    /// The end marker the full build stores as a `word`; the rule lives in `AyahEndMarker`, shared
+    /// with the widget.
     static func markerText(verse: Int) -> String {
-        String(String(verse).unicodeScalars.map { Character(Unicode.Scalar($0.value - 0x30 + 0x0660)!) })
+        AyahEndMarker.text(verse: verse)
     }
 
     // MARK: Rows

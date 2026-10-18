@@ -4622,6 +4622,125 @@
         }
       }
     },
+    "quran_widget_continue_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يفتح القرآن حيث توقفت عن القراءة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the Quran where you stopped reading."
+          }
+        }
+      }
+    },
+    "quran_widget_ayah_name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آية اليوم"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayah of the day"
+          }
+        }
+      }
+    },
+    "quran_widget_ayah_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آية مختلفة كل يوم."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A different ayah every day."
+          }
+        }
+      }
+    },
+    "quran_widget_continue_empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح القرآن لتبدأ القراءة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the Quran to start reading."
+          }
+        }
+      }
+    },
+    "quran_widget_ayah_empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح القرآن مرة لتظهر آية اليوم."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the Quran once to see the ayah of the day."
+          }
+        }
+      }
+    },
+    "quran_widget_ayah_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@، الآية %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, ayah %2$@"
+          }
+        }
+      }
+    },
+    "quran_widget_ayah_range_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@، الآيات من %2$@ إلى %3$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, ayahs %2$@ to %3$@"
+          }
+        }
+      }
+    },
     "quran_bookmark_add" : {
       "extractionState" : "manual",
       "localizations" : {
