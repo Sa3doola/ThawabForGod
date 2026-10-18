@@ -30,6 +30,14 @@ struct QuranLibraryView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
+                        coordinator.showBookmarks()
+                    } label: {
+                        Label(l10n.string(.quranMarksBookmarks), systemImage: "bookmark")
+                    }
+                    .accessibilityIdentifier("quran.library.bookmarks")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
                         coordinator.showSearch()
                     } label: {
                         Label(l10n.string(.quranSearch), systemImage: "magnifyingglass")

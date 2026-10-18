@@ -4515,6 +4515,90 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this note?" } }
       }
     },
+    "quran_marks_bookmarks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "العلامات" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bookmarks" } }
+      }
+    },
+    "quran_marks_notes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الملاحظات" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } }
+      }
+    },
+    "quran_marks_highlights" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المظلَّلة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Highlights" } }
+      }
+    },
+    "quran_marks_show" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "عرض" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show" } }
+      }
+    },
+    "quran_marks_sort" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الترتيب" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sort" } }
+      }
+    },
+    "quran_marks_by_date" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حسب التاريخ" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "By date" } }
+      }
+    },
+    "quran_marks_by_surah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حسب السورة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "By surah" } }
+      }
+    },
+    "quran_marks_delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حذف" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
+      }
+    },
+    "quran_marks_empty_bookmarks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "لا توجد علامات" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No bookmarks" } }
+      }
+    },
+    "quran_marks_empty_notes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "لا توجد ملاحظات" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No notes" } }
+      }
+    },
+    "quran_marks_empty_highlights" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "لا توجد آيات مظلَّلة" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No highlights" } }
+      }
+    },
+    "quran_marks_empty_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المس آيةً في القارئ لإضافة علامة أو تظليل أو ملاحظة." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap an ayah in the reader to bookmark, highlight or write a note." } }
+      }
+    },
     "quran_highlight" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -15,6 +15,8 @@ nonisolated enum QuranRoute: Hashable, Sendable {
     case surahInfo(Int)
     /// Search. No payload: the text, scope and results live on `QuranSearchViewModel`.
     case search
+    /// The bookmarks, notes and highlights list. No payload: kind and sort live on its view model.
+    case bookmarks
 }
 
 /// Where the Quran tab is, kept outside the view tree like every other section's.
@@ -70,6 +72,12 @@ final class QuranCoordinator {
         closePanel()
         if let prefill { search.prefill(prefill) }
         if path.last != .search { path.append(.search) }
+    }
+
+    /// Pushes the bookmarks list, unless it is already the screen in front.
+    func showBookmarks() {
+        closePanel()
+        if path.last != .bookmarks { path.append(.bookmarks) }
     }
 
     // MARK: Ayah panel

@@ -95,6 +95,12 @@ struct AppSectionView: View {
                             coordinator: container.quranCoordinator,
                             settings: container.quranReaderSettings
                         )
+                    case .bookmarks:
+                        QuranBookmarksView(
+                            viewModel: container.quranBookmarksViewModel,
+                            coordinator: container.quranCoordinator,
+                            settings: container.quranReaderSettings
+                        )
                     }
                 }
         }

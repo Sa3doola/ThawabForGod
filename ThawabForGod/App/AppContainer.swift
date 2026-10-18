@@ -185,6 +185,10 @@ final class AppContainer {
     /// SwiftData. One for the app; loaded at the end of `init`.
     let quranUserData: QuranUserDataStore
 
+    /// The bookmarks list's kind and sort: one for the section, so they survive the view tree being
+    /// rebuilt. Session-only.
+    let quranBookmarksViewModel: QuranBookmarksViewModel
+
     /// What a Mushaf page needs to draw, handed to the pager.
     var mushafRenderServices: MushafRenderServices {
         MushafRenderServices(pageFonts: quranPageFonts, metricsCache: quranPageMetrics)
@@ -473,6 +477,10 @@ final class AppContainer {
         self.quranUserData = QuranUserDataStore(
             repository: quranUserDataRepository,
             positions: quranUserDataRepository
+        )
+        self.quranBookmarksViewModel = QuranBookmarksViewModel(
+            userData: quranUserData,
+            reader: quranReaderViewModel
         )
 
         let prayerTrackerRepository = PrayerTrackerRepository(

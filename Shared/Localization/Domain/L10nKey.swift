@@ -287,6 +287,23 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranHighlightGreen = "quran_highlight_green"
     case quranHighlightBlue = "quran_highlight_blue"
     case quranHighlightPink = "quran_highlight_pink"
+    /// The Bookmarks screen's three kinds: its title, its segmented control and its empty state.
+    case quranMarksBookmarks = "quran_marks_bookmarks"
+    case quranMarksNotes = "quran_marks_notes"
+    case quranMarksHighlights = "quran_marks_highlights"
+    /// The kind picker's VoiceOver label, hidden on screen.
+    case quranMarksShow = "quran_marks_show"
+    /// The sort menu's label, and the title of its icon.
+    case quranMarksSort = "quran_marks_sort"
+    case quranMarksByDate = "quran_marks_by_date"
+    case quranMarksBySurah = "quran_marks_by_surah"
+    /// Removes a bookmark, note or highlight. A verb, as on the swipe action and in the menu.
+    case quranMarksDelete = "quran_marks_delete"
+    case quranMarksEmptyBookmarks = "quran_marks_empty_bookmarks"
+    case quranMarksEmptyNotes = "quran_marks_empty_notes"
+    case quranMarksEmptyHighlights = "quran_marks_empty_highlights"
+    /// The empty state's description, shown under whichever kind is empty.
+    case quranMarksEmptyHint = "quran_marks_empty_hint"
     case quranContinueReading = "quran_continue_reading"
     case quranSearchPrompt = "quran_search_prompt"
     /// The toolbar button and the search screen's title.
