@@ -67,6 +67,13 @@ struct AppSectionView: View {
         let viewModel = container.quranReaderViewModel
         let library = container.quranLibraryViewModel
 
+        let target = QuranCommandTarget(
+            coordinator: container.quranCoordinator,
+            reader: viewModel,
+            userData: container.quranUserData,
+            isSectionActive: { [router = container.router] in router.selectedTab == .quran }
+        )
+
         return NavigationStack(path: $coordinator.path) {
             QuranLibraryView(viewModel: library, coordinator: container.quranCoordinator)
                 .navigationDestination(for: QuranRoute.self) { route in
@@ -84,6 +91,7 @@ struct AppSectionView: View {
                             settingsModel: container.quranSettingsViewModel,
                             about: container.aboutViewModel
                         )
+                        .modifier(QuranReaderKeysModifier(target: target, coordinator: container.quranCoordinator))
                         #if DEBUG
                         .quranLaunchHooks(viewModel: viewModel, container: container)
                         #endif
@@ -110,6 +118,7 @@ struct AppSectionView: View {
         // index is built behind it, so the root's first frame already has its rows.
         .task { await library.load(language: container.localizationManager.language) }
         .quranSectionChrome(coordinator: container.quranCoordinator, viewModel: viewModel)
+        .focusedSceneValue(\.quranCommandTarget, target)
     }
 
     /// The two Sahihs, each pushing into its divisions and then into the narrations.
@@ -179,5 +188,21 @@ struct AppSectionView: View {
             )
         }
         #endif
+    }
+}
+
+/// Attaches the reader's paging keys. The three flags are read here, in this modifier's own body,
+/// so a sheet opening re-evaluates this and never `QuranReaderView.body`.
+private struct QuranReaderKeysModifier: ViewModifier {
+    let target: QuranCommandTarget
+    let coordinator: QuranCoordinator
+
+    func body(content: Content) -> some View {
+        content.quranReaderKeys(
+            target: target,
+            isActive: !coordinator.isSettingsSheetPresented
+                && !coordinator.isPanelSheetPresented
+                && coordinator.noteEditorAyah == nil
+        )
     }
 }

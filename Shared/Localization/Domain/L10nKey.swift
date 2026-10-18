@@ -355,6 +355,20 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// That button's VoiceOver hint, `%@` the next surah's name — "Opens Al-Baqarah".
     case quranOpensSurah = "quran_opens_surah"
 
+    // The Quran's menu bar commands: the Mac's Quran menu, and the shortcuts shown beside each item
+
+    case quranCommandNextPage = "quran_command_next_page"
+    case quranCommandPreviousPage = "quran_command_previous_page"
+    case quranCommandNextSurah = "quran_command_next_surah"
+    case quranCommandPreviousSurah = "quran_command_previous_surah"
+    case quranCommandGoTo = "quran_command_go_to"
+    case quranCommandBookmark = "quran_command_bookmark"
+    case quranCommandToggleAyahPanel = "quran_command_toggle_ayah_panel"
+    case quranCommandToggleDisplayMode = "quran_command_toggle_display_mode"
+    case quranCommandNextTheme = "quran_command_next_theme"
+    case quranCommandBiggerText = "quran_command_bigger_text"
+    case quranCommandSmallerText = "quran_command_smaller_text"
+
     // The Library: the field, its example and failures, the index picker and its tabs, the rows
 
     /// The field's placeholder on a build with Mushaf pages.

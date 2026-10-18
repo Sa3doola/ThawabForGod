@@ -55,6 +55,8 @@ struct ThawabForGodApp: App {
         .windowResizability(.contentMinSize)
         .commands { SectionCommands(container: container) }
         #endif
+        // Outside the `#if`: the iPad lists the Quran menu in its ⌘ overlay too.
+        .commands { QuranCommands(localization: container.localizationManager) }
 
         #if os(macOS)
         // The Mac idiom, and the reason the toolbar gear is `#if os(iOS)`: a Mac user looks for

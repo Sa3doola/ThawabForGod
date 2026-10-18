@@ -30,6 +30,7 @@ struct QuranLibraryHeader: View {
         .padding(.vertical, AppSpacing.sm)
         .frame(maxWidth: AppBreakpoint.readingMeasure)
         .frame(maxWidth: .infinity)
+        .onChange(of: coordinator.goToFocusRequest) { isFocused = true }
         .onChange(of: viewModel.failure) {
             if viewModel.failure != nil {
                 AccessibilityNotification.Announcement(failureMessage).post()

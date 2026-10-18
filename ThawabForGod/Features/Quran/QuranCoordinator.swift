@@ -133,6 +133,27 @@ final class QuranCoordinator {
         }
     }
 
+    /// Some form of the ayah panel is showing. M7.3 adds the bottom panel to this.
+    var isPanelOpen: Bool { isPanelSheetPresented || isPanelInspectorPresented }
+
+    /// ⌥⌘I: closes the panel if it is open, else opens it on `ayah`.
+    func toggleAyahPanel(at ayah: VerseReference) {
+        if isPanelOpen {
+            closePanel()
+        } else {
+            showAyah(ayah)
+        }
+    }
+
+    /// Bumped by `focusGoTo()`; the Library header focuses its field when it changes.
+    private(set) var goToFocusRequest = 0
+
+    /// ⌘G: returns to the Library and asks its go-to field to take focus.
+    func focusGoTo() {
+        popToRoot()
+        goToFocusRequest += 1
+    }
+
     /// Prev / next in the panel: the panel moves first, then the page or list follows it.
     func stepPanel(to ayah: VerseReference) {
         panelAyah = ayah
