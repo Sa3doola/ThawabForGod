@@ -51,7 +51,9 @@ struct QuranReaderView: View {
             marks: userData.marks,
             onSelect: { coordinator.showAyah($0) },
             onNextSurah: { coordinator.open(.surah($0)) },
-            onShowSurahInfo: surahInfo.isAvailable ? { coordinator.showSurahInfo($0) } : nil
+            onShowSurahInfo: surahInfo.isAvailable ? { coordinator.showSurahInfo($0) } : nil,
+            tabletopBottom: TabletopBottomView(coordinator: coordinator, panel: panel, reader: viewModel, userData: userData),
+            onTabletopChange: { coordinator.panelUsesBottom = $0 }
         )
             .quranAyahPanel(coordinator: coordinator, panel: panel, reader: viewModel, userData: userData, palette: palette, faces: faces)
             .navigationTitle(title)
@@ -79,6 +81,7 @@ struct QuranReaderView: View {
                 isOnScreen = false
                 viewModel.exitImmersive()
                 viewModel.endSession()
+                coordinator.endBottomPanel()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background, isOnScreen { viewModel.endSession() }
@@ -110,6 +113,8 @@ private struct QuranReaderContent: View {
     let onSelect: (VerseReference) -> Void
     let onNextSurah: (Int) -> Void
     let onShowSurahInfo: ((Int) -> Void)?
+    let tabletopBottom: TabletopBottomView
+    let onTabletopChange: (Bool) -> Void
 
     @Environment(\.theme) private var theme
 
@@ -145,7 +150,9 @@ private struct QuranReaderContent: View {
                 onSelect: onSelect,
                 onSeparatedTopAyahChange: viewModel.separatedTopAyahDidChange,
                 onNextSurah: onNextSurah,
-                onShowSurahInfo: onShowSurahInfo
+                onShowSurahInfo: onShowSurahInfo,
+                tabletopBottom: tabletopBottom,
+                onTabletopChange: onTabletopChange
             )
         }
     }

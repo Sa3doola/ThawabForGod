@@ -369,6 +369,9 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranCommandBiggerText = "quran_command_bigger_text"
     case quranCommandSmallerText = "quran_command_smaller_text"
 
+    /// The hint under the tabletop reader's page, shown until an ayah is tapped.
+    case quranTabletopHint = "quran_tabletop_hint"
+
     // The Library: the field, its example and failures, the index picker and its tabs, the rows
 
     /// The field's placeholder on a build with Mushaf pages.

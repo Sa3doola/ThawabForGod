@@ -55,10 +55,7 @@ extension View {
     /// macOS, which has no immersive mode.
     func quranImmersiveBars(hidden: Bool) -> some View {
         #if os(iOS)
-        // `.toolbar(_:for:)` is the iOS 16 spelling; `toolbarVisibility` is iOS 18.
-        return self
-            .toolbar(hidden ? .hidden : .automatic, for: .navigationBar)
-            .toolbar(hidden ? .hidden : .automatic, for: .tabBar)
+        return modifier(QuranImmersiveBarsModifier(hidden: hidden))
         #else
         return self
         #endif
@@ -70,6 +67,24 @@ extension View {
         modifier(QuranSectionChromeModifier(coordinator: coordinator, viewModel: viewModel))
     }
 }
+
+#if os(iOS)
+/// The navigation bar follows `hidden`; the tab bar also goes at compact height on iPhone (landscape),
+/// where about 390 pt of screen cannot spare a bar.
+private struct QuranImmersiveBarsModifier: ViewModifier {
+    let hidden: Bool
+
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    func body(content: Content) -> some View {
+        let tabBarHidden = hidden || (DeviceKind.isPhone && verticalSizeClass == .compact)
+        // `.toolbar(_:for:)` is the iOS 16 spelling; `toolbarVisibility` is iOS 18.
+        content
+            .toolbar(hidden ? .hidden : .automatic, for: .navigationBar)
+            .toolbar(tabBarHidden ? .hidden : .automatic, for: .tabBar)
+    }
+}
+#endif
 
 private struct QuranReaderBarsModifier: ViewModifier {
     let palette: ReadingPalette

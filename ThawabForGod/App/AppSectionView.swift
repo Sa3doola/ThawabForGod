@@ -114,6 +114,11 @@ struct AppSectionView: View {
         }
         // The Library and surah info draw a QUL face too; until now only the reading surface set this.
         .environment(\.quranFaces, container.quranFaces)
+        #if DEBUG
+        // So the Library and every pushed screen see `-quranFold` / `-quranFoldHorizontal`, not
+        // only the reader's launch hooks.
+        .environment(\.foldOverride, QuranLaunchOptions.current.foldOverride)
+        #endif
         // On the stack, not only on the root: when the reader is the first screen of the session the
         // index is built behind it, so the root's first frame already has its rows.
         .task { await library.load(language: container.localizationManager.language) }

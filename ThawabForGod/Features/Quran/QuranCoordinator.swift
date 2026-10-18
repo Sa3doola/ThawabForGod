@@ -120,21 +120,55 @@ final class QuranCoordinator {
         }
     }
 
+    /// The bottom panel is showing (tabletop: `QuranReadingSurface` reports it through `panelUsesBottom`).
+    var isPanelBottomPresented = false
+
+    /// Whether the panel should sit at the bottom. An open panel moves with it; the non-bottom
+    /// target follows `panelUsesInspector` (the sheet wherever the inspector is unused).
+    var panelUsesBottom = false {
+        didSet {
+            guard panelUsesBottom != oldValue else { return }
+            isTafsirReaderPresented = false
+            noteEditorAyah = nil
+            if panelUsesBottom, isPanelSheetPresented || isPanelInspectorPresented {
+                isPanelSheetPresented = false
+                isPanelInspectorPresented = false
+                isPanelBottomPresented = true
+            } else if !panelUsesBottom, isPanelBottomPresented {
+                isPanelBottomPresented = false
+                if panelUsesInspector {
+                    isPanelInspectorPresented = true
+                } else {
+                    isPanelSheetPresented = true
+                }
+            }
+        }
+    }
+
+    /// The tabletop reader left the screen (a push over it, or Back): drop a bottom panel and the
+    /// placement without re-presenting it as a sheet from a reader nobody is looking at.
+    func endBottomPanel() {
+        isPanelBottomPresented = false
+        panelUsesBottom = false
+    }
+
     /// A tap on an ayah: selects it and opens the panel on it.
     func showAyah(_ ayah: VerseReference) {
         reader.select(ayah)
         panelAyah = ayah
         // The settings sheet lets taps through to the page; two sheets cannot be up at once.
         isSettingsSheetPresented = false
-        if panelUsesInspector {
+        if panelUsesBottom {
+            isPanelBottomPresented = true
+        } else if panelUsesInspector {
             isPanelInspectorPresented = true
         } else {
             isPanelSheetPresented = true
         }
     }
 
-    /// Some form of the ayah panel is showing. M7.3 adds the bottom panel to this.
-    var isPanelOpen: Bool { isPanelSheetPresented || isPanelInspectorPresented }
+    /// Some form of the ayah panel is showing.
+    var isPanelOpen: Bool { isPanelSheetPresented || isPanelInspectorPresented || isPanelBottomPresented }
 
     /// ⌥⌘I: closes the panel if it is open, else opens it on `ayah`.
     func toggleAyahPanel(at ayah: VerseReference) {
@@ -174,6 +208,7 @@ final class QuranCoordinator {
     func closePanel() {
         isPanelSheetPresented = false
         isPanelInspectorPresented = false
+        isPanelBottomPresented = false
         isTafsirReaderPresented = false
         noteEditorAyah = nil
     }

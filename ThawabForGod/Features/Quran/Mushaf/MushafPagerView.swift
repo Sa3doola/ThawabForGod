@@ -5,6 +5,12 @@
 
 import SwiftUI
 
+extension EnvironmentValues {
+    /// True while the ayah panel holds one half of a vertically folded display: the pager then is the
+    /// other half and ignores the fold, like `ignoresFold`. Read by the pager; nothing sets it yet (the Duo half-width panel was not built).
+    @Entry var mushafPanelCoversFold: Bool = false
+}
+
 /// The style's pages as a horizontal book, always right-to-left: page 1 is the rightmost page and
 /// the next page lies to the left, as in a printed Arabic Mushaf.
 ///
@@ -40,6 +46,7 @@ struct MushafPagerView: View {
     @Environment(\.quranFaces) private var faces
     @Environment(\.forcedRenderer) private var forcedRenderer
     @Environment(\.foldOverride) private var foldOverride
+    @Environment(\.mushafPanelCoversFold) private var panelCoversFold
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -53,7 +60,7 @@ struct MushafPagerView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let fold = ignoresFold ? nil : FoldGeometry.resolve(in: geometry, override: foldOverride)
+            let fold = (ignoresFold || panelCoversFold) ? nil : FoldGeometry.resolve(in: geometry, override: foldOverride)
             let unit = unit(for: geometry.size, fold: fold)
             // Side insets can be asymmetric (a foldable's vertical system bar), and a paging scroll
             // view must be exactly one screen wide or the next page peeks in. So the scroll view

@@ -30,7 +30,12 @@ struct QuranReadingSurface: View {
     var onSeparatedTopAyahChange: (VerseReference) -> Void = { _ in }
     var onNextSurah: (Int) -> Void = { _ in }
     var onShowSurahInfo: ((Int) -> Void)? = nil
+    /// The bottom half on a tabletop-folded display; `nil` never splits.
+    var tabletopBottom: TabletopBottomView? = nil
+    /// Whether the split is on screen, so the coordinator can send the ayah panel to the bottom half.
+    var onTabletopChange: (Bool) -> Void = { _ in }
 
+    @Environment(\.foldOverride) private var foldOverride
     @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.theme) private var theme
 
@@ -52,14 +57,7 @@ struct QuranReadingSurface: View {
     private var content: some View {
         switch settings.displayMode {
         case .mushaf where corpus.hasPages:
-            MushafPagerView(
-                corpus: corpus,
-                state: mushaf,
-                settings: settings,
-                services: services,
-                marks: marks,
-                onSelect: onSelect
-            )
+            tabletopAwarePager
         case .mushaf, .separated:
             if let surah = corpus.surah(separatedSurah) {
                 SeparatedReaderView(
@@ -79,7 +77,49 @@ struct QuranReadingSurface: View {
                 )
                 // A new surah starts at its own top rather than at the last one's scroll offset.
                 .id(separatedSurah)
+                .onAppear { onTabletopChange(false) }
             }
         }
+    }
+
+    /// The pager, or on a horizontally folded display (tabletop) the page on the top half and
+    /// `tabletopBottom` on the bottom, with the hinge left empty. Measured over the reading area, so
+    /// the heights are the page's own.
+    private var tabletopAwarePager: some View {
+        GeometryReader { geometry in
+            let division = FoldGeometry.resolveDivision(in: geometry, override: foldOverride)
+            Group {
+                if case .horizontal(let top, let gutter, let bottom) = division, let tabletopBottom {
+                    VStack(spacing: 0) {
+                        pager(isTabletop: true).frame(height: top)
+                        Color.clear.frame(height: gutter)
+                        tabletopBottom.frame(height: bottom)
+                    }
+                } else {
+                    pager(isTabletop: false)
+                }
+            }
+            .onChange(of: isTabletop(division), initial: true) { _, active in
+                onTabletopChange(active)
+            }
+            // `initial` does not fire again when the reader returns from a push.
+            .onAppear { onTabletopChange(isTabletop(division)) }
+        }
+    }
+
+    private func isTabletop(_ division: FoldGeometry.Division?) -> Bool {
+        if case .horizontal = division, tabletopBottom != nil { true } else { false }
+    }
+
+    private func pager(isTabletop: Bool) -> some View {
+        MushafPagerView(
+            corpus: corpus,
+            state: mushaf,
+            settings: settings,
+            services: services,
+            isTabletop: isTabletop,
+            marks: marks,
+            onSelect: onSelect
+        )
     }
 }

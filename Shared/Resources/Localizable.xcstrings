@@ -4605,6 +4605,23 @@
         }
       }
     },
+    "quran_tabletop_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اضغط على آية لقراءة ترجمتها وتفسيرها هنا."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap an ayah to read its translation and tafsir here."
+          }
+        }
+      }
+    },
     "quran_bookmark_add" : {
       "extractionState" : "manual",
       "localizations" : {
