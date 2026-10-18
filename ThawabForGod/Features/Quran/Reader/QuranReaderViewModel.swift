@@ -3,6 +3,7 @@
 //  ThawabForGod
 //
 
+import Foundation
 import Observation
 
 /// The Quran reader's session: the corpus load, where the reader is in either mode, and the switch
@@ -43,6 +44,13 @@ final class QuranReaderViewModel {
     @ObservationIgnored private let repository: any QuranRepositoring
     @ObservationIgnored private let style: MushafStyle
     @ObservationIgnored private let allowsImmersive: Bool
+    @ObservationIgnored private let positions: (any QuranReadingPositionRecording)?
+    @ObservationIgnored private let activity: ActivityRecorder?
+    @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private var sessionEnd: Task<Void, Never>?
+    /// True once the reader has been somewhere real (a navigation, a selection, a page turn) in this
+    /// process, so the Library's Continue reading uses the live place rather than the stored one.
+    @ObservationIgnored private(set) var hasLivePlace = false
     /// A target that arrived before the corpus did. The latest wins.
     @ObservationIgnored private var parkedTarget: GoToTarget?
     @ObservationIgnored private var scrollSerial = 0
@@ -56,16 +64,28 @@ final class QuranReaderViewModel {
         repository: any QuranRepositoring,
         settings: QuranReaderSettings,
         style: MushafStyle = .madaniV2,
-        allowsImmersive: Bool? = nil
+        allowsImmersive: Bool? = nil,
+        positions: (any QuranReadingPositionRecording)? = nil,
+        activity: ActivityRecorder? = nil,
+        now: @escaping () -> Date = Date.init
     ) {
         self.repository = repository
         self.settings = settings
         self.style = style
+        self.positions = positions
+        self.activity = activity
+        self.now = now
         // `nil` means "ask the device". The question is asked here and not in the default argument
         // because a default value is evaluated outside the main actor, where `DeviceKind.isPhone`
         // cannot be read.
         self.allowsImmersive = allowsImmersive ?? DeviceKind.isPhone
         mushaf = MushafReadingState(page: 1, pages: style.pages)
+        // Page turns come from the pager. In separated mode `open()` moves the page before
+        // `separatedLocation`, so only Mushaf mode may report from here.
+        mushaf.onPageChange = { [weak self] _ in
+            guard let self, showsMushafPages else { return }
+            noteLocationChange()
+        }
     }
 
     // MARK: Derived
@@ -161,6 +181,7 @@ final class QuranReaderViewModel {
         } else {
             separatedSurah = place.ayah.surah
         }
+        noteLocationChange()
         return true
     }
 
@@ -170,6 +191,7 @@ final class QuranReaderViewModel {
         mushaf.select(ayah)
         // Read from there, as Mushaf does.
         if !showsMushafPages { separatedLocation = ayah }
+        noteLocationChange()
     }
 
     /// Switches modes keeping the reader's place, and writes nothing but the mode:
@@ -191,6 +213,7 @@ final class QuranReaderViewModel {
             }
         }
         settings.select(displayMode: mode)
+        noteLocationChange()
     }
 
     func toggleDisplayMode() {
@@ -200,6 +223,38 @@ final class QuranReaderViewModel {
     /// The separated list reports its first ayah in view. Goes into an unobserved property.
     func separatedTopAyahDidChange(_ ayah: VerseReference) {
         separatedLocation = ayah
+        noteLocationChange()
+    }
+
+    // MARK: Position and session
+
+    /// The one place the reader's place is reported. Nothing is recorded before a corpus has loaded,
+    /// so the default 1:1 is never written at launch.
+    private func noteLocationChange() {
+        guard corpus != nil else { return }
+        hasLivePlace = true
+        positions?.recordReadingPosition(location)
+    }
+
+    /// The reader is leaving the screen or the app: write the place now and leave one Quran chip in
+    /// Recent activity. Synchronous; `awaitSessionEnd()` waits for the work it starts.
+    func endSession() {
+        guard hasLivePlace, let corpus, corpus.surah(location.surah) != nil else { return }
+        let place = location
+        let date = now()
+        let previous = sessionEnd
+        sessionEnd = Task { [positions, activity] in
+            await previous?.value
+            await positions?.flushReadingPosition()
+            if let surah = corpus.surah(place.surah) {
+                activity?.record(.quran(place, of: surah.ayahCount, at: date))
+            }
+            await activity?.flush()
+        }
+    }
+
+    func awaitSessionEnd() async {
+        await sessionEnd?.value
     }
 
     // MARK: Immersive

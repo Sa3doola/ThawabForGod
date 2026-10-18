@@ -418,9 +418,19 @@ final class AppContainer {
         #endif
         let quranReaderSettings = QuranReaderSettings(settingsStore: settingsStore)
         self.quranReaderSettings = quranReaderSettings
+        // Built before the reader, which records its position into it (it needs only `persistence`).
+        // One actor behind both protocols; the store is the only thing that holds it.
+        let quranUserDataRepository = QuranUserDataRepository(modelContainer: persistence.container)
+        let quranUserData = QuranUserDataStore(
+            repository: quranUserDataRepository,
+            positions: quranUserDataRepository
+        )
+        self.quranUserData = quranUserData
         let quranReaderViewModel = QuranReaderViewModel(
             repository: quranRepository,
-            settings: quranReaderSettings
+            settings: quranReaderSettings,
+            positions: quranUserData,
+            activity: activityRecorder
         )
         self.quranReaderViewModel = quranReaderViewModel
         let quranSurahInfoViewModel = SurahInfoViewModel(repository: quranSurahInfo, reader: quranReaderViewModel)
@@ -437,14 +447,23 @@ final class AppContainer {
             tafsir: quranTafsir
         )
         self.aboutViewModel = AboutViewModel(quran: quranRepository, packs: quranPacks)
-        self.quranLibraryViewModel = QuranLibraryViewModel(reader: quranReaderViewModel, surahInfo: quranSurahInfoViewModel)
+        self.quranLibraryViewModel = QuranLibraryViewModel(
+            reader: quranReaderViewModel,
+            surahInfo: quranSurahInfoViewModel,
+            userData: quranUserData
+        )
         let quranSearchViewModel = QuranSearchViewModel(
             search: self.quranSearch,
             translations: quranTranslations,
-            reader: quranReaderViewModel
+            reader: quranReaderViewModel,
+            recents: QuranRecentSearchStore(settingsStore: settingsStore)
         )
         self.quranSearchViewModel = quranSearchViewModel
-        self.quranCoordinator = QuranCoordinator(reader: quranReaderViewModel, search: quranSearchViewModel)
+        self.quranCoordinator = QuranCoordinator(
+            reader: quranReaderViewModel,
+            search: quranSearchViewModel,
+            userData: quranUserData
+        )
 
         // The same three links again, over the two Sahihs. Another file and the same
         // `CorpusDatabase`, which is the point of that type taking a resource name and knowing
@@ -472,12 +491,6 @@ final class AppContainer {
             corpus: hadithRepository
         )
 
-        // One actor behind both protocols; the store is the only thing that holds it.
-        let quranUserDataRepository = QuranUserDataRepository(modelContainer: persistence.container)
-        self.quranUserData = QuranUserDataStore(
-            repository: quranUserDataRepository,
-            positions: quranUserDataRepository
-        )
         self.quranBookmarksViewModel = QuranBookmarksViewModel(
             userData: quranUserData,
             reader: quranReaderViewModel
@@ -719,10 +732,15 @@ final class AppContainer {
             // Somebody else's use cases, on purpose: the chips name an adhkar chapter and a
             // dhikr, and resolving those names anywhere but through the feature that owns them
             // would be a second copy of the corpus's vocabulary. The Quran's "continue reading"
-            // and chapter names come back with the ported reader's user data (M6).
+            // and chapter names come through an adapter, never the store or the corpus itself.
             tasbih: tasbihUseCase,
             adhkar: getAdhkar,
             recentActivity: recentActivity,
+            quranProgress: QuranHomeProgress(
+                userData: quranUserData,
+                reader: quranReaderViewModel,
+                repository: quranRepository
+            ),
             tracker: prayerTracker,
             clock: clock
         )

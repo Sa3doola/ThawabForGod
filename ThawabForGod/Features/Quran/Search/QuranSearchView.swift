@@ -40,6 +40,7 @@ struct QuranSearchView: View {
                     }
                 }
             }
+            .onSubmit(of: .search) { viewModel.rememberSearch() }
             .autocorrectionDisabled()
             .task { await viewModel.prepare() }
             .task(id: viewModel.key) { await viewModel.run() }
@@ -59,6 +60,8 @@ struct QuranSearchView: View {
     private func content(_ palette: ReadingPalette) -> some View {
         if let corpus = viewModel.corpus {
             switch viewModel.outcome {
+            case .idle where !viewModel.recentSearches.isEmpty:
+                recentList(palette)
             case .idle:
                 ContentUnavailableView {
                     Label { Text(l10n.string(.quranSearchPrompt)) } icon: { Image(systemName: "magnifyingglass") }
@@ -103,6 +106,41 @@ struct QuranSearchView: View {
             Label { Text(l10n.string(.quranSearchNoResults)) } icon: { Image(systemName: "magnifyingglass") }
         }
         .accessibilityIdentifier("quran.search.empty")
+    }
+
+    /// The last submitted searches, shown while the field is empty.
+    private func recentList(_ palette: ReadingPalette) -> some View {
+        List {
+            Section {
+                ForEach(viewModel.recentSearches, id: \.self) { recent in
+                    Button {
+                        viewModel.useRecentSearch(recent)
+                    } label: {
+                        Label {
+                            Text(verbatim: recent)
+                        } icon: {
+                            Image(systemName: "clock.arrow.circlepath")
+                        }
+                    }
+                    .tint(palette.text)
+                    .listRowBackground(palette.background)
+                    .accessibilityIdentifier("quran.search.recent")
+                }
+            } header: {
+                HStack {
+                    Text(l10n.string(.quranRecentSearches))
+                    Spacer()
+                    Button {
+                        viewModel.clearRecentSearches()
+                    } label: {
+                        Text(l10n.string(.quranClear))
+                    }
+                    .accessibilityLabel(Text(l10n.string(.quranRecentSearchesClear)))
+                    .accessibilityIdentifier("quran.search.recent.clear")
+                }
+                .foregroundStyle(palette.secondaryText)
+            }
+        }
     }
 
     // MARK: Lists
@@ -206,6 +244,7 @@ struct QuranSearchView: View {
         _ ref: VerseReference, palette: ReadingPalette, @ViewBuilder label: () -> some View
     ) -> some View {
         Button {
+            viewModel.rememberSearch()
             coordinator.open(.ayah(ref))
         } label: {
             label()

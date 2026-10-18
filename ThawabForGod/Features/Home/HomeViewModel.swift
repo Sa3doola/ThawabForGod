@@ -140,6 +140,7 @@ final class HomeViewModel {
     @ObservationIgnored private let tasbih: TasbihUseCase?
     @ObservationIgnored private let adhkar: GetAdhkarUseCase?
     @ObservationIgnored private let recentActivity: RecentActivityUseCase?
+    @ObservationIgnored private let quranProgress: (any HomeQuranProgressProviding)?
     @ObservationIgnored private let tracker: PrayerTrackerUseCase?
     /// Where the times are being computed for — the seeded point until a live fix replaces it.
     ///
@@ -196,6 +197,7 @@ final class HomeViewModel {
         tasbih: TasbihUseCase? = nil,
         adhkar: GetAdhkarUseCase? = nil,
         recentActivity: RecentActivityUseCase? = nil,
+        quranProgress: (any HomeQuranProgressProviding)? = nil,
         tracker: PrayerTrackerUseCase? = nil,
         clock: any ClockService = SystemClockService(),
         calendar: Calendar = .gregorianLocal
@@ -205,6 +207,7 @@ final class HomeViewModel {
         self.tasbih = tasbih
         self.adhkar = adhkar
         self.recentActivity = recentActivity
+        self.quranProgress = quranProgress
         self.tracker = tracker
         self.coordinates = coordinates
         self.locationService = locationService
@@ -252,7 +255,7 @@ final class HomeViewModel {
         // `async let` is awaited below so the child is still structured: cancelling the screen's
         // task cancels this too.
         async let name: Void = resolvePlaceName()
-        async let activities: Void = loadRecentActivities()
+        async let activities: Void = loadQuranAndActivities()
         async let tracked: Void = reloadTracker()
 
         for await _ in clock.ticks(every: .seconds(1)) {
@@ -328,6 +331,27 @@ final class HomeViewModel {
         await reloadTracker()
     }
 
+    /// Lets the reader finish writing its position, then reads the card and the chips.
+    ///
+    /// Settling first avoids the pop-versus-reload race: leaving the reader parks a write, and a
+    /// read that overtook it would go on naming the place the reader opened at.
+    private func loadQuranAndActivities() async {
+        await quranProgress?.settle()
+        await loadContinueReading()
+        await loadRecentActivities()
+    }
+
+    /// The "continue reading" card: the last ayah read and its chapter's name, or nothing.
+    private func loadContinueReading() async {
+        guard let quranProgress, let ayah = await quranProgress.lastReadAyah() else {
+            continueReading = nil
+            return
+        }
+
+        let name = await quranProgress.surahName(ayah.surah, in: .current())
+        continueReading = ContinueReading(reference: ayah, surahName: name)
+    }
+
     /// Loads the recent-activity chips, resolving each one's name as it goes.
     ///
     /// Silent on failure and empty on nothing, which are the same outcome as far as the screen is
@@ -356,9 +380,9 @@ final class HomeViewModel {
     private func subject(of activity: RecentActivity) async -> String? {
         switch activity.kind {
         case .quran:
-            // The chapter's name comes back with the ported reader (M6); until then the chip
-            // says "Quran" and the verse, which is still the way back to it.
-            return nil
+            // Without a name the chip says "Quran" and the verse, which is still the way back.
+            guard let quranProgress, let ref = activity.verseReference else { return nil }
+            return await quranProgress.surahName(ref.surah, in: .current())
 
         case .adhkar:
             // The chapter titles now live in the corpus rather than in the string catalog, so

@@ -44,6 +44,10 @@ extension AppContainer {
             // and the stack is not touched (a cold launch takes back its early push).
             router.selectedTab = .quran
             quranCoordinator.open(.ayah(reference))
+
+        case .quranContinue:
+            router.selectedTab = .quran
+            quranCoordinator.openReader()
         }
     }
 }

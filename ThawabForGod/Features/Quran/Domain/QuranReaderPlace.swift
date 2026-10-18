@@ -29,6 +29,11 @@ nonisolated struct QuranReaderPlace: Equatable, Sendable {
             return QuranReaderPlace(
                 ayah: reference, page: corpus.pageNumber(for: reference), selectsAyah: true)
 
+        case .resume(let reference):
+            guard corpus.ayah(reference) != nil else { return nil }
+            return QuranReaderPlace(
+                ayah: reference, page: corpus.pageNumber(for: reference), selectsAyah: false)
+
         case .surah(let number):
             guard let surah = corpus.surah(number) else { return nil }
             return QuranReaderPlace(

@@ -13,6 +13,8 @@ nonisolated enum GoToTarget: Hashable, Sendable {
     /// The ayah where the juz (1…30) or hizb (1…60) begins.
     case juz(Int)
     case hizb(Int)
+    /// Where the reader left off: positions like `.ayah`, but does not select the ayah.
+    case resume(VerseReference)
 
     /// "50" → page 50, "2:255" → ayah 2:255, "juz 5" / "ج ٥" / "الجزء ٥", "hizb 12" / "حزب ١٢",
     /// "page 50" / "ص ٥٠", "surah 18" / "سورة ١٨". Accepts Arabic-Indic digits. Returns nil for

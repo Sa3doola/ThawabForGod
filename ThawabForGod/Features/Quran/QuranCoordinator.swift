@@ -46,20 +46,26 @@ final class QuranCoordinator {
 
     @ObservationIgnored private let search: QuranSearchViewModel
 
-    init(reader: QuranReaderViewModel, search: QuranSearchViewModel) {
+    /// The stored reading position. `nil` in tests and previews.
+    @ObservationIgnored private let userData: QuranUserDataStore?
+
+    init(reader: QuranReaderViewModel, search: QuranSearchViewModel, userData: QuranUserDataStore? = nil) {
         self.reader = reader
         self.search = search
+        self.userData = userData
     }
 
     /// The reader has been pushed at least once in this process, so there is a place to go back to.
-    /// In memory: M6 replaces it with the restored `ReadingPosition`.
+    /// A session flag; a stored position (`userData.hasReadingPosition`) covers a relaunch.
     private(set) var hasShownReader = false
 
     /// The reader is the screen at the top of this section's stack.
     var isReaderOnTop: Bool { path.last == .reader }
 
     /// Continue reading can be offered: there is a place, and the reader is not already on the stack.
-    var canContinueReading: Bool { hasShownReader && !path.contains(.reader) }
+    var canContinueReading: Bool {
+        (hasShownReader || userData?.hasReadingPosition == true) && !path.contains(.reader)
+    }
 
     /// Pushes a surah's introduction, unless it is already the screen in front.
     func showSurahInfo(_ surah: Int) {
@@ -167,9 +173,14 @@ final class QuranCoordinator {
         }
     }
 
-    /// Shows the reader where it was left.
+    /// Shows the reader where it was left: the live place if this process has one, else the stored
+    /// reading position (opened without selecting the ayah).
     func openReader() {
-        showReader()
+        if !reader.hasLivePlace, let ayah = userData?.readingPosition?.ayah {
+            open(.resume(ayah))
+        } else {
+            showReader()
+        }
     }
 
     func popToRoot() {

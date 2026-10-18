@@ -31,6 +31,7 @@ struct QuranReaderView: View {
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverRunning
     /// True while this is the screen in front. The bars take the page's colours only then, so
     /// restoring them is something the code says rather than only something preference scoping
@@ -77,6 +78,10 @@ struct QuranReaderView: View {
             .onDisappear {
                 isOnScreen = false
                 viewModel.exitImmersive()
+                viewModel.endSession()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background, isOnScreen { viewModel.endSession() }
             }
     }
 

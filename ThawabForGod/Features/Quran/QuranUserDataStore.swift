@@ -18,7 +18,7 @@ import os
 /// repository; there is no user-facing error.
 @MainActor
 @Observable
-final class QuranUserDataStore {
+final class QuranUserDataStore: QuranReadingPositionRecording {
 
     // MARK: Lists, newest first
 
@@ -27,6 +27,9 @@ final class QuranUserDataStore {
     private(set) var highlights: [QuranHighlight] = []
     private(set) var readingPosition: QuranReadingPosition?
     private(set) var isLoaded = false
+    /// Whether there is a position at all. Flips once, unlike `readingPosition`, which changes on
+    /// every page turn; observers that only need the question read this.
+    private(set) var hasReadingPosition = false
 
     // MARK: Lookups
 
@@ -39,6 +42,9 @@ final class QuranUserDataStore {
     @ObservationIgnored private let repository: any QuranUserDataRepositoring
     @ObservationIgnored private let positions: any QuranReadingPositionRepositoring
     @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private let positionDebounce: Duration
+    @ObservationIgnored private var pendingPosition: (ayah: VerseReference, date: Date)?
+    @ObservationIgnored private var positionTimer: Task<Void, Never>?
     @ObservationIgnored private var pending: Task<Void, Never>?
     @ObservationIgnored private var hasStartedLoading = false
     /// Links of the write chain not yet finished, and whether one of them failed.
@@ -52,11 +58,13 @@ final class QuranUserDataStore {
     init(
         repository: any QuranUserDataRepositoring,
         positions: any QuranReadingPositionRepositoring,
-        now: @escaping () -> Date = Date.init
+        now: @escaping () -> Date = Date.init,
+        positionDebounce: Duration = .seconds(1)
     ) {
         self.repository = repository
         self.positions = positions
         self.now = now
+        self.positionDebounce = positionDebounce
     }
 
     // MARK: Loading
@@ -72,7 +80,8 @@ final class QuranUserDataStore {
                 let marks = try await repository.marks()
                 let position = try await positions.readingPosition()
                 replace(with: marks)
-                readingPosition = position
+                // A position the reader recorded while loading is newer than the disk's.
+                if pendingPosition == nil { applyPosition(position) }
             } catch {
                 Self.logger.error("Load failed: \(String(describing: error), privacy: .public)")
             }
@@ -130,12 +139,40 @@ final class QuranUserDataStore {
         enqueue { [repository] in try await repository.setHighlight(color, ayah: ayah, at: date) }
     }
 
-    /// Written through on every call; M6.4 adds the debounce inside this method.
+    /// Memory now, disk after the reader has stayed for `positionDebounce`. The same ayah twice is
+    /// ignored, so a write never happens per page turn.
     func recordReadingPosition(_ ayah: VerseReference) {
+        guard ayah != readingPosition?.ayah else { return }
         let date = now()
         // No list changes, so none is rebuilt: a page turn must not redraw the Library.
-        edit(rebuildsLists: false) { $0.readingPosition = QuranReadingPosition(ayah: ayah, updatedAt: date) }
+        edit(rebuildsLists: false) { $0.applyPosition(QuranReadingPosition(ayah: ayah, updatedAt: date)) }
+        pendingPosition = (ayah, date)
+        positionTimer?.cancel()
+        positionTimer = Task { [weak self, positionDebounce] in
+            guard (try? await Task.sleep(for: positionDebounce)) != nil, !Task.isCancelled else { return }
+            self?.enqueuePendingPosition()
+        }
+    }
+
+    /// Writes the waiting position now and awaits every write issued so far.
+    func flushReadingPosition() async {
+        positionTimer?.cancel()
+        positionTimer = nil
+        enqueuePendingPosition()
+        await flush()
+    }
+
+    private func enqueuePendingPosition() {
+        positionTimer = nil
+        guard let (ayah, date) = pendingPosition else { return }
+        pendingPosition = nil
         enqueue { [positions] in try await positions.recordReadingPosition(ayah, at: date) }
+    }
+
+    private func applyPosition(_ position: QuranReadingPosition?) {
+        readingPosition = position
+        let has = position != nil
+        if has != hasReadingPosition { hasReadingPosition = has }
     }
 
     #if DEBUG
@@ -240,6 +277,6 @@ final class QuranUserDataStore {
     private func reloadFromDisk() async {
         guard let marks = try? await repository.marks() else { return }
         replace(with: marks)
-        if let position = try? await positions.readingPosition() { readingPosition = position }
+        if pendingPosition == nil, let position = try? await positions.readingPosition() { applyPosition(position) }
     }
 }

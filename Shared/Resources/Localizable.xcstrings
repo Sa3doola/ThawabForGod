@@ -4658,6 +4658,40 @@
         }
       }
     },
+    "quran_recent_searches" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عمليات البحث الأخيرة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent searches"
+          }
+        }
+      }
+    },
+    "quran_recent_searches_clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسح عمليات البحث الأخيرة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear recent searches"
+          }
+        }
+      }
+    },
     "quran_clear" : {
       "extractionState" : "manual",
       "localizations" : {

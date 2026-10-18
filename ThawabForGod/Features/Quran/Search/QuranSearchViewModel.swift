@@ -54,10 +54,35 @@ final class QuranSearchViewModel {
     /// not search again.
     @ObservationIgnored private var lastAppliedKey: Key?
 
-    init(search: any QuranSearchRepositoring, translations: any TranslationRepositoring, reader: QuranReaderViewModel) {
+    @ObservationIgnored private let recents: QuranRecentSearchStore?
+    /// The last submitted searches, newest first. Empty without a store.
+    private(set) var recentSearches: [String] = []
+
+    init(
+        search: any QuranSearchRepositoring, translations: any TranslationRepositoring,
+        reader: QuranReaderViewModel, recents: QuranRecentSearchStore? = nil
+    ) {
         self.search = search
         self.translations = translations
         self.reader = reader
+        self.recents = recents
+        self.recentSearches = recents?.load() ?? []
+    }
+
+    /// Remembers the current text. Called on submit and on a result tap, never while typing.
+    func rememberSearch() {
+        guard let recents else { return }
+        recentSearches = recents.remember(text)
+    }
+
+    func clearRecentSearches() {
+        recents?.clear()
+        recentSearches = []
+    }
+
+    /// Searches again for an earlier text, keeping the scope.
+    func useRecentSearch(_ recent: String) {
+        text = recent
     }
 
     var key: Key { Key(text: text, scope: scope) }
@@ -151,5 +176,43 @@ final class QuranSearchViewModel {
         ayah: @Sendable (Item) -> VerseReference
     ) async -> [SurahGroup<Item>] {
         SurahGroup.groups(items, ayah: ayah)
+    }
+}
+
+/// The last searches, newest first, kept as a JSON `[String]` under `.quranRecentSearches`. What the
+/// reader typed and nothing else; unreadable data reads as none (Mushaf's `RecentSearchStore`).
+nonisolated struct QuranRecentSearchStore: Sendable {
+    static let limit = 10
+
+    private let settingsStore: any SettingsStore
+
+    init(settingsStore: any SettingsStore) {
+        self.settingsStore = settingsStore
+    }
+
+    func load() -> [String] {
+        guard let json = settingsStore.string(for: .quranRecentSearches),
+              let decoded = try? JSONDecoder().decode([String].self, from: Data(json.utf8))
+        else { return [] }
+        return decoded
+    }
+
+    /// Puts `text` first, dropping an earlier copy; empty text changes nothing. Returns the new list.
+    @discardableResult
+    func remember(_ text: String) -> [String] {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var list = load()
+        guard !trimmed.isEmpty else { return list }
+        list.removeAll { $0 == trimmed }
+        list.insert(trimmed, at: 0)
+        list = Array(list.prefix(Self.limit))
+        if let data = try? JSONEncoder().encode(list), let json = String(data: data, encoding: .utf8) {
+            settingsStore.set(json, for: .quranRecentSearches)
+        }
+        return list
+    }
+
+    func clear() {
+        settingsStore.set(nil as String?, for: .quranRecentSearches)
     }
 }

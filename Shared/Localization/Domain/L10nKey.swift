@@ -363,6 +363,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranFieldPlaceholderSurahs = "quran_field_placeholder_surahs"
     /// The field's clear button, read by VoiceOver.
     case quranClear = "quran_clear"
+    case quranRecentSearches = "quran_recent_searches"
+    case quranRecentSearchesClear = "quran_recent_searches_clear"
     /// The button that goes to what was typed.
     case quranGo = "quran_go"
     /// The example line under the field. Four arguments, each already formatted by the caller: the

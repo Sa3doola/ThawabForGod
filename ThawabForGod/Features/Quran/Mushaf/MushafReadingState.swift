@@ -24,6 +24,10 @@ final class MushafReadingState {
 
     let pages: ClosedRange<Int>
 
+    /// Called after the page changes, by whatever moved it (a swipe, a turn button, a jump). The
+    /// reader's view model sets it to record the reading position; it is not observed.
+    @ObservationIgnored var onPageChange: ((Int) -> Void)?
+
     init(page: Int = 1, pages: ClosedRange<Int>) {
         self.pages = pages
         self.page = min(max(page, pages.lowerBound), pages.upperBound)
@@ -32,7 +36,10 @@ final class MushafReadingState {
     /// Moves to `page`, clamped to the style's pages.
     func show(page: Int) {
         let clamped = min(max(page, pages.lowerBound), pages.upperBound)
-        if clamped != self.page { self.page = clamped }
+        if clamped != self.page {
+            self.page = clamped
+            onPageChange?(clamped)
+        }
     }
 
     /// The first page of the unit on screen: the odd page of a spread, else the page itself.

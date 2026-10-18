@@ -33,4 +33,7 @@ nonisolated enum AppRoute: Hashable, Sendable {
 
     /// The Quran tab, with the reader open at this ayah, in whichever mode the reader is in.
     case quranVerse(VerseReference)
+
+    /// The Quran tab, with the reader back where it was left — no ayah selected.
+    case quranContinue
 }

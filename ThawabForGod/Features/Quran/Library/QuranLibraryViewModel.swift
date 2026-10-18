@@ -53,9 +53,12 @@ final class QuranLibraryViewModel {
     private(set) var filteredSurahs: [QuranLibrarySurahRow] = []
     private(set) var failure: QuranGoToFailure?
 
-    init(reader: QuranReaderViewModel, surahInfo: SurahInfoViewModel) {
+    @ObservationIgnored private let userData: QuranUserDataStore?
+
+    init(reader: QuranReaderViewModel, surahInfo: SurahInfoViewModel, userData: QuranUserDataStore? = nil) {
         self.reader = reader
         self.surahInfo = surahInfo
+        self.userData = userData
     }
 
     // MARK: Derived
@@ -115,6 +118,13 @@ final class QuranLibraryViewModel {
     /// may read it only while `QuranCoordinator.canContinueReading` is true (design note, 3.5).
     var resume: QuranLibraryResume? {
         guard let corpus = reader.corpus else { return nil }
+        guard reader.hasLivePlace else {
+            // Nothing has been opened in this process: the stored position, if it still names a verse.
+            guard let ayah = userData?.readingPosition?.ayah,
+                  corpus.ayah(ayah) != nil, let surah = corpus.surah(ayah.surah) else { return nil }
+            return QuranLibraryResume(
+                surah: surah, ayah: ayah, page: showsPages ? corpus.pageNumber(for: ayah) : nil)
+        }
         let location = reader.location
         guard let surah = corpus.surah(location.surah) else { return nil }
         // The page gate is the index's, through `showsPages`. Before the index exists it is false,

@@ -65,6 +65,9 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case quranEnabledTafsirs
     /// The tafsir the panel opens on. Unset: automatic.
     case quranDefaultTafsir
+    /// The last searches the reader submitted, newest first: a JSON `[String]` of what they typed.
+    /// Unset: none.
+    case quranRecentSearches
 
     /// How large the adhkar are set. **Its own key rather than `readerTextSize`**, deliberately:
     /// the Quran is read in long sittings on a page the reader chose a paper for, and a dhikr is
