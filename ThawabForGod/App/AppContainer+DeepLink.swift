@@ -16,7 +16,7 @@ extension AppContainer {
     /// one function keeps up.
     ///
     /// Most cases delegate straight to `open(_ route: AppRoute)`, which already knows the rule
-    /// about selecting the tab before driving its coordinator. The four that do not are the four
+    /// about selecting the tab before driving its coordinator. The five that do not are the five
     /// `AppRoute` has no case for, because nothing *inside* the app ever needed to ask for them.
     func open(_ link: DeepLink) {
         switch link {
@@ -52,6 +52,16 @@ extension AppContainer {
 
         case .quran:
             open(AppRoute.quran)
+
+        case .quranVerse(let reference):
+            open(AppRoute.quranVerse(reference))
+
+        case .quranPage(let page):
+            // On a build without printed pages the target does not resolve and the stack stays
+            // at the Library root: never a wrong place.
+            router.selectedTab = .quran
+            quranCoordinator.popToRoot()
+            quranCoordinator.open(.page(page))
 
         case .hadith:
             router.selectedTab = .hadith

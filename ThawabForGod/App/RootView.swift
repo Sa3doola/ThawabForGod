@@ -50,6 +50,12 @@ struct RootView: View {
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
                 Task { await refillReminders() }
+                // A new day means a new ayah of the day for the Quran widgets.
+                Task { await container.quranWidgetPublisher.publish() }
+            }
+            // At launch, and when the enabled translations change.
+            .task(id: container.quranReaderSettings.enabledTranslations) {
+                await container.quranWidgetPublisher.publish()
             }
             // Widget taps and `noor://` URLs. SwiftUI delivers these straight to the view tree
             // on both platforms, so no delegate is involved — a URL that names nothing this

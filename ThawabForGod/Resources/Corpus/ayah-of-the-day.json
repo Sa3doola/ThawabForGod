@@ -1,0 +1,632 @@
+{
+  "entries" : [
+    {
+      "from" : 1,
+      "surah" : 1,
+      "to" : 7
+    },
+    {
+      "from" : 45,
+      "surah" : 2,
+      "to" : 46
+    },
+    {
+      "from" : 115,
+      "surah" : 2,
+      "to" : 115
+    },
+    {
+      "from" : 152,
+      "surah" : 2,
+      "to" : 152
+    },
+    {
+      "from" : 153,
+      "surah" : 2,
+      "to" : 153
+    },
+    {
+      "from" : 155,
+      "surah" : 2,
+      "to" : 157
+    },
+    {
+      "from" : 186,
+      "surah" : 2,
+      "to" : 186
+    },
+    {
+      "from" : 195,
+      "surah" : 2,
+      "to" : 195
+    },
+    {
+      "from" : 201,
+      "surah" : 2,
+      "to" : 201
+    },
+    {
+      "from" : 250,
+      "surah" : 2,
+      "to" : 250
+    },
+    {
+      "from" : 255,
+      "surah" : 2,
+      "to" : 255
+    },
+    {
+      "from" : 256,
+      "surah" : 2,
+      "to" : 256
+    },
+    {
+      "from" : 263,
+      "surah" : 2,
+      "to" : 263
+    },
+    {
+      "from" : 285,
+      "surah" : 2,
+      "to" : 285
+    },
+    {
+      "from" : 286,
+      "surah" : 2,
+      "to" : 286
+    },
+    {
+      "from" : 8,
+      "surah" : 3,
+      "to" : 8
+    },
+    {
+      "from" : 26,
+      "surah" : 3,
+      "to" : 26
+    },
+    {
+      "from" : 31,
+      "surah" : 3,
+      "to" : 31
+    },
+    {
+      "from" : 92,
+      "surah" : 3,
+      "to" : 92
+    },
+    {
+      "from" : 103,
+      "surah" : 3,
+      "to" : 103
+    },
+    {
+      "from" : 133,
+      "surah" : 3,
+      "to" : 134
+    },
+    {
+      "from" : 139,
+      "surah" : 3,
+      "to" : 139
+    },
+    {
+      "from" : 159,
+      "surah" : 3,
+      "to" : 159
+    },
+    {
+      "from" : 185,
+      "surah" : 3,
+      "to" : 185
+    },
+    {
+      "from" : 190,
+      "surah" : 3,
+      "to" : 191
+    },
+    {
+      "from" : 200,
+      "surah" : 3,
+      "to" : 200
+    },
+    {
+      "from" : 28,
+      "surah" : 4,
+      "to" : 28
+    },
+    {
+      "from" : 110,
+      "surah" : 4,
+      "to" : 110
+    },
+    {
+      "from" : 59,
+      "surah" : 6,
+      "to" : 59
+    },
+    {
+      "from" : 162,
+      "surah" : 6,
+      "to" : 163
+    },
+    {
+      "from" : 23,
+      "surah" : 7,
+      "to" : 23
+    },
+    {
+      "from" : 55,
+      "surah" : 7,
+      "to" : 56
+    },
+    {
+      "from" : 199,
+      "surah" : 7,
+      "to" : 199
+    },
+    {
+      "from" : 2,
+      "surah" : 8,
+      "to" : 4
+    },
+    {
+      "from" : 51,
+      "surah" : 9,
+      "to" : 51
+    },
+    {
+      "from" : 128,
+      "surah" : 9,
+      "to" : 129
+    },
+    {
+      "from" : 62,
+      "surah" : 10,
+      "to" : 64
+    },
+    {
+      "from" : 114,
+      "surah" : 11,
+      "to" : 115
+    },
+    {
+      "from" : 87,
+      "surah" : 12,
+      "to" : 87
+    },
+    {
+      "from" : 11,
+      "surah" : 13,
+      "to" : 11
+    },
+    {
+      "from" : 28,
+      "surah" : 13,
+      "to" : 28
+    },
+    {
+      "from" : 7,
+      "surah" : 14,
+      "to" : 7
+    },
+    {
+      "from" : 40,
+      "surah" : 14,
+      "to" : 41
+    },
+    {
+      "from" : 49,
+      "surah" : 15,
+      "to" : 50
+    },
+    {
+      "from" : 97,
+      "surah" : 15,
+      "to" : 99
+    },
+    {
+      "from" : 18,
+      "surah" : 16,
+      "to" : 18
+    },
+    {
+      "from" : 90,
+      "surah" : 16,
+      "to" : 90
+    },
+    {
+      "from" : 97,
+      "surah" : 16,
+      "to" : 97
+    },
+    {
+      "from" : 125,
+      "surah" : 16,
+      "to" : 125
+    },
+    {
+      "from" : 128,
+      "surah" : 16,
+      "to" : 128
+    },
+    {
+      "from" : 23,
+      "surah" : 17,
+      "to" : 24
+    },
+    {
+      "from" : 80,
+      "surah" : 17,
+      "to" : 80
+    },
+    {
+      "from" : 10,
+      "surah" : 18,
+      "to" : 10
+    },
+    {
+      "from" : 46,
+      "surah" : 18,
+      "to" : 46
+    },
+    {
+      "from" : 109,
+      "surah" : 18,
+      "to" : 109
+    },
+    {
+      "from" : 25,
+      "surah" : 20,
+      "to" : 28
+    },
+    {
+      "from" : 114,
+      "surah" : 20,
+      "to" : 114
+    },
+    {
+      "from" : 83,
+      "surah" : 21,
+      "to" : 83
+    },
+    {
+      "from" : 87,
+      "surah" : 21,
+      "to" : 88
+    },
+    {
+      "from" : 89,
+      "surah" : 21,
+      "to" : 89
+    },
+    {
+      "from" : 107,
+      "surah" : 21,
+      "to" : 107
+    },
+    {
+      "from" : 118,
+      "surah" : 23,
+      "to" : 118
+    },
+    {
+      "from" : 35,
+      "surah" : 24,
+      "to" : 35
+    },
+    {
+      "from" : 63,
+      "surah" : 25,
+      "to" : 63
+    },
+    {
+      "from" : 62,
+      "surah" : 27,
+      "to" : 62
+    },
+    {
+      "from" : 24,
+      "surah" : 28,
+      "to" : 24
+    },
+    {
+      "from" : 2,
+      "surah" : 29,
+      "to" : 2
+    },
+    {
+      "from" : 45,
+      "surah" : 29,
+      "to" : 45
+    },
+    {
+      "from" : 69,
+      "surah" : 29,
+      "to" : 69
+    },
+    {
+      "from" : 21,
+      "surah" : 30,
+      "to" : 21
+    },
+    {
+      "from" : 13,
+      "surah" : 31,
+      "to" : 13
+    },
+    {
+      "from" : 17,
+      "surah" : 31,
+      "to" : 17
+    },
+    {
+      "from" : 21,
+      "surah" : 33,
+      "to" : 21
+    },
+    {
+      "from" : 41,
+      "surah" : 33,
+      "to" : 42
+    },
+    {
+      "from" : 56,
+      "surah" : 33,
+      "to" : 56
+    },
+    {
+      "from" : 70,
+      "surah" : 33,
+      "to" : 71
+    },
+    {
+      "from" : 15,
+      "surah" : 35,
+      "to" : 15
+    },
+    {
+      "from" : 82,
+      "surah" : 36,
+      "to" : 82
+    },
+    {
+      "from" : 180,
+      "surah" : 37,
+      "to" : 182
+    },
+    {
+      "from" : 10,
+      "surah" : 39,
+      "to" : 10
+    },
+    {
+      "from" : 53,
+      "surah" : 39,
+      "to" : 53
+    },
+    {
+      "from" : 60,
+      "surah" : 40,
+      "to" : 60
+    },
+    {
+      "from" : 30,
+      "surah" : 41,
+      "to" : 30
+    },
+    {
+      "from" : 34,
+      "surah" : 41,
+      "to" : 34
+    },
+    {
+      "from" : 43,
+      "surah" : 42,
+      "to" : 43
+    },
+    {
+      "from" : 7,
+      "surah" : 47,
+      "to" : 7
+    },
+    {
+      "from" : 24,
+      "surah" : 47,
+      "to" : 24
+    },
+    {
+      "from" : 10,
+      "surah" : 49,
+      "to" : 10
+    },
+    {
+      "from" : 12,
+      "surah" : 49,
+      "to" : 12
+    },
+    {
+      "from" : 13,
+      "surah" : 49,
+      "to" : 13
+    },
+    {
+      "from" : 16,
+      "surah" : 50,
+      "to" : 16
+    },
+    {
+      "from" : 56,
+      "surah" : 51,
+      "to" : 56
+    },
+    {
+      "from" : 17,
+      "surah" : 54,
+      "to" : 17
+    },
+    {
+      "from" : 1,
+      "surah" : 55,
+      "to" : 4
+    },
+    {
+      "from" : 26,
+      "surah" : 55,
+      "to" : 27
+    },
+    {
+      "from" : 60,
+      "surah" : 55,
+      "to" : 60
+    },
+    {
+      "from" : 3,
+      "surah" : 57,
+      "to" : 3
+    },
+    {
+      "from" : 16,
+      "surah" : 57,
+      "to" : 16
+    },
+    {
+      "from" : 22,
+      "surah" : 57,
+      "to" : 23
+    },
+    {
+      "from" : 18,
+      "surah" : 59,
+      "to" : 19
+    },
+    {
+      "from" : 21,
+      "surah" : 59,
+      "to" : 21
+    },
+    {
+      "from" : 22,
+      "surah" : 59,
+      "to" : 24
+    },
+    {
+      "from" : 2,
+      "surah" : 61,
+      "to" : 3
+    },
+    {
+      "from" : 9,
+      "surah" : 63,
+      "to" : 9
+    },
+    {
+      "from" : 11,
+      "surah" : 64,
+      "to" : 11
+    },
+    {
+      "from" : 16,
+      "surah" : 64,
+      "to" : 16
+    },
+    {
+      "from" : 1,
+      "surah" : 67,
+      "to" : 2
+    },
+    {
+      "from" : 4,
+      "surah" : 68,
+      "to" : 4
+    },
+    {
+      "from" : 10,
+      "surah" : 71,
+      "to" : 12
+    },
+    {
+      "from" : 14,
+      "surah" : 87,
+      "to" : 17
+    },
+    {
+      "from" : 17,
+      "surah" : 88,
+      "to" : 20
+    },
+    {
+      "from" : 27,
+      "surah" : 89,
+      "to" : 30
+    },
+    {
+      "from" : 7,
+      "surah" : 91,
+      "to" : 10
+    },
+    {
+      "from" : 1,
+      "surah" : 93,
+      "to" : 5
+    },
+    {
+      "from" : 5,
+      "surah" : 94,
+      "to" : 6
+    },
+    {
+      "from" : 1,
+      "surah" : 96,
+      "to" : 5
+    },
+    {
+      "from" : 1,
+      "surah" : 97,
+      "to" : 5
+    },
+    {
+      "from" : 7,
+      "surah" : 99,
+      "to" : 8
+    },
+    {
+      "from" : 1,
+      "surah" : 103,
+      "to" : 3
+    },
+    {
+      "from" : 1,
+      "surah" : 108,
+      "to" : 3
+    },
+    {
+      "from" : 1,
+      "surah" : 109,
+      "to" : 6
+    },
+    {
+      "from" : 1,
+      "surah" : 110,
+      "to" : 3
+    },
+    {
+      "from" : 1,
+      "surah" : 112,
+      "to" : 4
+    },
+    {
+      "from" : 1,
+      "surah" : 113,
+      "to" : 5
+    },
+    {
+      "from" : 1,
+      "surah" : 114,
+      "to" : 6
+    }
+  ],
+  "sha256" : "76992cad0c9f7bb56757804580c84868918a5327b60a69ee31a7493083ea28bd",
+  "source" : "Tools/QuranBuilder/data/ayah-of-the-day.txt",
+  "status" : "reviewed by Saad, 2026-10-18 (final). 65:2-3 replaced with 25:63 (65:2 opens with a divorce ruling)."
+}

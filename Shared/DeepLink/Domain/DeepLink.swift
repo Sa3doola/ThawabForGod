@@ -48,6 +48,12 @@ nonisolated enum DeepLink: Hashable, Sendable {
     /// The Mushaf, wherever reading stopped.
     case quran
 
+    /// One verse in the reader, selected: `noor://quran/verse/2/255`.
+    case quranVerse(VerseReference)
+
+    /// One printed page: `noor://quran/page/50`. Where the build has no pages the Library stays.
+    case quranPage(Int)
+
     case hadith
 
     /// Settings. On macOS this is a no-op — that build reaches the same screen through ⌘, and
@@ -87,7 +93,7 @@ nonisolated extension DeepLink {
         case .tasbih: "tasbih"
         case .names: "names"
         case .adhkar, .adhkarCategory: "adhkar"
-        case .quran: "quran"
+        case .quran, .quranVerse, .quranPage: "quran"
         case .hadith: "hadith"
         case .settings: "settings"
         }
@@ -108,6 +114,15 @@ nonisolated extension DeepLink {
             components.queryItems = [
                 URLQueryItem(name: Self.periodQueryName, value: period.rawValue)
             ]
+        }
+
+        switch self {
+        case .quranVerse(let reference):
+            components.path = "/verse/\(reference.surah)/\(reference.verse)"
+        case .quranPage(let page):
+            components.path = "/page/\(page)"
+        default:
+            break
         }
 
         guard let url = components.url else {
@@ -140,7 +155,20 @@ nonisolated extension DeepLink {
         case "qibla": self = .qibla
         case "tasbih": self = .tasbih
         case "names": self = .names
-        case "quran": self = .quran
+        case "quran":
+            // Anything that is not a well-formed verse or page is still "the Quran", as a
+            // malformed adhkar link is still "the adhkar": `noor://quran` must keep working.
+            let parts = components.path.split(separator: "/").map(String.init)
+            if parts.count == 3, parts[0] == "verse",
+               let surah = Int(parts[1]), (1...114).contains(surah),
+               let verse = Int(parts[2]), verse >= 1 {
+                self = .quranVerse(VerseReference(surah: surah, verse: verse))
+            } else if parts.count == 2, parts[0] == "page",
+                      let page = Int(parts[1]), page >= 1 {
+                self = .quranPage(page)
+            } else {
+                self = .quran
+            }
         case "hadith": self = .hadith
         case "settings": self = .settings
 

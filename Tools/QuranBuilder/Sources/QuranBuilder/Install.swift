@@ -27,6 +27,10 @@ func installOutputs(_ config: BuildConfig) throws -> [URL] {
                                          with: built.appendingPathComponent(file)))
         }
     }
+
+    if let listDestination = install.ayahOfTheDay, let curated = config.curated {
+        installed.append(try replace(config.path(listDestination), with: config.path(curated.ayahOfTheDayOutput)))
+    }
     return installed
 }
 

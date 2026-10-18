@@ -22,4 +22,14 @@ nonisolated protocol WidgetRefreshing: Sendable {
     /// prayer schedule, so anything that invalidates one invalidates all of them, and naming
     /// kinds here would be a list to forget to add to.
     func reloadAll()
+
+    /// Reloads one widget kind (`QuranWidgetKind`), for a change only that kind shows.
+    func reload(kind: String)
+}
+
+nonisolated extension WidgetRefreshing {
+    /// Fakes written before per-kind reloads keep compiling; a coarser reload is always correct.
+    func reload(kind: String) {
+        reloadAll()
+    }
 }

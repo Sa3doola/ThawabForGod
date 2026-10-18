@@ -181,9 +181,20 @@ final class AppContainer {
     /// Hafs alone in a public clone.
     var quranFaces: QuranFaces { .launch }
 
+    /// KFGQPC Hafs in the bundle, for the widget font copy: at the root, else found by the same
+    /// walk `FontRegistrar` does (the synchronized group may nest it).
+    private static func bundledHafsURL() -> URL? {
+        if let url = Bundle.main.url(forResource: "KFGQPC-HafsUthmanic", withExtension: "ttf") { return url }
+        guard let root = Bundle.main.resourceURL else { return nil }
+        return FontRegistrar.fontURLs(under: root).first { $0.lastPathComponent == "KFGQPC-HafsUthmanic.ttf" }
+    }
+
     /// The reader's bookmarks, notes, highlights and reading position, in memory and mirrored to
     /// SwiftData. One for the app; loaded at the end of `init`.
     let quranUserData: QuranUserDataStore
+
+    /// Publishes the Quran widgets' snapshot and font into the App Group (M7.4).
+    let quranWidgetPublisher: QuranWidgetPublisher
 
     /// The bookmarks list's kind and sort: one for the section, so they survive the view tree being
     /// rebuilt. Session-only.
@@ -433,6 +444,21 @@ final class AppContainer {
             activity: activityRecorder
         )
         self.quranReaderViewModel = quranReaderViewModel
+        let bundleInfo = Bundle.main.infoDictionary
+        let quranWidgetPublisher = QuranWidgetPublisher(
+            repository: quranRepository,
+            translations: quranTranslations,
+            settings: quranReaderSettings,
+            reader: quranReaderViewModel,
+            userData: quranUserData,
+            settingsStore: settingsStore,
+            widgets: widgets,
+            fonts: QuranWidgetFontInstaller(),
+            hafsURL: Self.bundledHafsURL(),
+            appVersion: "\(bundleInfo?["CFBundleShortVersionString"] as? String ?? "0")(\(bundleInfo?["CFBundleVersion"] as? String ?? "0"))"
+        )
+        self.quranWidgetPublisher = quranWidgetPublisher
+        quranUserData.onPositionSettled = { [weak quranWidgetPublisher] in quranWidgetPublisher?.positionDidSettle($0) }
         let quranSurahInfoViewModel = SurahInfoViewModel(repository: quranSurahInfo, reader: quranReaderViewModel)
         self.quranSurahInfoViewModel = quranSurahInfoViewModel
         self.quranAyahPanelViewModel = AyahPanelViewModel(

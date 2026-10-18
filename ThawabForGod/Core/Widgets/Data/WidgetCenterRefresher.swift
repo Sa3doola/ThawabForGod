@@ -18,4 +18,8 @@ nonisolated struct WidgetCenterRefresher: WidgetRefreshing {
     func reloadAll() {
         WidgetCenter.shared.reloadAllTimelines()
     }
+
+    func reload(kind: String) {
+        WidgetCenter.shared.reloadTimelines(ofKind: kind)
+    }
 }

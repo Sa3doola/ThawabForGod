@@ -251,6 +251,8 @@ struct BuildConfig: Decodable {
         let packs: String?
         /// The folder the QUL header, surah-name and common faces are copied into (qul only).
         let fonts: String?
+        /// Where `curated.ayahOfTheDayOutput` is copied for the app (references only, committed).
+        let ayahOfTheDay: String?
     }
 
     let profile: Profile

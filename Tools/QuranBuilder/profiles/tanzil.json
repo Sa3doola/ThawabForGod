@@ -3,7 +3,8 @@
   "output": "../../../QuranData/out/tanzil/quran.sqlite",
   "install": {
     "database": "../../../ThawabForGod/Resources/Corpus/quran.sqlite",
-    "packs": "../../../ThawabForGod/Resources/Corpus/Packs"
+    "packs": "../../../ThawabForGod/Resources/Corpus/Packs",
+    "ayahOfTheDay": "../../../ThawabForGod/Resources/Corpus/ayah-of-the-day.json"
   },
   "tanzil": {
     "text": {

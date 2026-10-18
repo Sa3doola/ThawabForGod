@@ -45,6 +45,9 @@ final class QuranUserDataStore: QuranReadingPositionRecording {
     @ObservationIgnored private let positionDebounce: Duration
     @ObservationIgnored private var pendingPosition: (ayah: VerseReference, date: Date)?
     @ObservationIgnored private var positionTimer: Task<Void, Never>?
+    /// Called when a reading position has settled (the debounce elapsed, or it was flushed). The
+    /// composition root points it at the widget publisher.
+    @ObservationIgnored var onPositionSettled: ((VerseReference) -> Void)?
     @ObservationIgnored private var pending: Task<Void, Never>?
     @ObservationIgnored private var hasStartedLoading = false
     /// Links of the write chain not yet finished, and whether one of them failed.
@@ -166,6 +169,7 @@ final class QuranUserDataStore: QuranReadingPositionRecording {
         positionTimer = nil
         guard let (ayah, date) = pendingPosition else { return }
         pendingPosition = nil
+        onPositionSettled?(ayah)
         enqueue { [positions] in try await positions.recordReadingPosition(ayah, at: date) }
     }
 

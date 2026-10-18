@@ -29,6 +29,11 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case lastKnownLatitude
     case lastKnownLongitude
 
+    // The Quran widgets' data: a JSON `QuranWidgetSnapshot` the app writes for the extension to
+    // read. Like the pair above, a *cache* the user never chose — rebuilt by the app on launch,
+    // so losing it costs nothing and it must never be read as a preference.
+    case quranWidgetSnapshot
+
     // How Home is arranged: which sections, in what order, and which shortcut circles. One key
     // holding the whole value as JSON — see `HomeLayoutRepository` for why it is not nine.
     case homeLayout
