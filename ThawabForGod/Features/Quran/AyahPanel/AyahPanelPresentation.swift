@@ -15,7 +15,9 @@ nonisolated enum AyahPanelLayout {
         #else
         // Never on iOS: an `.inspector` attached to the reader, which is pushed inside the split
         // view's detail column, pops the reader as soon as it is pushed (found on an iPad simulator).
-        // The sheet is the panel there, at every width.
+        // Re-tested in M7.1 with the inspector on the Quran NavigationStack instead (even never
+        // presented): it still pops the pushed reader, so the cause is any `.inspector` inside the
+        // split view's detail column, not where it is attached. The sheet is the panel there, at every width.
         false
         #endif
     }

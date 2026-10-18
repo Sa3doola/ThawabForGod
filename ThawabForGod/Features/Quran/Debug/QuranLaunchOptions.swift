@@ -70,6 +70,10 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
     var resetsUserData = false
     /// `-quranSeedUserData YES`: add a fixed set of marks (after a reset, if both are given).
     var seedsUserData = false
+    /// `-quranPanel 2:255`: open the ayah panel on that verse once the reader is up.
+    var panelAyah: VerseReference?
+    /// `-quranPanelInspector YES`: force the inspector placement (a simulator cannot be rotated from a script).
+    var forcesPanelInspector = false
 
     /// The launch is scripted into the Quran tab: it names a reader target or a Library index.
     var isQuranLaunch: Bool { readerTarget != nil || libraryTab != nil }
@@ -120,6 +124,8 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
         libraryTab = values["quranLibrary"].flatMap(QuranLibraryTab.init(rawValue:))
         resetsUserData = bool("quranResetUserData") ?? false
         seedsUserData = bool("quranSeedUserData") ?? false
+        panelAyah = values["quranPanel"].flatMap(VerseReference.init(parsing:))
+        forcesPanelInspector = bool("quranPanelInspector") ?? false
     }
 
     /// Where the launch asks the reader to open, if anywhere. A page wins over a surah; a surah

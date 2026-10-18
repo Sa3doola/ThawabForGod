@@ -54,6 +54,8 @@ private struct QuranLaunchHooks: ViewModifier {
         // band only when it asked for one.
         viewModel.mushaf.select(options.selectedAyah)
         if options.startsImmersive && DeviceKind.isPhone { viewModel.mushaf.isChromeHidden = true }
+        if options.forcesPanelInspector { container.quranCoordinator.panelUsesInspector = true }
+        if let ayah = options.panelAyah { container.quranCoordinator.showAyah(ayah) }
 
         guard let corpus = viewModel.corpus else { return }
         if let size = options.spreadRenderSize {
