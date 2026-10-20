@@ -1,6 +1,6 @@
 //
 //  WidgetLocalization.swift
-//  NoorWidgets
+//  ThawabForGod
 //
 
 import Foundation
@@ -78,5 +78,26 @@ nonisolated struct WidgetLocalization: Sendable {
     /// countdowns and is no less true on a Home Screen.
     func countdown(_ interval: TimeInterval) -> String {
         times.countdownString(from: interval, system: style.numberSystem)
+    }
+
+    // MARK: - Quran widgets
+
+    /// A catalogue string with `%1$@`-style values substituted, in the entry's language.
+    func string(_ key: L10nKey, _ arguments: any CVarArg...) -> String {
+        String(format: string(key), locale: locale, arguments: arguments)
+    }
+
+    /// `2:255`, in the reader's digits and isolated so the colon cannot reorder in an RTL line.
+    func reference(surah: Int, verse: Int, lastVerse: Int? = nil) -> String {
+        var numeric = "\(number(surah)):\(number(verse))"
+        if let lastVerse, lastVerse != verse { numeric += "\u{2013}\(number(lastVerse))" }
+        return "\u{2068}\(numeric)\u{2069}"
+    }
+}
+
+extension NextPrayerSnapshot.Style {
+    /// The surah's name in the entry's language.
+    nonisolated func surahName(arabic: String, english: String) -> String {
+        language == .arabic ? arabic : english
     }
 }

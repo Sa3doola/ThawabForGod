@@ -181,12 +181,13 @@ final class AppContainer {
     /// Hafs alone in a public clone.
     var quranFaces: QuranFaces { .launch }
 
-    /// KFGQPC Hafs in the bundle, for the widget font copy: at the root, else found by the same
+    /// A font file in the bundle (Hafs, Amiri Quran) for the widget font copy: at the root, else found by the same
     /// walk `FontRegistrar` does (the synchronized group may nest it).
-    private static func bundledHafsURL() -> URL? {
-        if let url = Bundle.main.url(forResource: "KFGQPC-HafsUthmanic", withExtension: "ttf") { return url }
+    private static func bundledFontURL(named fileName: String) -> URL? {
+        let name = (fileName as NSString).deletingPathExtension
+        if let url = Bundle.main.url(forResource: name, withExtension: "ttf") { return url }
         guard let root = Bundle.main.resourceURL else { return nil }
-        return FontRegistrar.fontURLs(under: root).first { $0.lastPathComponent == "KFGQPC-HafsUthmanic.ttf" }
+        return FontRegistrar.fontURLs(under: root).first { $0.lastPathComponent == fileName }
     }
 
     /// The reader's bookmarks, notes, highlights and reading position, in memory and mirrored to
@@ -454,7 +455,8 @@ final class AppContainer {
             settingsStore: settingsStore,
             widgets: widgets,
             fonts: QuranWidgetFontInstaller(),
-            hafsURL: Self.bundledHafsURL(),
+            fontURLs: [Self.bundledFontURL(named: QuranWidgetFont.fileName), Self.bundledFontURL(named: QuranWidgetFont.amiriFileName)]
+                .compactMap { $0 },
             appVersion: "\(bundleInfo?["CFBundleShortVersionString"] as? String ?? "0")(\(bundleInfo?["CFBundleVersion"] as? String ?? "0"))"
         )
         self.quranWidgetPublisher = quranWidgetPublisher

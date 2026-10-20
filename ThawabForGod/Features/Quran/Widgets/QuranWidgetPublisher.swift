@@ -5,8 +5,9 @@
 
 import Foundation
 
-/// Writes what the two Quran widgets show into the App Group: the place last read, and the next
-/// days' ayah of the day with the first enabled translation, plus a one-time copy of the Hafs font.
+/// Writes what the two Quran widgets show into the App Group: the place last read, and the whole
+/// ayah-of-the-day list with the first enabled translation (the widget picks the day itself, so it
+/// can never go stale), plus a one-time copy of the Hafs and Amiri Quran fonts.
 ///
 /// Ported from Mushaf's `WidgetPublisher`. The widget reads nothing else, so it needs no database,
 /// no corpus and no network. **Texts are `Ayah.text` byte for byte** (the widget draws the markers),
@@ -17,9 +18,6 @@ import Foundation
 /// a publish waits for it rather than racing it for the single snapshot value.
 @MainActor
 final class QuranWidgetPublisher {
-    /// Days of "Ayah of the day" written ahead; the app republishes on every foreground.
-    static let daysAhead = 30
-
     private let repository: any QuranRepositoring
     private let translations: any TranslationRepositoring
     private let settings: QuranReaderSettings
@@ -28,9 +26,8 @@ final class QuranWidgetPublisher {
     private let settingsStore: any SettingsStore
     private let widgets: any WidgetRefreshing
     private let fonts: any QuranWidgetFontInstalling
-    private let hafsURL: URL?
+    private let fontURLs: [URL]
     private let appVersion: String
-    private let now: () -> Date
 
     private var tail: Task<Void, Never>?
     private var cachedSurahs: [Surah]?
@@ -46,9 +43,8 @@ final class QuranWidgetPublisher {
         settingsStore: any SettingsStore,
         widgets: any WidgetRefreshing,
         fonts: any QuranWidgetFontInstalling,
-        hafsURL: URL?,
-        appVersion: String,
-        now: @escaping () -> Date = Date.init
+        fontURLs: [URL],
+        appVersion: String
     ) {
         self.repository = repository
         self.translations = translations
@@ -58,9 +54,8 @@ final class QuranWidgetPublisher {
         self.settingsStore = settingsStore
         self.widgets = widgets
         self.fonts = fonts
-        self.hafsURL = hafsURL
+        self.fontURLs = fontURLs
         self.appVersion = appVersion
-        self.now = now
     }
 
     // MARK: Entry points
@@ -101,18 +96,20 @@ final class QuranWidgetPublisher {
             snapshot.continueReading = await continueReading(at: ayah, keeping: old?.continueReading)
         }
 
-        let today = DailyAyahRule.dayKey(for: now())
         let list = await AyahOfTheDayList.bundled()
         let translation = await firstTranslation()
-        let fresh = old?.days.first?.day == today && old?.days.count == Self.daysAhead
-            && old?.listID == list?.sha256 && old?.days.first?.translation?.packID == translation?.id.rawValue
-        if !fresh, let list {
-            snapshot.days = await days(list: list, translation: translation)
+        // No date in the check: the widget picks the day, so most foregrounds write nothing. The app
+        // version is in it because a new build may carry corrected text.
+        let key = list.map { "\($0.sha256)|\($0.entries.count)|\(appVersion)|\(translation?.id.rawValue ?? "-")" }
+        if let list, old?.entriesKey != key {
+            snapshot.entries = await entries(list: list, translation: translation)
+            snapshot.listCount = list.entries.count
             snapshot.listID = list.sha256
+            snapshot.entriesKey = key
         }
 
         var fontInstalled = false
-        if old?.fontVersion != appVersion, let hafsURL, await fonts.install(from: hafsURL) {
+        if old?.fontVersion != appVersion, !fontURLs.isEmpty, await fonts.install(from: fontURLs) {
             snapshot.fontVersion = appVersion
             fontInstalled = true
         }
@@ -134,7 +131,7 @@ final class QuranWidgetPublisher {
         if fontInstalled || snapshot.continueReading != old?.continueReading {
             widgets.reload(kind: QuranWidgetKind.continueReading)
         }
-        if fontInstalled || snapshot.days != old?.days {
+        if fontInstalled || snapshot.entries != old?.entries || snapshot.listCount != old?.listCount {
             widgets.reload(kind: QuranWidgetKind.ayahOfTheDay)
         }
     }
@@ -163,24 +160,22 @@ final class QuranWidgetPublisher {
         return ContentPackSelection.enabledPacks(installed: installed, enabled: settings.enabledTranslations).first
     }
 
-    private func days(list: AyahOfTheDayList, translation: ContentPack?) async -> [QuranWidgetSnapshot.DailyAyah] {
-        let calendar = DailyAyahRule.calendar
-        let start = now()
-        var days: [QuranWidgetSnapshot.DailyAyah] = []
-        for offset in 0..<Self.daysAhead {
-            guard let date = calendar.date(byAdding: .day, value: offset, to: start),
-                  let entry = list.entry(for: date, calendar: calendar),
-                  let daily = await dailyAyah(entry, day: DailyAyahRule.dayKey(for: date, calendar: calendar), translation: translation)
-            else { continue }
-            days.append(daily)
+    /// One `DailyAyah` per list entry, `index` being the entry's position. An entry that does not
+    /// resolve is left out, never shifted over: that day the widget shows its empty sentence rather
+    /// than another ayah.
+    private func entries(list: AyahOfTheDayList, translation: ContentPack?) async -> [QuranWidgetSnapshot.DailyAyah] {
+        var result: [QuranWidgetSnapshot.DailyAyah] = []
+        for (index, entry) in list.entries.enumerated() {
+            guard let daily = await dailyAyah(entry, index: index, translation: translation) else { continue }
+            result.append(daily)
         }
-        return days
+        return result
     }
 
     /// One entry as the widget shows it: `Ayah.text` of each ayah, unmodified, and the plain
     /// translation of each. `nil` if any ayah does not resolve.
     private func dailyAyah(
-        _ entry: AyahOfTheDayList.Entry, day: String, translation: ContentPack?
+        _ entry: AyahOfTheDayList.Entry, index: Int, translation: ContentPack?
     ) async -> QuranWidgetSnapshot.DailyAyah? {
         let corpus = reader.corpus
         guard let surah = await surah(entry.surah, corpus: corpus) else { return nil }
@@ -189,7 +184,7 @@ final class QuranWidgetPublisher {
         guard texts.count == entry.verses.count else { return nil }
 
         return .init(
-            day: day, first: entry.first, lastVerse: entry.last,
+            index: index, first: entry.first, lastVerse: entry.last,
             surahNameArabic: surah.arabicName, surahNameEnglish: surah.englishName, texts: texts,
             translation: await translationTexts(for: entry, pack: translation)
         )

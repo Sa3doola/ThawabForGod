@@ -45,10 +45,11 @@ enum QuranWidgetPreviewData {
             page: page,
             juz: page == nil ? nil : 15
         )
-        let key = DailyAyahRule.dayKey(for: Date(), calendar: DailyAyahRule.calendar)
-        snapshot.days = [
+        snapshot.listCount = 1
+        snapshot.entries = [
             .init(
-                day: key, first: VerseReference(surah: 2, verse: 255), lastVerse: 256,
+                index: DailyAyahRule.entryIndex(for: Date(), count: 1, calendar: DailyAyahRule.calendar),
+                first: VerseReference(surah: 2, verse: 255), lastVerse: 256,
                 surahNameArabic: "البقرة", surahNameEnglish: "Al-Baqarah",
                 texts: ["…", "…"], translation: nil
             )

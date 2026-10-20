@@ -3,56 +3,22 @@
 //  NoorWidgets
 //
 
-import CoreText
 import Foundation
 import WidgetKit
 
-/// One moment of a Quran widget: the stored snapshot (nil until the app has written one), the
-/// presentation choices, and whether the Hafs face is registered in this process.
-nonisolated struct QuranWidgetEntry: TimelineEntry, Sendable {
-    let date: Date
-    let snapshot: QuranWidgetSnapshot?
-    let style: NextPrayerSnapshot.Style
-    let hasHafs: Bool
-}
+// `QuranWidgetEntry` already has the `date` the protocol asks for.
+extension QuranWidgetEntry: TimelineEntry {}
 
-/// Registers the Hafs face the app copied into the App Group container. Idempotent.
-nonisolated enum QuranWidgetFontRegistration {
-
-    /// True when `QuranWidgetFont.postScriptName` can be drawn in this process.
-    static func register() -> Bool {
-        if isKnown { return true }
-        guard let url = QuranWidgetFont.containerFileURL,
-              FileManager.default.fileExists(atPath: url.path) else { return false }
-        CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
-        // Registration can report an error for an already-registered file, so ask the font
-        // system whether the name resolves rather than trusting the return value.
-        return isKnown
+/// Reads what the two Quran kinds share: the snapshot, the style and the font state.
+private nonisolated enum QuranWidgetInputs {
+    static func load() -> (snapshot: QuranWidgetSnapshot?, style: NextPrayerSnapshot.Style, hasHafs: Bool) {
+        let store = UserDefaultsSettingsStore(defaults: SharedDefaults.store)
+        return (QuranWidgetSnapshot.load(from: store), .current(from: store), QuranWidgetFontRegistration.register())
     }
-
-    private static var isKnown: Bool {
-        let font = CTFontCreateWithName(QuranWidgetFont.postScriptName as CFString, 12, nil)
-        return CTFontCopyPostScriptName(font) as String == QuranWidgetFont.postScriptName
-    }
-}
-
-/// Shared timeline construction for the two Quran kinds.
-private nonisolated enum QuranWidgetTimeline {
 
     static func entry(at date: Date) -> QuranWidgetEntry {
-        let store = UserDefaultsSettingsStore(defaults: SharedDefaults.store)
-        return QuranWidgetEntry(
-            date: date,
-            snapshot: QuranWidgetSnapshot.load(from: store),
-            style: .current(from: store),
-            hasHafs: QuranWidgetFontRegistration.register()
-        )
-    }
-
-    static func nextMidnight(after now: Date) -> Date {
-        let calendar = DailyAyahRule.calendar
-        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
-            ?? now.addingTimeInterval(24 * 60 * 60)
+        let inputs = load()
+        return QuranWidgetEntry(date: date, snapshot: inputs.snapshot, style: inputs.style, hasHafs: inputs.hasHafs)
     }
 }
 
@@ -62,41 +28,38 @@ struct ContinueReadingProvider: TimelineProvider {
     init() {}
 
     func placeholder(in context: Context) -> QuranWidgetEntry {
-        QuranWidgetTimeline.entry(at: Date())
+        QuranWidgetInputs.entry(at: Date())
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QuranWidgetEntry) -> Void) {
-        completion(QuranWidgetTimeline.entry(at: Date()))
+        completion(QuranWidgetInputs.entry(at: Date()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<QuranWidgetEntry>) -> Void) {
-        let now = Date()
-        completion(Timeline(
-            entries: [QuranWidgetTimeline.entry(at: now)],
-            policy: .after(QuranWidgetTimeline.nextMidnight(after: now))
-        ))
+        let inputs = QuranWidgetInputs.load()
+        let result = QuranWidgetTimeline.continueReading(
+            now: Date(), snapshot: inputs.snapshot, style: inputs.style, hasHafs: inputs.hasHafs)
+        completion(Timeline(entries: result.entries, policy: .after(result.reloadAfter)))
     }
 }
 
-/// Ayah of the Day: an entry now and one at the next midnight, so the ayah turns over unprompted.
+/// Ayah of the Day: an entry now and one at each of the next seven midnights.
 struct AyahOfTheDayProvider: TimelineProvider {
 
     init() {}
 
     func placeholder(in context: Context) -> QuranWidgetEntry {
-        QuranWidgetTimeline.entry(at: Date())
+        QuranWidgetInputs.entry(at: Date())
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QuranWidgetEntry) -> Void) {
-        completion(QuranWidgetTimeline.entry(at: Date()))
+        completion(QuranWidgetInputs.entry(at: Date()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<QuranWidgetEntry>) -> Void) {
-        let now = Date()
-        let midnight = QuranWidgetTimeline.nextMidnight(after: now)
-        completion(Timeline(
-            entries: [QuranWidgetTimeline.entry(at: now), QuranWidgetTimeline.entry(at: midnight)],
-            policy: .after(midnight)
-        ))
+        let inputs = QuranWidgetInputs.load()
+        let result = QuranWidgetTimeline.ayahOfTheDay(
+            now: Date(), snapshot: inputs.snapshot, style: inputs.style, hasHafs: inputs.hasHafs)
+        completion(Timeline(entries: result.entries, policy: .after(result.reloadAfter)))
     }
 }
