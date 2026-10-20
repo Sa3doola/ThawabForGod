@@ -88,3 +88,6 @@ quran-common.ttf
 # drawn in the QUL fonts above, which this public repo must not redistribute, so the captures stay
 # local like the fonts do; the milestone report says where they are.
 Screenshots/quran-migration/
+
+# Tool state written by editor/agent hooks
+.omc/
