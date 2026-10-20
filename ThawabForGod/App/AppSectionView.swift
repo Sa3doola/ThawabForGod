@@ -74,7 +74,7 @@ struct AppSectionView: View {
             isSectionActive: { [router = container.router] in router.selectedTab == .quran }
         )
 
-        return NavigationStack(path: $coordinator.path) {
+        return NavigationStack(path: $coordinator.path.navigationPath(isActive: { [router = container.router] in router.selectedTab == .quran })) {
             QuranLibraryView(viewModel: library, coordinator: container.quranCoordinator)
                 .navigationDestination(for: QuranRoute.self) { route in
                     switch route {
@@ -135,7 +135,7 @@ struct AppSectionView: View {
     private var hadith: some View {
         @Bindable var coordinator = container.hadithCoordinator
 
-        return NavigationStack(path: $coordinator.path) {
+        return NavigationStack(path: $coordinator.path.navigationPath(isActive: { [router = container.router] in router.selectedTab == .hadith })) {
             HadithCollectionListView(
                 viewModel: container.hadithViewModel(),
                 coordinator: container.hadithCoordinator

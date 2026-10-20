@@ -39,6 +39,7 @@ struct HadithCollectionRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("hadith.collection.\(collection.id)")
     }
 
     /// `Books: 97 · Hadith: 7,580`, with the digits in the reader's number system.

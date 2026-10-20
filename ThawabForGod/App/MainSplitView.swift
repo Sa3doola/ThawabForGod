@@ -35,18 +35,20 @@ struct MainSplitView: View {
             List(AppTab.visible, id: \.self, selection: selection) { tab in
                 Label(l10n.string(tab.titleKey), systemImage: tab.symbol)
                     .tag(tab)
+                    .accessibilityIdentifier("app.sidebar.\(tab.rawValue)")
             }
             .navigationTitle(l10n.string(.appName))
             .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 320)
         } detail: {
             AppSectionView(container: container, tab: container.router.selectedTab)
-                // Each section's stack is bound to a path of its own type (`[QuranRoute]`,
-                // `[HadithRoute]`, ...). The detail column keeps one navigation state, and handing
-                // it a stack with a different path type under the same identity traps with
-                // `AnyNavigationPath.Error.comparisonTypeMismatch`. A fresh identity per section
-                // gives each its own state; nothing is lost, since every path lives on its coordinator.
-                .id(container.router.selectedTab)
         }
+        // The detail column keeps one navigation controller and adopts whichever stack it is shown.
+        // A fresh identity on the *detail* is not enough: the controller outlives it, so a screen
+        // pushed in one section (a Hadith book) leaves the next section's stack on a blank page, and
+        // a path of another type crashes it (see `Binding.navigationPath()`). The identity is on the
+        // whole split view so the column is rebuilt with it. Nothing is lost — every path lives on
+        // its coordinator — and the only view state here, the column visibility, is above the id.
+        .id(container.router.selectedTab)
         // `.balanced` rather than the default `.prominentDetail`: the sidebar is four or five
         // rows the reader picks from, not a panel that should shove the page aside to appear.
         .navigationSplitViewStyle(.balanced)
