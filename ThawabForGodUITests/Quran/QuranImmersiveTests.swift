@@ -19,22 +19,25 @@ final class QuranImmersiveTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    /// iPhone. The edges turn the page (left is next, right is previous); the footer is outside the
-    /// text, so a tap on it hides the Library button and the tab bar, and a second brings both back.
-    func testTapZonesAndChrome() throws {
+    /// iPhone. Taps never turn a page: a tap on a word selects its ayah (the panel opens), whichever
+    /// edge of the line it is on, and the page stays 50. The footer is outside the text, so a tap
+    /// on it hides the Library button and the tab bar, and a second brings both back; a word tap
+    /// while the bars are hidden still selects its ayah.
+    func testTapsNeverTurnAndFooterTogglesChrome() throws {
         try XCTSkipUnless(TestPlatform.isPhone, "Immersive reading is iPhone only")
         let app = XCUIApplication()
         app.launchQuran(["-quranMode", "mushaf", "-quranPage", "50"])
         try requireMushafPages(app)
         XCTAssertTrue(waitUntilOnScreen(app.pageFooter(50), in: app, timeout: 15))
         XCTAssertTrue(app.appTabBar.exists, "the reader sits inside the tab bar")
-        let window = app.windows.firstMatch
 
-        // The left edge, halfway down, is the next page; the right edge is back.
-        window.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.55)).tapOrClick()
-        XCTAssertTrue(waitUntilOnScreen(app.pageFooter(51), in: app), "left edge = next page")
-        window.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.55)).tapOrClick()
-        XCTAssertTrue(waitUntilOnScreen(app.pageFooter(50), in: app), "right edge = previous page")
+        // The first word and the last word of a line sat in the old edge zones: neither turns now.
+        for edge in [WordEdge.first, .last] {
+            let ayah = try XCTUnwrap(ayahsInBody(of: app, count: 1).first, "an ayah in the body of page 50")
+            tapWord(of: ayah, edge: edge, in: app)
+            dismissAyahPanel(in: app, opened: "a word tap opens the ayah panel (\(edge))")
+            XCTAssertTrue(waitForPages([50], in: app), "a word tap did not turn the page (\(edge))")
+        }
 
         // The footer, in the middle: outside the text.
         let library = app.readerLibraryButton
@@ -44,7 +47,16 @@ final class QuranImmersiveTests: XCTestCase {
         XCTAssertTrue(app.appTabBar.waitForNonExistence(timeout: 5), "tab bar hidden")
         captureScreenshot(app, screen: "reader-mushaf-immersive", theme: "paper")
 
-        app.pageFooter(50).tapOrClick()
+        // Immersive: a word still selects its ayah and the page still does not change.
+        let ayah = try XCTUnwrap(ayahsInBody(of: app, count: 1).first, "an ayah in the body while immersive")
+        tapWord(of: ayah, edge: .first, in: app)
+        dismissAyahPanel(in: app, opened: "a word tap while immersive opens the panel")
+        XCTAssertTrue(waitForPages([50], in: app), "still page 50 after the immersive word tap")
+
+        // Bring the bars back with the footer, if the panel left them hidden.
+        if !library.exists {
+            app.pageFooter(50).tapOrClick()
+        }
         XCTAssertTrue(library.waitForExistence(timeout: 5), "navigation bar back")
         XCTAssertTrue(app.appTabBar.waitForExistence(timeout: 5), "tab bar back")
     }

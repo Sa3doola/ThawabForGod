@@ -79,8 +79,8 @@ extension XCUIElement {
         #endif
     }
 
-    /// Taps an ayah's element inside the middle of the page, where a reader would. On iPhone the
-    /// outer 15% of a page turns it, and a short ayah's element can be centred there.
+    /// Taps an ayah's element inside the middle of the page, where a reader would. (Edge zones no
+    /// longer turn pages; the middle band just keeps the point on text.)
     func tapInText(of app: XCUIApplication) {
         let window = app.windows.firstMatch.frame
         let band = CGRect(x: window.minX + window.width * 0.2, y: frame.minY, width: window.width * 0.6, height: frame.height)
@@ -228,8 +228,9 @@ extension XCTestCase {
     func requireMushafPages(_ app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) throws {
         waitForReader(app, file: file, line: line)
         // Loaded content and the toggle appear in one update; a short wait covers the render.
+        // At compact width the toggle sits in the More menu, which exists only when there is a mode to switch.
         try XCTSkipUnless(
-            app.readerModeToggle.waitForExistence(timeout: 2),
+            app.readerModeToggle.waitForExistence(timeout: 2) || app.element(id: "quran.reader.more").exists,
             "This build has no Mushaf pages (public data): the mode toggle does not exist."
         )
     }
@@ -320,42 +321,122 @@ extension XCTestCase {
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
-    /// Turns one Mushaf page the way a reader does, on iPhone and iPad alike, and returns once the
-    /// on-screen footer has changed (false if it never did). The pager is right-to-left, so "next"
-    /// is a tap on the left edge on iPhone (as `QuranImmersiveTests` established; the edge zones are
-    /// iPhone only) and a swipe from left to right elsewhere. If the first direction changes nothing
-    /// the opposite one is tried: the test only needs the place to differ, not which way it went.
+    /// The page numbers whose footers are on screen, ascending: one page, or two in a spread (the
+    /// pager keeps neighbouring pages in the tree, so only footers whose centre is in the window
+    /// count). Parsed from "... Page <n>"; the language is pinned to English at launch.
+    @MainActor
+    func onScreenPageNumbers(in app: XCUIApplication) -> [Int] {
+        let window = app.windows.firstMatch.frame
+        let footers = app.staticTexts.matching(textPredicate("CONTAINS", "Page "))
+        var pages = Set<Int>()
+        for index in 0..<footers.count {
+            let footer = footers.element(boundBy: index)
+            guard footer.exists, window.contains(CGPoint(x: footer.frame.midX, y: footer.frame.midY)),
+                  let range = footer.text.range(of: #"Page (\d+)"#, options: .regularExpression),
+                  let number = Int(footer.text[range].dropFirst("Page ".count)) else { continue }
+            pages.insert(number)
+        }
+        return pages.sorted()
+    }
+
+    /// Waits until the pages on screen are exactly `pages`.
+    @MainActor
+    func waitForPages(_ pages: [Int], in app: XCUIApplication, timeout: TimeInterval = 10) -> Bool {
+        let predicate = NSPredicate { [self] _, _ in onScreenPageNumbers(in: app) == pages }
+        return XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: nil)], timeout: timeout) == .completed
+    }
+
+    /// Performs the gesture that turns the Mushaf pager one unit, and nothing else: it does not wait
+    /// and does not check where the pager landed. The pager is right-to-left, so "next" is a swipe
+    /// (a drag on the Mac) from left to right. A tap never turns a page.
+    @MainActor
+    func turnPage(next: Bool, in app: XCUIApplication) {
+        let window = app.windows.firstMatch
+        #if os(macOS)
+        // A drag across the middle of the window.
+        let from = window.coordinate(withNormalizedOffset: CGVector(dx: next ? 0.3 : 0.7, dy: 0.5))
+        let to = window.coordinate(withNormalizedOffset: CGVector(dx: next ? 0.7 : 0.3, dy: 0.5))
+        from.click(forDuration: 0.05, thenDragTo: to)
+        #else
+        // A swipe on an ayah that is on the page, not at a fraction of the window: on an iPad in the
+        // sidebar arrangement the window's leading third is the sidebar, and a drag that starts
+        // there never reaches the pager.
+        let ayahs = app.ayahElements
+        var onPage: XCUIElement = window
+        for index in 0..<min(ayahs.count, 40) where isOnScreen(ayahs.element(boundBy: index), in: app) {
+            onPage = ayahs.element(boundBy: index)
+            break
+        }
+        // `swipeRight()` on an ayah drags across that one line, a few points: the pager reads it as a
+        // tap and opens the panel. Drag across the page from the line's own height instead.
+        let bounds = window.frame
+        let line = onPage.frame
+        let startX = min(max(line.midX, bounds.minX + bounds.width * 0.4), bounds.maxX - bounds.width * 0.1) - bounds.minX
+        let y = line.midY - bounds.minY
+        let dx = bounds.width * 0.3 * (next ? 1 : -1)
+        let origin = window.coordinate(withNormalizedOffset: .zero)
+        origin.withOffset(CGVector(dx: startX, dy: y))
+            .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: startX + dx, dy: y)),
+                   withVelocity: .fast, thenHoldForDuration: 0)
+        #endif
+    }
+
+    /// Turns one page forward by swiping and returns true only if the pager landed on exactly the
+    /// next unit: the page after the last one on screen (n + 1 on a single page, n + 2 in a spread).
+    /// Any other landing, or none, is false. Never taps, and never tries the other direction.
     @MainActor
     func turnOnePage(in app: XCUIApplication) -> Bool {
-        guard let start = onScreenFooterText(in: app) else { return false }
-        let window = app.windows.firstMatch
-        func turn(next: Bool) {
-            if TestPlatform.isPhone {
-                window.coordinate(withNormalizedOffset: CGVector(dx: next ? 0.05 : 0.95, dy: 0.55)).tapOrClick()
-            } else {
-                #if os(macOS)
-                // A drag across the middle of the window: left-to-right goes to the next page.
-                let from = window.coordinate(withNormalizedOffset: CGVector(dx: next ? 0.3 : 0.7, dy: 0.5))
-                let to = window.coordinate(withNormalizedOffset: CGVector(dx: next ? 0.7 : 0.3, dy: 0.5))
-                from.click(forDuration: 0.05, thenDragTo: to)
-                #else
-                // A swipe on an ayah that is on the page, not at a fraction of the window: on an iPad
-                // in the sidebar arrangement the window's leading third is the sidebar, and a drag
-                // that starts there never reaches the pager. Swiping right goes to the next page.
-                let ayahs = app.ayahElements
-                var onPage: XCUIElement = window
-                for index in 0..<min(ayahs.count, 40) where isOnScreen(ayahs.element(boundBy: index), in: app) {
-                    onPage = ayahs.element(boundBy: index)
-                    break
-                }
-                if next { onPage.swipeRight() } else { onPage.swipeLeft() }
-                #endif
-            }
+        let before = onScreenPageNumbers(in: app)
+        guard let last = before.last else { return false }
+        let expected = (0..<before.count).map { last + 1 + $0 }
+        turnPage(next: true, in: app)
+        return waitForPages(expected, in: app, timeout: 6)
+    }
+
+    /// Waits for the ayah panel, as a column (Close) or a sheet (Done), then dismisses it.
+    @MainActor
+    func dismissAyahPanel(in app: XCUIApplication, opened message: String, file: StaticString = #filePath, line: UInt = #line) {
+        let close = app.element(id: "quran.panel.close")
+        let done = app.element(id: "quran.panel.done")
+        XCTAssertTrue(close.waitForExistence(timeout: 10) || done.waitForExistence(timeout: 2), message, file: file, line: line)
+        let button = close.exists ? close : done
+        button.tapOrClick()
+        XCTAssertTrue(button.waitForNonExistence(timeout: 10), "the panel closed", file: file, line: line)
+    }
+
+    /// Taps the first or last word of the top line of `ayah`: its element's frame inset by 6 pt on
+    /// the chosen side. The text is right-to-left and the screen coordinates are not, so the
+    /// first word is at the frame's right (maxX) edge and the last word at its left (minX) edge.
+    /// The frame is clipped to the window first.
+    enum WordEdge { case first, last }
+
+    @MainActor
+    func tapWord(of ayah: XCUIElement, edge: WordEdge, in app: XCUIApplication) {
+        let window = app.windows.firstMatch.frame
+        let frame = ayah.frame.intersection(window)
+        let x = edge == .first ? frame.maxX - 6 : frame.minX + 6
+        let y = frame.minY + 6
+        app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: x - window.minX, dy: y - window.minY)).tapOrClick()
+    }
+
+    /// Up to `count` ayah elements on screen whose top lies in the page's body (not under a bar),
+    /// ordered top to bottom and spread through the list, so they are different lines.
+    @MainActor
+    func ayahsInBody(of app: XCUIApplication, count: Int) -> [XCUIElement] {
+        let window = app.windows.firstMatch.frame
+        var found: [(minY: CGFloat, element: XCUIElement)] = []
+        let ayahs = app.ayahElements
+        for index in 0..<ayahs.count {
+            let ayah = ayahs.element(boundBy: index)
+            guard isOnScreen(ayah, in: app),
+                  ayah.frame.minY > window.minY + window.height * 0.15,
+                  ayah.frame.minY < window.minY + window.height * 0.75 else { continue }
+            found.append((ayah.frame.minY, ayah))
         }
-        turn(next: true)
-        if waitForFooterToChange(from: start, in: app, timeout: 4) { return true }
-        turn(next: false)
-        return waitForFooterToChange(from: start, in: app, timeout: 4)
+        let sorted = found.sorted { $0.minY < $1.minY }.map(\.element)
+        guard sorted.count > count else { return sorted }
+        return (0..<count).map { sorted[$0 * (sorted.count - 1) / max(count - 1, 1)] }
     }
 
     /// The numbers of the Library's surah rows currently on screen, from their identifiers.

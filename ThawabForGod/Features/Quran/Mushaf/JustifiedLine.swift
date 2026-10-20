@@ -21,14 +21,12 @@ struct JustifiedLine: View {
 
     @Environment(\.quranFaces) private var faces
     @Environment(\.readingPalette) private var palette
-    /// iPhone immersive reading: a tap in the page's edge zones turns the page instead.
-    @Environment(\.mushafTapHandling) private var tapHandling
 
     var body: some View {
         JustifiedLineLayout(justify: !isCentered, minimumSpacing: fontSize * renderer.metrics.minimumGapEm) {
             ForEach(LineItem.items(for: line, renderer: renderer)) { item in
-                // A tap, not a Button, so its position can be checked against the edge zones.
-                // VoiceOver reads and activates the page's per-ayah elements, never these.
+                // A tap, not a Button: VoiceOver reads and activates the page's per-ayah elements,
+                // never these. A tap on a word only ever selects its ayah.
                 label(for: item)
                     .anchorPreference(key: HighlightBoundsKey.self, value: .bounds) {
                         item.ayah == selectedAyah || highlights[item.ayah] != nil ? [item.ayah: [$0]] : [:]
@@ -40,10 +38,7 @@ struct JustifiedLine: View {
                         [LineItemBounds(ayah: item.ayah, bounds: $0)]
                     }
                     .contentShape(.rect)
-                    .onTapGesture(coordinateSpace: .named(MushafTapHandling.space)) { location in
-                        if tapHandling?.turnsPage(at: location) == true { return }
-                        onSelect(item.ayah)
-                    }
+                    .onTapGesture { onSelect(item.ayah) }
             }
         }
         // An ayah's words on a line are contiguous: one band behind them, extended into the gaps,
@@ -75,11 +70,6 @@ struct JustifiedLine: View {
                     .contentShape(.rect)
                     .onTapGesture { location in
                         let frames = items.map { ($0.ayah, proxy[$0.bounds]) }
-                        if let tapHandling {
-                            // The same point in the page unit, for the edge zones.
-                            let line = proxy.frame(in: .named(MushafTapHandling.space))
-                            if tapHandling.turnsPage(at: CGPoint(x: line.minX + location.x, y: line.minY + location.y)) { return }
-                        }
                         if let ayah = LineItemBounds.nearest(to: location.x, in: frames) { onSelect(ayah) }
                     }
             }

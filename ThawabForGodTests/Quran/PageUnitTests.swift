@@ -72,30 +72,3 @@ struct PageUnitTests {
         #expect(metrics.fontSize >= 22, "page \(number) at \(width) pt")
     }
 }
-
-/// Ported from Mushaf's `TapZoneTests` (Phase 6.6): the iPhone's tap zones.
-struct TapZoneTests {
-    @Test func edgesTurnThePageLikeABook() {
-        // The left edge is the next page: a Mushaf is read right to left.
-        #expect(MushafTapZone.zone(x: 10, width: 400) == .nextPage)
-        #expect(MushafTapZone.zone(x: 59, width: 400) == .nextPage)
-        #expect(MushafTapZone.zone(x: 61, width: 400) == .middle)
-        #expect(MushafTapZone.zone(x: 200, width: 400) == .middle)
-        #expect(MushafTapZone.zone(x: 341, width: 400) == .previousPage)
-        #expect(MushafTapZone.zone(x: 399, width: 400) == .previousPage)
-        #expect(MushafTapZone.zone(x: 10, width: 0) == .middle)
-    }
-
-    @MainActor
-    @Test func handlingTurnsOrToggles() {
-        var turned: [MushafPageTurn] = []
-        var toggles = 0
-        let handling = MushafTapHandling(width: 400, turn: { turned.append($0) }, toggleChrome: { toggles += 1 })
-        #expect(handling.turnsPage(at: CGPoint(x: 20, y: 300)))
-        #expect(!handling.turnsPage(at: CGPoint(x: 200, y: 300)), "an ayah in the middle is selected")
-        handling.tapOutsideText(at: CGPoint(x: 390, y: 10))
-        handling.tapOutsideText(at: CGPoint(x: 200, y: 10))
-        #expect(turned == [.next, .previous])
-        #expect(toggles == 1)
-    }
-}

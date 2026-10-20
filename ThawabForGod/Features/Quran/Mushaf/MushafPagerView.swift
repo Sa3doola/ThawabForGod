@@ -11,6 +11,16 @@ extension EnvironmentValues {
     @Entry var mushafPanelCoversFold: Bool = false
 }
 
+/// Shows or hides the reader's chrome (iPhone immersive reading). Set on the pager's row only
+/// while that applies; `nil` elsewhere, where a tap outside the text does nothing.
+struct MushafChromeToggle {
+    let toggle: () -> Void
+}
+
+extension EnvironmentValues {
+    @Entry var mushafChromeToggle: MushafChromeToggle?
+}
+
 /// The style's pages as a horizontal book, always right-to-left: page 1 is the rightmost page and
 /// the next page lies to the left, as in a printed Arabic Mushaf.
 ///
@@ -47,6 +57,7 @@ struct MushafPagerView: View {
     @Environment(\.forcedRenderer) private var forcedRenderer
     @Environment(\.foldOverride) private var foldOverride
     @Environment(\.mushafPanelCoversFold) private var panelCoversFold
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -77,7 +88,6 @@ struct MushafPagerView: View {
                         unit: unit,
                         fold: fold,
                         sideInsets: sideInsets,
-                        screenWidth: geometry.size.width + sideInsets.leading + sideInsets.trailing,
                         maxPageWidth: isTabletop ? Self.tabletopPageWidth : nil,
                         marks: marks,
                         onSelect: onSelect
@@ -100,7 +110,14 @@ struct MushafPagerView: View {
                 }
                 .onChange(of: visibleUnit) { _, first in
                     guard let first else { return }
+                    // A jump is settling: reports of other units are stale until it arrives.
                     if let jumpTarget, first != jumpTarget { return }
+                    // A paging swipe moves one unit. Anything further is the RTL scroll view
+                    // reporting its mirrored origin: go back to where the reader is.
+                    guard MushafPagerStep.accepts(reported: first, page: state.page, pageCount: unit.pageCount, jumpTarget: jumpTarget) else {
+                        jump(to: unit.unitStart(for: state.page), proxy: proxy, farJump: true)
+                        return
+                    }
                     // Keep the exact page if it is still visible (the left page of a spread).
                     if !(first...(first + unit.pageCount - 1)).contains(state.page) { state.show(page: first) }
                 }
@@ -108,19 +125,11 @@ struct MushafPagerView: View {
                     await prepare(around: state.page)
                 }
                 .onChange(of: state.page) { _, page in
-                    // Programmatic navigation (go to, a turn from a key or an edge tap).
+                    // Programmatic navigation (go to, a turn from a key or the menu).
                     let target = unit.unitStart(for: page)
                     guard target != visibleUnit else { return }
-                    // Both: the reader scrolls a far unit into the lazy stack, the position binding
-                    // keeps the paging scroll view on it (a long jump back on the Mac otherwise
-                    // stayed where it was).
-                    jumpTarget = target
-                    proxy.scrollTo(target)
-                    visibleUnit = target
-                    Task {
-                        try? await Task.sleep(for: .milliseconds(500))
-                        if jumpTarget == target { jumpTarget = nil }
-                    }
+                    let isNeighbour = visibleUnit.map { abs(target - $0) == unit.pageCount } ?? false
+                    jump(to: target, proxy: proxy, farJump: !isNeighbour)
                 }
             }
         }
@@ -128,6 +137,26 @@ struct MushafPagerView: View {
         .background(palette.background)
         // Forced whatever the interface language: a Mushaf always pages right-to-left.
         .environment(\.layoutDirection, .rightToLeft)
+    }
+
+    /// Moves the scroll view to the unit starting at `target`. A neighbouring unit needs only the
+    /// scroll position (one scroll path); a far one also asks the reader to scroll it into the lazy
+    /// stack (a long jump back on the Mac otherwise stayed where it was). Once the window closes,
+    /// a view that is still elsewhere is sent there once more.
+    private func jump(to target: Int, proxy: ScrollViewProxy, farJump: Bool) {
+        jumpTarget = target
+        if farJump {
+            proxy.scrollTo(target)
+            visibleUnit = target
+        } else {
+            withAnimation(reduceMotion ? nil : .default) { visibleUnit = target }
+        }
+        Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            guard jumpTarget == target else { return }
+            jumpTarget = nil
+            if visibleUnit != target { proxy.scrollTo(target) }
+        }
     }
 
     /// Registers the page fonts around `page`, then measures the neighbours, nearest first.
@@ -180,8 +209,6 @@ private struct MushafPagerUnits: View {
     let unit: MushafPageUnit
     let fold: FoldGeometry?
     let sideInsets: EdgeInsets
-    /// The paging scroll view's width (one unit), for the edge tap zones.
-    let screenWidth: CGFloat
     let maxPageWidth: CGFloat?
     let marks: QuranAyahMarks
     let onSelect: (VerseReference) -> Void
@@ -203,20 +230,16 @@ private struct MushafPagerUnits: View {
         }
         .scrollTargetLayout()
         // Once for the row, not per unit: the same closures for every page.
-        .environment(\.mushafTapHandling, tapHandling(width: screenWidth))
+        .environment(\.mushafChromeToggle, chromeToggle)
     }
 
-    /// iPhone immersive reading: edge taps turn the page, a tap outside the text shows or hides the
-    /// chrome. Off with VoiceOver (it pages with its own gestures), and on iPad and the Mac.
-    private func tapHandling(width: CGFloat) -> MushafTapHandling? {
+    /// iPhone immersive reading: a tap outside the text shows or hides the chrome. Off with
+    /// VoiceOver (it pages with its own gestures), and on iPad and the Mac.
+    private var chromeToggle: MushafChromeToggle? {
         guard DeviceKind.isPhone, !voiceOverEnabled else { return nil }
-        return MushafTapHandling(
-            width: width,
-            turn: { turn in
-                if state.canTurn(turn) { state.turn(turn) }
-            },
+        return MushafChromeToggle(
             // Reduce Motion: the bars appear and go without sliding.
-            toggleChrome: { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { state.isChromeHidden.toggle() } }
+            toggle: { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { state.isChromeHidden.toggle() } }
         )
     }
 }
@@ -240,7 +263,7 @@ struct MushafUnitView: View {
     /// Each page fits its own widest line; facing pages share the smaller size.
     @State private var sharedFontSize: CGFloat = .infinity
 
-    @Environment(\.mushafTapHandling) private var tapHandling
+    @Environment(\.mushafChromeToggle) private var chromeToggle
 
     var body: some View {
         // The marks are read here, at the top level of this leaf's body, so this view observes the
@@ -254,13 +277,10 @@ struct MushafUnitView: View {
             case .widthFit: widthFitted(pageMarks)
             }
         }
-        // Taps on words and lines are measured here (edge zones); a tap anywhere else on the page
-        // (header, footer, margins, empty slots) reaches this one.
-        .coordinateSpace(.named(MushafTapHandling.space))
+        // A tap on words or lines selects an ayah there; a tap anywhere else on the page (header,
+        // footer, margins, empty slots) reaches this one.
         .contentShape(.rect)
-        .onTapGesture(coordinateSpace: .named(MushafTapHandling.space)) { location in
-            tapHandling?.tapOutsideText(at: location)
-        }
+        .onTapGesture { chromeToggle?.toggle() }
     }
 
     /// iPhone landscape: the page as wide as the screen and as tall as the page's proportions make

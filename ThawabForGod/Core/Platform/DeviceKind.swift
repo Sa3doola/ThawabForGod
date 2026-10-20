@@ -8,7 +8,7 @@ import UIKit
 #endif
 
 /// What kind of device the app runs on, for the few behaviours that belong to one kind of device
-/// rather than to a size: the Quran pager's edge taps, and the settings that only an iPhone has
+/// rather than to a size: the Quran pager's tap-to-toggle chrome, and the settings that only an iPhone has
 /// (landscape layout, opening a foldable flat).
 ///
 /// **Never for layout.** A layout follows the size, the size classes and the fold — an iPad in

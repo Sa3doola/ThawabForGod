@@ -42,24 +42,15 @@ final class MushafReadingState {
         }
     }
 
-    /// The first page of the unit on screen: the odd page of a spread, else the page itself.
-    private var unitStart: Int {
-        visiblePageCount == 2 ? page - (page - 1) % 2 : page
-    }
-
     /// One unit forward or back: a page, or a spread when two are showing.
     func turn(_ turn: MushafPageTurn) {
-        switch turn {
-        case .next: show(page: unitStart + visiblePageCount)
-        case .previous: show(page: unitStart - visiblePageCount)
+        if let target = MushafPagerStep.target(of: turn, from: page, pageCount: visiblePageCount, pages: pages) {
+            show(page: target)
         }
     }
 
     func canTurn(_ turn: MushafPageTurn) -> Bool {
-        switch turn {
-        case .next: unitStart + visiblePageCount <= pages.upperBound
-        case .previous: unitStart > pages.lowerBound
-        }
+        MushafPagerStep.target(of: turn, from: page, pageCount: visiblePageCount, pages: pages) != nil
     }
 
     func select(_ ayah: VerseReference?) {
