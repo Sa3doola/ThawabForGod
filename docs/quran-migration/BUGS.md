@@ -5,7 +5,7 @@ Saad adds bugs here (one line each: device, OS, steps, what happens, what should
 ## Open (reported 2026-10-20)
 - **B1 Crash (iPhone, iPad, Duo):** open the reader (Mushaf page), then tap another tab (Settings or Home) → the app crashes. [fixed 56de81f]
 - **B2 Mac:** tapping a surah in the Library does not open the reader. [fixed 4f8d868; Mac UI test pending: screen was locked]
-- **B3 Mushaf taps (all):** tapping the first word of a line turns the page and jumps to the last page. Wanted: taps never turn pages; pages change only by swiping/scrolling (plus keyboard and menu on iPad/Mac).
+- **B3 Mushaf taps (all):** tapping the first word of a line turns the page and jumps to the last page. Wanted: taps never turn pages; pages change only by swiping/scrolling (plus keyboard and menu on iPad/Mac). [fixed 61c172b; Mac paging test pending; last-page jump cause inferred, not reproduced]
 - **B4 Ayah of the Day widget:** doesn't work as expected (details to confirm while testing: empty, wrong ayah, wrong day, no Arabic font, tap does nothing).
 - **B5 iPad / iPhone Duo:** more issues seen; Saad adds them below.
 
