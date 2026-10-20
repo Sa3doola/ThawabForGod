@@ -7,7 +7,7 @@ import SwiftUI
 
 /// Everything about one ayah: the Hafs text at a compact size, Copy and Share, then a section picker
 /// ("Translation | Tafsir") and the chosen section. A sheet on iPhone and iPad portrait, an
-/// inspector on iPad landscape and the Mac.
+/// side panel on iPad landscape and the Mac.
 ///
 /// Ported from Mushaf's `AyahPanel`, minus bookmark, note and highlight (M6). It reads the ayah from
 /// the coordinator and the words from the reader's corpus, and **never calls a repository**: loading
@@ -20,25 +20,55 @@ struct AyahPanel: View {
     let panel: AyahPanelViewModel
     let reader: QuranReaderViewModel
     let userData: QuranUserDataStore
-    /// Shown as an inspector: no toolbar (previous / next / Close sit above the Arabic instead).
+    /// Shown in a side panel: no toolbar (previous / next / Close sit above the Arabic instead).
     let isInspector: Bool
 
     @Environment(\.readingPalette) private var palette
     @State private var detent: PresentationDetent = .medium
 
+    /// Nothing in this view may push a destination: in the side panel it has no stack of its own,
+    /// so a `NavigationLink` would land on the reader's. "Read more" is a sheet; keep it that way.
     var body: some View {
-        NavigationStack {
-            if let id = coordinator.panelAyah, let ayah = reader.corpus?.ayah(id), let corpus = reader.corpus {
-                AyahPanelContent(
-                    ayah: ayah, corpus: corpus, coordinator: coordinator, panel: panel, userData: userData,
-                    isInspector: isInspector, detent: $detent
-                )
-            } else {
-                palette.background
-            }
+        // The sheet wants a bar for its title and Done. The side panel sits inside the reader's own
+        // stack, where a second `NavigationStack` makes the column pop the reader (B2), so it gets
+        // the content bare and shows the reference in its stepper row instead.
+        if isInspector {
+            content.accessibilityIdentifier("quran.panel")
+        } else {
+            NavigationStack { content }
+                .presentationDetents([.medium, .large], selection: $detent)
+                .accessibilityIdentifier("quran.panel")
         }
-        .presentationDetents([.medium, .large], selection: $detent)
-        .accessibilityIdentifier("quran.panel")
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let id = coordinator.panelAyah, let ayah = reader.corpus?.ayah(id), let corpus = reader.corpus {
+            AyahPanelContent(
+                ayah: ayah, corpus: corpus, coordinator: coordinator, panel: panel, userData: userData,
+                isInspector: isInspector, detent: $detent
+            )
+        } else {
+            palette.background
+        }
+    }
+}
+
+/// The sheet's navigation title. Not applied in the side panel: with no stack of its own, a title
+/// there would land on the reader's.
+private struct PanelTitle: ViewModifier {
+    let reference: String
+    let applies: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if applies {
+            content
+                .navigationTitle(Text(verbatim: reference))
+                .toolbarTitleDisplayMode(.inline)
+        } else {
+            content
+        }
     }
 }
 
@@ -57,7 +87,7 @@ private struct AyahPanelContent: View {
     @Environment(\.readingPalette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The Arabic size in the panel: fixed, independent of the reader's text size setting, but
-    /// scaled with Dynamic Type. Compact in a sheet; larger in the inspector, which has the height.
+    /// scaled with Dynamic Type. Compact in a sheet; larger in the side panel, which has the height.
     @ScaledMetric(relativeTo: .title3) private var sheetArabicSize: CGFloat = 18
     @ScaledMetric(relativeTo: .title3) private var inspectorArabicSize: CGFloat = 22
     @ScaledMetric(relativeTo: .body) private var translationSize: CGFloat = 17
@@ -85,7 +115,7 @@ private struct AyahPanelContent: View {
         @Bindable var coordinator = coordinator
         return ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                // A sheet has previous / next in its navigation bar; the inspector has no bar.
+                // A sheet has previous / next in its navigation bar; the side panel has no bar.
                 if isInspector { stepper }
                 arabic
                 actions
@@ -96,8 +126,7 @@ private struct AyahPanelContent: View {
             .padding(.vertical, 12)
         }
         .background(palette.background)
-        .navigationTitle(Text(verbatim: reference))
-        .toolbarTitleDisplayMode(.inline)
+        .modifier(PanelTitle(reference: reference, applies: !isInspector))
         .toolbar {
             if !isInspector {
                 ToolbarItemGroup(placement: .navigation) {
@@ -142,7 +171,7 @@ private struct AyahPanelContent: View {
 
     // MARK: Arabic
 
-    /// Capped only in a sheet at the medium detent; the large detent and the inspector show it all.
+    /// Capped only in a sheet at the medium detent; the large detent and the side panel show it all.
     private var capsArabic: Bool { !isInspector && detent == .medium }
 
     /// The words, a no-break space, then the marker: drawn the way the separated reader draws them.
@@ -205,7 +234,7 @@ private struct AyahPanelContent: View {
 
     // MARK: Navigation
 
-    /// Previous / next ayah and Close in the inspector, above the Arabic.
+    /// Previous / next ayah and Close in the side panel, above the Arabic.
     private var stepper: some View {
         HStack {
             Button { step(to: corpus.ayah(before: ayah.id)) } label: {
@@ -228,10 +257,16 @@ private struct AyahPanelContent: View {
             }
             .disabled(corpus.ayah(after: ayah.id) == nil)
             .accessibilityIdentifier("quran.panel.next")
+            Text(verbatim: reference)
+                .appFont(.subheadline, weight: .semibold)
+                .lineLimit(1)
+                .layoutPriority(-1)
             Spacer()
             Button { coordinator.closePanel() } label: {
                 Text(l10n.string(.quranPanelClose))
             }
+            .layoutPriority(1)
+            .keyboardShortcut(.cancelAction)
             .accessibilityIdentifier("quran.panel.close")
         }
         .buttonStyle(.panelPlain)

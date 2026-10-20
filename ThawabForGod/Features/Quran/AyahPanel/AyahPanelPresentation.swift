@@ -5,26 +5,53 @@
 
 import SwiftUI
 
-/// Where the ayah panel goes: an inspector beside the page where the reader is wide (iPad
-/// landscape, the Mac), a sheet everywhere else. Mushaf's rule, measured on the reader view, which
-/// is the detail column, rather than on the screen.
+/// Where the ayah panel goes: a trailing column inside the reader where the reader is wide (iPad
+/// landscape, the Mac, one half of a vertically folded display), a sheet everywhere else.
+///
+/// **Our own column, not `.inspector`.** Any `.inspector` inside the split view's detail column pops
+/// the reader that was pushed there: found on the iPad in M7.1 (even never presented, and wherever it
+/// was attached) and again on the Mac in M8 (B2: tapping a surah in the library opened the reader and
+/// popped it at once). The column is a plain `HStack` child of the reader, which cannot touch a
+/// navigation stack.
+///
+/// The rule is measured on a `GeometryReader` around the *whole* `HStack` (reader and column), so
+/// opening the column narrows the reader without changing the answer and the layout cannot flip.
 nonisolated enum AyahPanelLayout {
-    static func usesInspector(size: CGSize, isCompact: Bool) -> Bool {
-        #if os(macOS)
-        true
-        #else
-        // Never on iOS: an `.inspector` attached to the reader, which is pushed inside the split
-        // view's detail column, pops the reader as soon as it is pushed (found on an iPad simulator).
-        // Re-tested in M7.1 with the inspector on the Quran NavigationStack instead (even never
-        // presented): it still pops the pushed reader, so the cause is any `.inspector` inside the
-        // split view's detail column, not where it is attached. The sheet is the panel there, at every width.
-        false
-        #endif
+    enum Platform: Sendable {
+        case iOS, macOS
+
+        static var current: Platform {
+            #if os(macOS)
+            .macOS
+            #else
+            .iOS
+            #endif
+        }
+    }
+
+    static let minimumWidth: CGFloat = 320
+    static let maximumWidth: CGFloat = 420
+
+    /// False while unmeasured (width or height <= 0). macOS: always (the column is capped at half the
+    /// reader, so a narrow window still gets it). iOS: on a fold, or regular width in landscape.
+    static func usesSidePanel(size: CGSize, isCompact: Bool, hasFold: Bool, platform: Platform = .current) -> Bool {
+        guard size.width > 0, size.height > 0 else { return false }
+        switch platform {
+        case .macOS: return true
+        case .iOS: return hasFold || (!isCompact && size.width > size.height)
+        }
+    }
+
+    /// On a fold, the trailing half plus the hinge; otherwise 36% of the reader, within 320...420
+    /// and never more than half the reader.
+    static func sidePanelWidth(containerWidth: CGFloat, fold: FoldGeometry?) -> CGFloat {
+        if let fold { return fold.trailingWidth + fold.gutterWidth }
+        return min(max(containerWidth * 0.36, minimumWidth), maximumWidth, containerWidth / 2)
     }
 }
 
 extension View {
-    /// Presents the ayah panel over the reader, driven by the coordinator's flags.
+    /// Presents the ayah panel beside or over the reader, driven by the coordinator's flags.
     func quranAyahPanel(
         coordinator: QuranCoordinator,
         panel: AyahPanelViewModel,
@@ -63,27 +90,53 @@ private struct AyahPanelPresentation: ViewModifier {
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
-    @State private var readerSize: CGSize = .zero
+    @Environment(\.foldOverride) private var foldOverride
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// What the placement rule is decided from; one value so a single `onChange` watches all of it.
+    private struct Placement: Equatable {
+        let size: CGSize
+        let isCompact: Bool
+        let fold: FoldGeometry?
+    }
 
     func body(content: Content) -> some View {
         @Bindable var coordinator = coordinator
-        content
-            .onChange(of: usesInspector, initial: true) { _, wide in
-                coordinator.panelUsesInspector = wide
+        let shown = coordinator.isPanelInspectorPresented
+        GeometryReader { proxy in
+            let fold = FoldGeometry.resolve(in: proxy, override: foldOverride)
+            HStack(spacing: 0) {
+                content
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .environment(\.mushafPanelCoversFold, shown && fold != nil)
+                // The animation is scoped to the column: on the whole reader it would also animate
+                // the pager re-laying out narrower.
+                Group {
+                    if shown {
+                        AyahSidePanel(
+                            coordinator: coordinator, panel: panel, reader: reader, userData: userData,
+                            gutter: fold?.gutterWidth ?? 0
+                        )
+                        .environment(\.readingPalette, palette)
+                        .environment(\.quranFaces, faces)
+                        .frame(width: AyahPanelLayout.sidePanelWidth(containerWidth: proxy.size.width, fold: fold))
+                        .transition(.move(edge: .trailing))
+                    }
+                }
+                .animation(reduceMotion ? nil : .default, value: shown)
             }
-            .sheet(isPresented: $coordinator.isPanelSheetPresented) {
-                panelView(isInspector: false)
+            .onChange(of: Placement(size: proxy.size, isCompact: isCompact, fold: fold), initial: true) { _, placement in
+                coordinator.panelUsesInspector = AyahPanelLayout.usesSidePanel(
+                    size: placement.size, isCompact: placement.isCompact, hasFold: placement.fold != nil
+                )
             }
-            .quranPanelInspector(isPresented: $coordinator.isPanelInspectorPresented) {
-                panelView(isInspector: true)
-            }
-            // After the inspector, so it measures the reader at full width. Measured inside, the
-            // inspector's own column would narrow the reader, flip the layout and close it again.
-            .onGeometryChange(for: CGSize.self) { $0.size } action: { readerSize = $0 }
-    }
-
-    private var usesInspector: Bool {
-        AyahPanelLayout.usesInspector(size: readerSize, isCompact: isCompact)
+        }
+        // The keyboard shrinks the measured height; on an iPad in portrait that would flip the rule
+        // and swap the sheet for the column while a note is being typed.
+        .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $coordinator.isPanelSheetPresented) {
+            sheetPanel
+        }
     }
 
     private var isCompact: Bool {
@@ -96,23 +149,9 @@ private struct AyahPanelPresentation: ViewModifier {
 
     /// The panel with the reader's palette and faces, set again because a sheet is not guaranteed
     /// to see values the reader computed rather than inherited.
-    private func panelView(isInspector: Bool) -> some View {
-        AyahPanel(coordinator: coordinator, panel: panel, reader: reader, userData: userData, isInspector: isInspector)
+    private var sheetPanel: some View {
+        AyahPanel(coordinator: coordinator, panel: panel, reader: reader, userData: userData, isInspector: false)
             .environment(\.readingPalette, palette)
             .environment(\.quranFaces, faces)
-    }
-}
-
-private extension View {
-    /// The inspector, on the Mac only. See `AyahPanelLayout.usesInspector`.
-    @ViewBuilder
-    func quranPanelInspector<Panel: View>(isPresented: Binding<Bool>, @ViewBuilder panel: () -> Panel) -> some View {
-        #if os(macOS)
-        inspector(isPresented: isPresented) {
-            panel().inspectorColumnWidth(min: 320, ideal: 380, max: 480)
-        }
-        #else
-        self
-        #endif
     }
 }

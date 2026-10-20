@@ -7,7 +7,7 @@ import SwiftUI
 
 extension EnvironmentValues {
     /// True while the ayah panel holds one half of a vertically folded display: the pager then is the
-    /// other half and ignores the fold, like `ignoresFold`. Read by the pager; nothing sets it yet (the Duo half-width panel was not built).
+    /// other half and ignores the fold, like `ignoresFold`. Read by the pager; set by the ayah side panel's presentation modifier.
     @Entry var mushafPanelCoversFold: Bool = false
 }
 

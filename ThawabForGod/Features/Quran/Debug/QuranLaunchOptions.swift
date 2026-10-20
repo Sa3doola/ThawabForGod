@@ -72,7 +72,7 @@ nonisolated struct QuranLaunchOptions: Equatable, Sendable {
     var seedsUserData = false
     /// `-quranPanel 2:255`: open the ayah panel on that verse once the reader is up.
     var panelAyah: VerseReference?
-    /// `-quranPanelInspector YES`: force the inspector placement (a simulator cannot be rotated from a script).
+    /// `-quranPanelInspector YES`: force the side panel placement (a simulator cannot be rotated from a script).
     var forcesPanelInspector = false
 
     /// The launch is scripted into the Quran tab: it names a reader target or a Library index.

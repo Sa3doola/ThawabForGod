@@ -103,8 +103,9 @@ final class QuranCoordinator {
         noteEditorAyah = ayah
     }
 
-    /// Whether the reader is wide enough for the inspector. Set by the presentation modifier from
-    /// the measured reader; an open panel moves between sheet and inspector when it changes.
+    /// Whether the panel takes the side-panel placement (a trailing column in the reader; the name
+    /// predates the move off `.inspector`). Set by the presentation modifier from the measured reader;
+    /// an open panel moves between sheet and side panel when it changes.
     var panelUsesInspector = false {
         didSet {
             guard panelUsesInspector != oldValue else { return }
@@ -124,7 +125,7 @@ final class QuranCoordinator {
     var isPanelBottomPresented = false
 
     /// Whether the panel should sit at the bottom. An open panel moves with it; the non-bottom
-    /// target follows `panelUsesInspector` (the sheet wherever the inspector is unused).
+    /// target follows `panelUsesInspector` (the sheet wherever the side panel is unused).
     var panelUsesBottom = false {
         didSet {
             guard panelUsesBottom != oldValue else { return }
