@@ -353,10 +353,9 @@ extension XCTestCase {
     func turnPage(next: Bool, in app: XCUIApplication) {
         let window = app.windows.firstMatch
         #if os(macOS)
-        // A drag across the middle of the window.
-        let from = window.coordinate(withNormalizedOffset: CGVector(dx: next ? 0.3 : 0.7, dy: 0.5))
-        let to = window.coordinate(withNormalizedOffset: CGVector(dx: next ? 0.7 : 0.3, dy: 0.5))
-        from.click(forDuration: 0.05, thenDragTo: to)
+        // A mouse drag does not scroll a paging scroll view on the Mac; a trackpad does, by scroll
+        // events. Scrolling right-to-left content: "next" moves the content to the right.
+        window.scroll(byDeltaX: next ? 600 : -600, deltaY: 0)
         #else
         // A swipe on an ayah that is on the page, not at a fraction of the window: on an iPad in the
         // sidebar arrangement the window's leading third is the sidebar, and a drag that starts
@@ -400,7 +399,15 @@ extension XCTestCase {
         let done = app.element(id: "quran.panel.done")
         XCTAssertTrue(close.waitForExistence(timeout: 10) || done.waitForExistence(timeout: 2), message, file: file, line: line)
         let button = close.exists ? close : done
-        button.tapOrClick()
+        // The panel slides in; a click during the slide has no hit point yet.
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: button)
+        _ = XCTWaiter().wait(for: [hittable], timeout: 5)
+        // By coordinate: the button disappears as it is clicked, and XCTest re-resolving it by
+        // identifier then lands on the panel's container, which has no hit point.
+        let window = app.windows.firstMatch.frame
+        let frame = button.frame
+        app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: frame.midX - window.minX, dy: frame.midY - window.minY)).tapOrClick()
         XCTAssertTrue(button.waitForNonExistence(timeout: 10), "the panel closed", file: file, line: line)
     }
 

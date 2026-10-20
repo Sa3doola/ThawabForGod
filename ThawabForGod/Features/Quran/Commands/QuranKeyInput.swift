@@ -117,15 +117,17 @@ private struct QuranKeyResponder: UIViewRepresentable {
 #if os(macOS)
 /// The keys a SwiftUI shortcut cannot carry on the Mac: Space and ⇧Space (a shortcut takes one for
 /// the other), Page Up / Page Down, and ⌘[ / ⌘] (a `NavigationStack` claims them for Back and
-/// Forward before the menu sees them). Virtual key codes for the layout-independent keys,
+/// Forward before the menu sees them). The plain arrows are here too: as menu key equivalents they
+/// never fired while the reader's scroll view had focus (M8), so ← / → are handled before the menu.
+/// A Mushaf pages right to left in every language, so ← is the next page whatever the UI language. Virtual key codes for the layout-independent keys,
 /// characters for the brackets (their key differs between layouts).
 private enum QuranMonitoredKey {
     static func command(for event: NSEvent) -> QuranCommand? {
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             .subtracting([.function, .numericPad])
         switch (event.keyCode, modifiers) {
-        case (49, []), (121, []): return .nextPage            // Space, Page Down
-        case (49, [.shift]), (116, []): return .previousPage  // ⇧Space, Page Up
+        case (49, []), (121, []), (123, []): return .nextPage      // Space, Page Down, ←
+        case (49, [.shift]), (116, []), (124, []): return .previousPage  // ⇧Space, Page Up, →
         default: break
         }
         guard modifiers == [.command] else { return nil }

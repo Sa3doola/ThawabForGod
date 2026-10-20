@@ -43,7 +43,9 @@ final class QuranSectionSwitchTests: XCTestCase {
         } else {
             let row = app.element(id: "app.sidebar.\(section.rawValue)")
             // A tap during the previous switch's transition can be dropped, so retry until the
-            // row reports itself selected.
+            // row reports itself selected. (The Mac's outline list does not report selection on the
+            // label: there the later checks on what is on screen are the assertion.)
+            #if os(iOS)
             for _ in 0..<3 {
                 row.tapOrClick()
                 let selected = NSPredicate(format: "isSelected == true")
@@ -51,6 +53,9 @@ final class QuranSectionSwitchTests: XCTestCase {
                 if XCTWaiter().wait(for: [done], timeout: 3) == .completed { break }
             }
             XCTAssertTrue(row.isSelected, "the \(section.rawValue) section is selected")
+            #else
+            row.tapOrClick()
+            #endif
         }
     }
 
