@@ -4964,23 +4964,6 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } }
       }
     },
-    "quran_bookmarks_empty" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا توجد آيات محفوظة بعد. المس علامة الحفظ بجانب الآية لحفظها."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No saved verses yet. Tap the bookmark beside a verse to keep it."
-          }
-        }
-      }
-    },
     "quran_recent_searches" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5130,23 +5113,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Index"
-          }
-        }
-      }
-    },
-    "quran_juz_label" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جزء"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Juz"
           }
         }
       }
@@ -5780,23 +5746,6 @@
         }
       }
     },
-    "quran_sajda" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "سجدة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sajda"
-          }
-        }
-      }
-    },
     "quran_search" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6048,23 +5997,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Translations"
-          }
-        }
-      }
-    },
-    "quran_section_bookmarks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "العلامات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bookmarks"
           }
         }
       }
@@ -6851,40 +6783,6 @@
         }
       }
     },
-    "reader_page_section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الصفحة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Page"
-          }
-        }
-      }
-    },
-    "reader_preview_section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "معاينة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preview"
-          }
-        }
-      }
-    },
     "reader_reset" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6898,23 +6796,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reset"
-          }
-        }
-      }
-    },
-    "reader_text_section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "النص"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text"
           }
         }
       }
@@ -8228,23 +8109,6 @@
         }
       }
     },
-    "tafsir_open" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "عرض تفسير هذه الآية"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show the commentary on this verse"
-          }
-        }
-      }
-    },
     "tafsir_silent" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8292,23 +8156,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The commentary could not be loaded."
-          }
-        }
-      }
-    },
-    "tafsir_verse_label" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تفسير آية"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On verse"
           }
         }
       }

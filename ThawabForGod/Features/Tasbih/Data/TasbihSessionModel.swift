@@ -7,7 +7,7 @@ import Foundation
 import SwiftData
 
 /// SwiftData's representation of a `TasbihSession`. Stays inside `Data`, exactly as
-/// `BookmarkRecord` does: a `@Model` instance is bound to the context that fetched it and must
+/// `HadithBookmarkRecord` does: a `@Model` instance is bound to the context that fetched it and must
 /// never cross an actor boundary — the domain value type is what travels.
 ///
 /// `dhikrID` is unique because there is one running session per preset. The repository still

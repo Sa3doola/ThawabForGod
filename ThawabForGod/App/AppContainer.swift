@@ -18,7 +18,6 @@ final class AppContainer {
     let persistence: PersistenceController
     let themeManager: ThemeManager
     let localizationManager: LocalizationManager
-    let bookmarkRepository: any BookmarkRepository
     let httpClient: any HTTPClient
     let locationService: any LocationService
     let headingProvider: any HeadingProviding
@@ -329,9 +328,6 @@ final class AppContainer {
             settingsStore: settingsStore,
             numberFormatting: numberFormatting,
             timeFormatting: timeFormatting
-        )
-        self.bookmarkRepository = SwiftDataBookmarkRepository(
-            modelContainer: persistence.container
         )
 
         let recentActivityRepository = RecentActivityRepository(

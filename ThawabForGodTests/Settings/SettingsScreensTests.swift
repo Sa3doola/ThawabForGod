@@ -452,11 +452,12 @@ struct SettingsRouteTests {
         #expect(SettingsRoute.root.contains(.sources) == false)
     }
 
-    /// The root is everything this *build* has, less `sources`. Both halves matter: a route
+    /// The root is everything this *build* has, less `sources` and `quranPacks` (one level down,
+    /// reached from About and from the Quran screen). Both halves matter: a route
     /// filtered out for the wrong platform would be a row opening an empty screen, and one
     /// filtered out that should not be would be a screen with no way to reach it.
     @Test func theRootListsEveryRouteThisBuildHas() {
-        let expected = SettingsRoute.allCases.filter { $0.isAvailable && $0 != .sources }
+        let expected = SettingsRoute.allCases.filter { $0.isAvailable && $0 != .sources && $0 != .quranPacks }
 
         #expect(SettingsRoute.root == expected)
     }

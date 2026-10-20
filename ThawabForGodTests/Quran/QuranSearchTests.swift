@@ -77,12 +77,16 @@ struct QuranSearchQueryTests {
         #expect(QuranSearchHighlight.arabicRanges(in: "فَلَمَّا جَآءَهُم", query: short).isEmpty)
     }
 
-    /// The Imlaei spelling finds 2:3, whose Hafs spelling differs (ٱلصَّلَوٰةَ): the result is shown
-    /// without a highlight rather than with an altered text. The finding half is in
-    /// `QuranSearchRepositoryTests`.
-    @Test func spellingDifferencesShowNoHighlight() throws {
+    /// The Imlaei spelling finds 2:3, whose Hafs spelling differs (dagger alef): the word is marked
+    /// by reading it in imla'i spelling too (`matchesUthmaniVariant`, M5.5), and only that word is
+    /// marked; the displayed text is never altered. This used to assert no highlight at all.
+    @Test func aDaggerAlefWordIsMarkedForTheImlaeiSpellingTyped() throws {
         let query = try #require(QuranSearchQuery("الصلاة", scope: .quran))
-        #expect(QuranSearchHighlight.arabicRanges(in: "ٱلَّذِينَ يُؤۡمِنُونَ بِٱلۡغَيۡبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ", query: query).isEmpty)
+        let text = "ٱلَّذِينَ يُؤۡمِنُونَ بِٱلۡغَيۡبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ"
+        let lastWord = try #require(text.split(separator: " ").last)
+        let ranges = QuranSearchHighlight.arabicRanges(in: text, query: query)
+        // Compared by scalars: Arabic literals can be canonically reordered in transit.
+        #expect(ranges.map { Array(text[$0].unicodeScalars) } == [Array(lastWord.unicodeScalars)])
     }
 
     @Test func translationHighlight() throws {

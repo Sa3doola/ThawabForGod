@@ -16,7 +16,6 @@ nonisolated struct PersistenceController: Sendable {
     let container: ModelContainer
 
     static let schema = Schema([
-        BookmarkRecord.self,
         TasbihSessionModel.self,
         RecentActivityRecord.self,
         PrayerCompletionRecord.self,

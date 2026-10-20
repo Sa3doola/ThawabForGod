@@ -248,15 +248,11 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranLibrary = "quran_library"
     /// The overflow menu at compact width, which holds the mode toggle and the reader settings.
     case quranMore = "quran_more"
-    /// Precedes a number — "Juz 7", "جزء ٧" — rather than carrying one, because the digits go
-    /// through `LocalizationManager` and a format string would take that away from it.
-    case quranJuzLabel = "quran_juz_label"
     /// Followed by a number. Written as a label with a colon rather than "7 verses", which
     /// Arabic cannot say with one noun form across every count.
     case quranVersesLabel = "quran_verses_label"
     case quranMeccan = "quran_meccan"
     case quranMedinan = "quran_medinan"
-    case quranSajda = "quran_sajda"
     case quranVerseLabel = "quran_verse_label"
     case quranUnavailable = "quran_unavailable"
     case quranTryAgain = "quran_try_again"
@@ -264,8 +260,6 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranShowSeparated = "quran_show_separated"
     /// The mode toggle while the reader is showing the verse list — switches to Mushaf pages.
     case quranShowMushaf = "quran_show_mushaf"
-    case quranSectionBookmarks = "quran_section_bookmarks"
-    case quranBookmarksEmpty = "quran_bookmarks_empty"
     case quranBookmarkAdd = "quran_bookmark_add"
     case quranBookmarkRemove = "quran_bookmark_remove"
     /// The VoiceOver name of a bookmark, as custom content. A noun, not the button's verb: Arabic
@@ -455,12 +449,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: Tafsir
 
     case tafsirTitle = "tafsir_title"
-    case tafsirOpen = "tafsir_open"
     case tafsirSilent = "tafsir_silent"
     case tafsirUnavailable = "tafsir_unavailable"
-    /// Precedes a number — "On verse 255" — rather than carrying one, so the digits go through
-    /// `LocalizationManager` instead of a format string.
-    case tafsirVerseLabel = "tafsir_verse_label"
     /// The panel's Tafsir section for a group of ayahs, `%@` the range — "Tafsir of ayahs 2:3–5".
     case quranTafsirOfAyahs = "quran_tafsir_of_ayahs"
     /// Opens the whole tafsir entry from the panel's collapsed text.
@@ -495,13 +485,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     // MARK: The reading panel
 
     case readerOptionsTitle = "reader_options_title"
-    case readerPageSection = "reader_page_section"
     case readerKeepScreenAwake = "reader_keep_screen_awake"
     case readerKeepScreenAwakeDetail = "reader_keep_screen_awake_detail"
-    case readerTextSection = "reader_text_section"
     case readerTextSize = "reader_text_size"
     case readerReset = "reader_reset"
-    case readerPreviewSection = "reader_preview_section"
     case readerFontSection = "reader_font_section"
     case readerFontKFGQPC = "reader_font_kfgqpc"
     case readerFontAmiri = "reader_font_amiri"

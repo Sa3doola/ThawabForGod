@@ -420,7 +420,9 @@ struct QuranReaderViewModelTests {
         #expect(model.separatedSurah == 1)
     }
 
-    @Test func selectingTogglesTheSelectionAndPresentsNothing() async throws {
+    /// A tap never clears the selection: the panel is closed from the panel, and the selection
+    /// stays after it closes (`QuranReaderViewModel.select`). This used to be a toggle.
+    @Test func selectingTwiceKeepsTheSelectionAndPresentsNothing() async throws {
         let (model, _, _) = Self.makeModel()
         await model.load()
         let ayah = VerseReference(surah: 2, verse: 255)
@@ -429,7 +431,7 @@ struct QuranReaderViewModelTests {
         #expect(model.mushaf.selectedAyah == ayah)
 
         model.select(ayah)
-        #expect(model.mushaf.selectedAyah == nil)
+        #expect(model.mushaf.selectedAyah == ayah)
         #expect(model.separatedScrollRequest == nil)
         #expect(model.separatedSurah == 1)
     }
