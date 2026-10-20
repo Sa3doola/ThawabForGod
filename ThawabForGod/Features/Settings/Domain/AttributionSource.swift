@@ -96,7 +96,8 @@ nonisolated extension AttributionSource {
             attributionKey: .sourceQuranAttribution,
             licenceKey: .licenceCCBY,
             noteKey: nil,
-            url: URL(string: "https://tanzil.net")!
+            url: URL(string: "https://tanzil.net")!,
+            licenceFile: "TanzilQuranText-NOTICE"
         ),
         AttributionSource(
             id: "adhkar",

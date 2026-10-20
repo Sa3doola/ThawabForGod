@@ -4,11 +4,11 @@ All inputs come from the Quranic Universal Library (https://qul.tarteel.ai, free
 Raw files live in `QuranData/raw/` (git-ignored; keep a zip backup). Check them with:
 `cd QuranData/raw && shasum -a 256 -c <(grep -E '^[0-9a-f]{64}  ' ../SOURCES.md | sed 's/  `/  /;s/`$//')` and `shasum -a 256 -c ../fonts-v2.sha256`.
 
-License status: QUL says licensing is per resource. **Every row is `unconfirmed` until you have it in writing** (QUL Discord / GitHub issues, or the original publisher). The release view of these rows (publisher, terms, whom to ask, fallbacks) is `docs/release/LICENSES.md` (Phase 8.1), with draft requests in `docs/release/license-requests.md`.
+License status: QUL says licensing is per resource. **Every row is `unconfirmed` until you have it in writing** (QUL Discord / GitHub issues, or the original publisher). The release view of these rows (who was asked, when, and the reply status) is the status table in `docs/release/license-requests.md`, which also holds the requests.
 
-## Bundled in the app today (`Mushaf/Resources/Fonts/`)
+## Bundled in the app today (`ThawabForGod/Resources/Fonts/Quran/`)
 
-Check with `shasum -a 256 Mushaf/Resources/Fonts/*.ttf`. Copyright and license text below are quoted from each font's own `name` table (read 2026-10-02). The three QUL fonts are copied from `QuranData/raw/fonts/headers/` by `BuildQuranData` (listed in `build.json` → `fonts`), which checks their hash before and after the copy.
+Check with `shasum -a 256 ThawabForGod/Resources/Fonts/Quran/*.ttf`. Copyright and license text below are quoted from each font's own `name` table (read 2026-10-02). The three QUL fonts are copied from `QuranData/raw/fonts/headers/` by `BuildQuranData` (listed in `build.json` → `fonts`), which checks their hash before and after the copy.
 
 | Font file | PostScript name | Source | SHA-256 | License status |
 |---|---|---|---|---|
@@ -21,7 +21,7 @@ Removed in Phase 2.5: `AyahMarker-1.ttf` ("ayat quran 1", quranb1og.blogspot.com
 
 Removed in Phase 2.1: `SurahNames.ttf` ("Quran karim 114", elharrakfonts.com, sha b29797d2…f672, all rights reserved, no redistribution grant). Its hard-coded character table (`SurahNameGlyph.scalars`) is gone too; the surah header and name lookups are generated from the QUL ligature JSON into `quran.sqlite` (`font_ligature`).
 
-## Bundled content packs (`Mushaf/Resources/Packs/`)
+## Bundled content packs (`ThawabForGod/Resources/Corpus/Packs/`)
 
 Built by `BuildQuranData` from the translation rows below (`build.json` → `packs`); file hashes and sizes are in `Packs/manifest.json`.
 
@@ -37,7 +37,7 @@ Built by `BuildQuranData` from the translation rows below (`build.json` → `pac
 | KFGQPC Hafs script: word by word (83,668 entries = 77,432 words + 6,236 markers) | `script/qpc-hafs-wbw.json` | f366269234e24f322146c043fe5fbf0132990613a94aff4b3f23847f45793ea7 | unconfirmed (KFGQPC) |
 | QPC V2 Glyph: word by word (same keys and ids as Hafs WBW, verified) | `script/qpc-v2-glyph-wbw.json` | 40964a1b7932e9a69e0dfc0d58dce3b73e30a803febda119fd6828bcb75fac98 | unconfirmed (KFGQPC) |
 | QPC V2 Glyphs: ayah by ayah (has `page_number`) | `script/qpc-v2-glyph-ayah.json` | 53ffaeb5e35fb25a272a74421793e9e0c0ea0ccdc6b0d28c05413898c023c3c9 | unconfirmed (KFGQPC) |
-| QPC V2 Font: 604 files `p1.ttf…p604.ttf`, PostScript `QCF2001…QCF2604`, 208 MB. Copied by the pipeline into `Mushaf/Resources/Fonts/madaniV2/` (git-ignored), each file checked against the manifest | `fonts/v2/` | see the manifest row below | unconfirmed (KFGQPC) |
+| QPC V2 Font: 604 files `p1.ttf…p604.ttf`, PostScript `QCF2001…QCF2604`, 208 MB. Copied by the pipeline into `QuranData/Fonts/madaniV2/` (git-ignored), each file checked against the manifest | `fonts/v2/` | see the manifest row below | unconfirmed (KFGQPC) |
 | Manifest of the 604 V2 font hashes (`QuranData/fonts-v2.sha256`, path relative to `raw/`) | `../fonts-v2.sha256` | a1316f4af85f2c049b0fef2b863d784c68a46ffa43a3f6034d85fbff53bb7229 | — |
 | QPC Hafs font `UthmanicHafs_V22.ttf` (byte-identical to the bundled `KFGQPC-HafsUthmanic.ttf`) | `fonts/UthmanicHafs_V22.ttf` | aa68bffce289b4c0ebac68e90502eb69e42356abcd1603cb2b8e99c2c723f145 | KFGQPC: free to distribute, no sale or modification |
 | Surah header font: PostScript `QCF_SurahHeader_COLOR`; one glyph = full header per surah | `fonts/headers/surah-header.ttf` | 731cdc14a3e50669ffd44c06335ce269665e22cb75db39ca137527e29c516308 | unconfirmed |
@@ -71,13 +71,13 @@ Built by `BuildQuranData` from the translation rows below (`build.json` → `pac
 | Tafsir al-Muyassar (ar): 6236 rows, 5040 groups, HTML | `tafsir/ar-muyassar/ar-tafsir-muyassar.db` | 73a405b933a33039affe96af05bd3cc82f4967f1372dccc797a8b2408cd9b916 | unconfirmed (KFGQPC) |
 | Abridged Explanation of the Quran (en, Al-Mukhtasar) | `tafsir/en-mukhtasar/abridged-explanation-of-the-quran.db` | 60b520c67260e35f83c16fc34f526a7a85c39392a642808f4d85725e968e291c | unconfirmed (Tafsir Center) |
 
-Tafsir packs bundled since Phase 4.1/4.5: `Mushaf/Resources/Packs/tafsir-ar-muyassar.sqlite` and `tafsir-en-mukhtasar.sqlite`, converted from the two files above (`build.json` → `packs.tafsirs`; sanitizer report and findings in `Scripts/BuildQuranData/README.md`). Both licenses are **unconfirmed** and must be resolved before release (roadmap 8.1). The exact QUL resource pages (ids) for these two downloads are not recorded yet: the packs' `source_url` is QUL's tafsir index.
+Tafsir packs bundled since Phase 4.1/4.5: `ThawabForGod/Resources/Corpus/Packs/tafsir-ar-muyassar.sqlite` and `tafsir-en-mukhtasar.sqlite`, converted from the two files above (`build.json` → `packs.tafsirs`; sanitizer report and findings in `Scripts/BuildQuranData/README.md`). Both licenses are **unconfirmed** and must be resolved before release (roadmap 8.1). The exact QUL resource pages (ids) for these two downloads are not recorded yet: the packs' `source_url` is QUL's tafsir index.
 
 ## Curated by this project
 
 | Resource | File | Bundled as | License |
 |---|---|---|---|
-| Ayah of the day list (Phase 8.0): 125 entries (single ayahs and ranges) chosen by this project, each with a note; **draft, to be reviewed by Saad** | `QuranData/curated/ayah-of-the-day.txt` (in git; its SHA-256 is recorded in the JSON) | `Mushaf/Resources/ayah-of-the-day.json` (references only; the text comes from `quran.sqlite` and the packs) | Own work; no third-party content |
+| Ayah of the day list (Phase 8.0): 125 entries (single ayahs and ranges) chosen by this project, each with a note; reviewed and final (2026-10-18) | `Tools/QuranBuilder/data/ayah-of-the-day.txt` (in git; its SHA-256 is recorded in the JSON) | `ThawabForGod/Resources/Corpus/ayah-of-the-day.json` (references only; the text comes from `quran.sqlite` and the packs) | Own work; no third-party content |
 
 ## Findings from verification (2026-10-02)
 

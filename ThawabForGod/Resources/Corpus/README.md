@@ -290,7 +290,7 @@ not the database, not the fonts, not the packs (QURAN_MIGRATION_PLAN.md, D1).
 Every QUL file is listed in `QuranData/SOURCES.md` with its SHA-256, its original
 publisher and its status, which is `unconfirmed` for all of them; the build
 refuses an input whose hash differs. A full App Store build ships the QUL data
-only once the requests in the Mushaf project's `docs/release/license-requests.md`
+only once the requests in `docs/release/license-requests.md`
 are answered in writing; until then a Release build without it fails on purpose,
 and the public build is the Tanzil one.
 
@@ -366,6 +366,45 @@ Glorious Quran Printing Complex (KFGQPC) by way of QUL. `KFGQPC-HafsUthmanic.ttf
 which this folder's sibling `Fonts/Quran/` already ships, is byte-identical to
 QUL's copy and carries the Complex's own grant ("free to use, copy and
 distribute; must not be sold or modified"); nothing else from QUL has a grant.
+
+#### What ships in each build
+
+| | Public clone (`tanzil`) | Full / App Store build (`qul`) |
+| --- | --- | --- |
+| Database | `Corpus/quran.sqlite` — capabilities `text` | `Corpus/quran-mushaf.sqlite` (preferred when bundled) — `text`, `words`, `mushafPages`, `glyphV2`, `fontLigatures` |
+| Packs (`Corpus/Packs/`) | `tafsir-ar-jalalayn` | and `translation-en-sahih-international`, `tafsir-ar-muyassar`, `tafsir-en-mukhtasar`, `surah-info-en` |
+| Curated list | `Corpus/ayah-of-the-day.json` — 125 references (surah, from, to; the notes live in `Tools/QuranBuilder/data/ayah-of-the-day.txt`), reviewed, no Quran text (this project's own work; the text comes from the database) | same file |
+| Quran faces (`Fonts/Quran/`) | `KFGQPC-HafsUthmanic.ttf`, `AmiriQuran-Regular.ttf` | and `surah-header.ttf`, `surah-name-v2.ttf`, `quran-common.ttf`, plus the 604 `madaniV2/p1…p604.ttf` |
+| Interface face | IBM Plex Sans Arabic (five weights) | same |
+| Reading | separated mode; Library has no Page tab | Mushaf mode and separated mode |
+
+The public build's texts and faces each have a licence notice in
+`ThawabForGod/Resources/Licenses/` (Settings → Sources links the Tanzil text and the fonts; Al-Jalalayn has no row there yet); the Tanzil
+notice is also inside `quran.sqlite` itself, as `meta` rows.
+
+**What the builds verify** (and so what has been checked, as opposed to trusted):
+Tanzil's two texts by the SHA-256 of their verses; Jalalayn by the SHA-256 of its
+notes and its 226 silent ayahs; every QUL input by its hash in
+`QuranData/SOURCES.md`; the whole Quran (114 surahs, 6,236 ayahs in order, 15
+sajdahs, juz boundaries against a static table, every claimed capability actually
+filled); the packs against their sources (Saheeh International agrees with QUL's
+simple export on all 6,236 ayahs); and an installed-size budget of 200 MB
+compressed / 400 MB installed. **What has not been verified:** the divisions
+against a printed Madina mushaf (above), the Jalalayn transcription against a
+printed edition, and anything about the QUL texts' licensing.
+
+#### Licence status of the QUL-derived resources
+
+Everything the full build adds beyond the public one is **unconfirmed** and
+requested in writing; none of it is in this repository. The drafts, and the status
+of each request, are in [`docs/release/license-requests.md`](../../../docs/release/license-requests.md):
+a GitHub issue to QUL (sent 2026-10-20), e-mail to the King Fahd Complex (sent
+2026-10-20) and to the Tafsir Center (sent 2026-10-20); Saheeh International is
+waiting for QUL's answer on whom to contact, and Dar Al-Marifa / Freepik are
+asked only if QUL says no permission exists. No reply has been recorded. Until one
+is, a full build is for development and testing, not release. Not needed, and not
+requested: Tanzil (its terms allow this with credit and no changes), Jalalayn
+(public domain), the KFGQPC Hafs font (its EULA), Amiri and Plex (OFL).
 
 ### The tafsir
 

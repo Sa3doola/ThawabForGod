@@ -14,7 +14,7 @@ import SwiftUI
 ///
 /// **Two columns, not three.** A third column would mean each section handing its list to the
 /// sidebar's neighbour and keeping only its leaf — a different navigation model per section,
-/// since Home has no list to give, the Quran has one level and the hadith have two. The detail
+/// since Home has no list to give, the Quran is a Library with a reader pushed over it and the hadith have two levels. The detail
 /// column keeps each section's own `NavigationStack` instead, so a push means the same thing at
 /// every width and the iPad and the iPhone stay one app rather than two.
 ///

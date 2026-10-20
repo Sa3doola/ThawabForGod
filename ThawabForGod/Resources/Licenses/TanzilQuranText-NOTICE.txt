@@ -1,0 +1,53 @@
+Tanzil Quran text: copyright notice and terms of use
+
+Noor displays the Quran in the Uthmani text of the Tanzil Project (https://tanzil.net) and searches it
+through the Tanzil Simple Clean text, both version 1.1. The text is used exactly as published: it is
+copied into the app's database verbatim and never changed, except that the basmala Tanzil prefixes to
+verse 1 of 112 surahs is moved to the surah's heading, which moves its words without altering them (a
+SHA-256 over all the verses is checked when
+the database is built). The source is named and linked in Settings > Sources. The notices below are
+reproduced unchanged from the copies of the text the database was built from, and are also stored
+inside the database itself (table "meta", keys "source:tanzil-uthmani:notice" and
+"source:tanzil-simple-clean:notice").
+
+----------------------------------------------------------------------------------------------------
+
+PLEASE DO NOT REMOVE OR CHANGE THIS COPYRIGHT BLOCK
+Tanzil Quran Text (Uthmani, Version 1.1)
+Copyright (C) 2007-2026 Tanzil Project
+License: Creative Commons Attribution 3.0
+This copy of the Quran text is carefully produced, highly
+verified and continuously monitored by a group of specialists
+at Tanzil Project.
+TERMS OF USE:
+- Permission is granted to copy and distribute verbatim copies
+of this text, but CHANGING IT IS NOT ALLOWED.
+- This Quran text can be used in any website or application,
+provided that its source (Tanzil Project) is clearly indicated,
+and a link is made to tanzil.net to enable users to keep
+track of changes.
+- This copyright notice shall be included in all verbatim copies
+of the text, and shall be reproduced appropriately in all files
+derived from or containing substantial portion of this text.
+Please check updates at: http://tanzil.net/updates/
+
+----------------------------------------------------------------------------------------------------
+
+PLEASE DO NOT REMOVE OR CHANGE THIS COPYRIGHT BLOCK
+Tanzil Quran Text (Simple Clean, Version 1.1)
+Copyright (C) 2007-2026 Tanzil Project
+License: Creative Commons Attribution 3.0
+This copy of the Quran text is carefully produced, highly
+verified and continuously monitored by a group of specialists
+at Tanzil Project.
+TERMS OF USE:
+- Permission is granted to copy and distribute verbatim copies
+of this text, but CHANGING IT IS NOT ALLOWED.
+- This Quran text can be used in any website or application,
+provided that its source (Tanzil Project) is clearly indicated,
+and a link is made to tanzil.net to enable users to keep
+track of changes.
+- This copyright notice shall be included in all verbatim copies
+of the text, and shall be reproduced appropriately in all files
+derived from or containing substantial portion of this text.
+Please check updates at: http://tanzil.net/updates/

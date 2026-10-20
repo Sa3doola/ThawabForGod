@@ -1,0 +1,16 @@
+Tafsir al-Jalalayn: status of the text
+
+Tafsir al-Jalalayn (the Arabic commentary shown in the ayah panel) was begun by Jalal al-Din
+al-Mahalli (d. 864 AH / 1459 CE) and completed by Jalal al-Din al-Suyuti (d. 911 AH / 1505 CE). The
+work is in the public domain by age, and Noor claims no rights in it.
+
+The Arabic text in the app was taken from the mirror https://github.com/spa5k/tafsir_api
+(tafsir/ar-tafsir-al-jalalayn). The mirror is a transcription, not a licence: it is the age of the work,
+not the host, that makes the text free to redistribute. The text is stored without editing (each note is
+only escaped and wrapped in a paragraph for display; a SHA-256 of the notes is checked when the
+database is built). 226 of the 6,236 verses have no note in this commentary, and the app says so
+rather than showing another verse's note.
+
+Nobody on this project has read the transcription line by line against a printed edition.
+
+English translations of this commentary belong to their modern translators and are not included.
