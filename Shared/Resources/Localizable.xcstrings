@@ -11060,13 +11060,13 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "وكالة ناسا/مركز غودارد لرحلات الفضاء — استوديو التصوير العلمي، وفريق LROC التابع لمركبة LRO"
+            "value" : "استوديو التصوير العلمي التابع لناسا (مجموعة القمر CGI)، باستخدام بيانات فسيفساء LROC WAC من جامعة ولاية أريزونا"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NASA/Goddard Space Flight Center Scientific Visualization Studio and the LRO LROC team"
+            "value" : "NASA's Scientific Visualization Studio (CGI Moon Kit), using LROC WAC mosaic data, Arizona State University"
           }
         }
       }
@@ -11077,13 +11077,13 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "صور ناسا لا تخضع عادةً لحقوق النشر، ويُطلب ذكر المصدر."
+            "value" : "صور ناسا لا تخضع عادةً لحقوق النشر، ويلزم ذكر ناسا كمصدر. هذا التطبيق غير معتمد من ناسا."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NASA imagery is generally not copyrighted; credit is requested."
+            "value" : "NASA imagery is generally not copyrighted; credit to NASA is required. This app is not endorsed by NASA."
           }
         }
       }

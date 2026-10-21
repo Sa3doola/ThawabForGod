@@ -169,8 +169,7 @@ nonisolated extension AttributionSource {
             url: URL(string: "https://github.com/IBM/plex")!,
             licenceFile: "IBMPlexSansArabic-OFL"
         ),
-        // The moon drawn on the calendar. The image is NASA's; the exact file's own page is where
-        // its terms are confirmed (svs.gsfc.nasa.gov/4720) — a manual step the project owner owns.
+        // The moon drawn on the calendar: NASA SVS's CGI Moon Kit (svs.gsfc.nasa.gov/4720).
         AttributionSource(
             id: "moon-image",
             titleKey: .sourceMoonImageTitle,
