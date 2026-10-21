@@ -34,19 +34,18 @@ nonisolated struct AstronomicalMoonCalculator: MoonPhaseCalculating {
         )
     }
 
+    /// Estimates the new moon from the elongation (age ≈ elongation/360 of a mean month), then
+    /// bisects a four-day window either side of the estimate. The Moon's speed varies by about
+    /// ±10%, so the true event is always inside it, and the cost is a handful of evaluations
+    /// rather than a scan back through the month.
     func lastNewMoon(onOrBefore date: Date) -> Date {
-        // Walk back an hour at a time. Elongation grows with time, so going backwards it falls;
-        // a *rise* between two steps is the wrap through 0°.
-        var upper = date
-        var lower = date
-        for _ in 0..<(31 * 24) {
-            lower = upper.addingTimeInterval(-3600)
-            if Self.elongation(Self.angles(at: lower)) > Self.elongation(Self.angles(at: upper)) {
-                return Self.bisect(from: lower, to: upper, crossing: 0)
-            }
-            upper = lower
-        }
-        return lower
+        let elongation = Self.elongation(Self.angles(at: date))
+        let estimate = date.addingTimeInterval(-elongation / 360 * Self.meanSynodicDays * 86_400)
+        return Self.bisect(
+            from: estimate.addingTimeInterval(-4 * 86_400),
+            to: estimate.addingTimeInterval(4 * 86_400),
+            crossing: 0
+        )
     }
 
     func nextNewMoon(after date: Date) -> Date { nextCrossing(of: 0, after: date) }
