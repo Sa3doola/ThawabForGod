@@ -146,3 +146,69 @@ background colours (search highlights).
 
 Do not merge `quran-migration` into `Development` yet: B7, B10 to B15 are open and the matrix is incomplete. That
 is for Saad to decide; nothing has been merged.
+
+---
+
+# 10. Close-out (2026-10-21, after `0b9a49e`)
+
+The sections above are the history and are not rewritten. Commits: `b1ee029` (B7, B9 follow-ups, B11 copy, B13, B14, B15) and `7610637` (B16). HEAD for the clean run is `7610637`; the working tree also carries two uncommitted Xcode re-saves (`project.pbxproj`, `Localizable.xcstrings`) that are not mine and were not committed.
+
+## 10.1 Per bug
+
+| Bug | Result | Agents | Tests |
+|---|---|---|---|
+| B9 review (`0b9a49e` had none) | rules-checker: no blockers. quran-reviewer: no blockers; applied the title overlap fix (`lineLimit`, padding) and the stale script/CLAUDE.md text. Not done: pushed Packs/Sources pages with the hidden root bar were not checked on a device. | rules-checker, quran-reviewer | covered by the clean run |
+| B7 Mac Arabic | **Fixed by the fallback, cause not found.** Probe: `preferredLocalizations = ["ar"]`, `ar.lproj` is in the built bundle, nothing pins left-to-right, yet `NSApp.userInterfaceLayoutDirection` is 0 (LTR) at init and after launch. On macOS `LocalizedModifier` now sets `\.layoutDirection` from `AppLanguage` at the root. Sidebar is on the right, panel on the left. **New B17: the reader's toolbar items collapse into the overflow menu in that mirrored window** (screenshot seen); the Arabic Mac test therefore no longer waits for the Library button. | rules-checker, quran-reviewer (no blockers; one rules "fail" on an inline `#if os(macOS)` in `Shared/`, which CLAUDE.md allows) | `testSidePanelInArabicIsLeading` passes on the Mac (was skipped) |
+| B12 Page tab | **Can't reproduce.** Both tests pass on iPhone Air (19 s, 20 s) and Duo (17 s, 33 s); `testEachIndex` passes on the iPad in 36 s. The grid shows. No change made. | none | as stated |
+| B13 Duo immersive | **Test assumption.** The Duo has no bottom tab bar XCUITest reports; the tab-bar asserts apply only where one exists. | reviewed with B7 | passes on Duo, iPhone Air; iPad skips by design |
+| B14 iPad immersive | **App bug, fixed.** Tapping the page footer opened the ayah panel on the iPad (probed by coordinate: footer text and the gap above it did). The footer now has its own hit shape and the chrome toggle. Cause (the last line's tall glyph boxes) is inferred; the reviewer could not confirm it from the diff, and the gap just above the footer still selects the last ayah. | rules-checker, quran-reviewer | `QuranImmersiveTests` on iPad, iPhone Air, Duo |
+| B15 Duo surah info | **Test assumption.** The Duo draws the system `BackButton` outside the navigation bar element; `tapBack()` falls back to it. | same | `QuranSurahInfoTests` on Duo |
+| B11 Mac skips | **One of four fixed**: `testPanelCopy` (the panel draws stored text + NBSP + end marker; Copy puts the stored text on the pasteboard). Three still skip: Notes segment, Home chip, tafsir Read more (the button exists, no sheet appears). Stopped at the 15-minute cap. | none | `testPanelCopy` on Mac |
+| B10 | Left manual (Saad, VoiceOver on the iPad). | | |
+| B16 widget gallery grey bar | **Fixed in code, not verified on a device, cause not confirmed.** See 10.3. | rules-checker, quran-reviewer (should-fix items applied) | 32 widget tests on iPhone Air |
+
+## 10.2 Clean confirmation run on `7610637`
+
+`QuranPlatformTests` only, plus unit tests. Logs in the session scratchpad (`clean_*.log`); builds produced 0 warnings in the iOS unit run.
+
+| Destination | Result | Time |
+|---|---|---|
+| iOS unit (iPhone Air) | 1188 tests, all pass | 16:57 to 16:58 |
+| macOS unit | 1183 tests, all pass | 16:58 to 16:59 |
+| iPhone Air, `QuranPlatformTests` | 18 pass / 0 fail / 8 skipped | 8.4 min |
+| iPhone Duo | 22 / 0 / 4 | 10.4 min |
+| iPad Pro 13 (M5) | 21 / 0 / 5 | 11.5 min |
+| Mac | 19 / 0 / 10 | 6.9 min |
+
+The Mac's 10 skips: the three B11 tests above; four Duo-only tests; iPhone-only `testLargestTextReader`; iPad-only `testPadRotationKeepsPanel`; `testSettingsQuranAndSources` (the Mac uses the Settings window). **Not run:** the existing UI suite, Arabic runs, public-data runs, dark runs (unchanged from section 7), and unit tests on the Duo and iPad. The matrix is still not complete.
+
+## 10.3 B16 measurements (simulator test process, not the extension)
+
+- Decoding a 532 KB snapshot of 250 long entries: 2.7 ms; trimmed to the days kept: 17 KB.
+- One large Ayah of the Day render with the Hafs face registered, a 99 KB real snapshot decoded and trimmed (10 of 125 entries kept): footprint grew about 1.2 MB. Hafs and Amiri are 430 KB together.
+- So the suspected causes (decode time, memory, the two fonts) are **not supported** by these numbers, and the real cause of the grey bar is unknown. What changed: previews (`placeholder`, `getSnapshot` with `isPreview`) return the bundled sample (`Shared/Resources/quran-widget-sample.json`, Tanzil 94:5-6, checked against the corpus by a test) with no App Group read, no font work and no list decode; the Ayah timeline keeps today plus seven days (plus a day either side for a time-zone change); Continue Reading keeps none of the list; font registration runs once per process. The preview therefore shows the reference only (`hasHafs` false), not the Arabic.
+- Needs a real device with Console (jetsam / `chronod`) to separate: extension killed for memory, slow first `getSnapshot`, a cached failed gallery snapshot.
+
+## 10.4 Widget PNGs reviewed (10 of 128)
+
+All were rendered by the unit test host, which runs in English, so the Arabic files show English labels ("Ayah of the day", "Continue Reading", "Verse"); that is the test host's bundle language, not seen on a device.
+
+1. `ayah-large-2-255-ar-full`: right. Whole ayah with marks and end marker, translation clipped with an ellipsis, credit line.
+2. `ayah-large-2-255-en-public`: right. Tanzil text without the pause marks, translation under it.
+3. `ayah-medium-25-63-en-full`: right, both lines whole.
+4. `ayah-medium-112-1-4-ar-public`: right; reference reads 112:1 to 4 in Arabic-Indic digits.
+5. `ayah-rectangular-1-1-7-en-full`: acceptable; one line of Arabic ending in an ellipsis over the reference.
+6. `ayah-medium-2-255-ar-full`: right; three lines, ends with an ellipsis by design.
+7. `ayah-large-112-1-4-en-full`: right; the markers 1 to 4 sit where they should.
+8. `continue-small-2-255-ar-full`: right apart from the English label noted above.
+9. `continue-medium-25-63-en-public`: right.
+10. `continue-large-112-1-4-ar-public`: looks right but nearly empty below the three lines; the large Continue Reading card is mostly white space.
+
+## 10.5 Open after close-out, for Saad
+
+- **B16 on a real iPhone** (check the gallery after a fresh install; a Home Screen widget across midnight; a time-zone change with no launch).
+- **B17**: decide whether Arabic Mac readers accept mirrored content with the reader's toolbar in the overflow menu, or the fallback should wait for a better route.
+- B10 (VoiceOver on the iPad panel); B11's three Mac tests (manual pass: Notes segment, Home chip, tafsir Read more); B5 (never described).
+- Also unchecked on a device: the B9 header with the pushed Packs and Sources pages, and the B14 gap just above the footer still selecting the last ayah.
+- Still not merged. `quran-migration` is not ready for `Development` until B16 and B17 are decided.
+
