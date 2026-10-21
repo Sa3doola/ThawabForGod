@@ -39,12 +39,12 @@ nonisolated struct HijriCalendarService: HijriCalendarServicing {
         let offset = HijriDayOffset.clamp(dayOffset())
         let days: [MonthGrid.Day] = (0..<length).compactMap { index in
             guard let date = gregorian.date(byAdding: .day, value: index - offset, to: first) else { return nil }
-            return MonthGrid.Day(number: index + 1, gregorian: gregorian.startOfDay(for: date))
+            let start = gregorian.startOfDay(for: date)
+            return MonthGrid.Day(number: index + 1, gregorian: start, weekday: gregorian.component(.weekday, from: start))
         }
         guard let start = days.first else { return nil }
 
-        let weekday = gregorian.component(.weekday, from: start.gregorian)
-        let blanks = ((weekday - firstWeekday) % 7 + 7) % 7
+        let blanks = ((start.weekday - firstWeekday) % 7 + 7) % 7
         return MonthGrid(year: key.year, month: key.month, leadingBlanks: blanks, days: days)
     }
 

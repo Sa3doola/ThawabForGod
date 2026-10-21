@@ -84,10 +84,22 @@ nonisolated enum IslamicEventTable {
     static func bundled(_ bundle: Bundle = .main) -> [IslamicEvent] {
         guard let url = bundle.url(forResource: resourceName, withExtension: "json"),
               let data = try? Data(contentsOf: url),
-              let events = try? JSONDecoder().decode([IslamicEvent].self, from: data) else {
+              let entries = try? JSONDecoder().decode([Lossy<IslamicEvent>].self, from: data) else {
             return []
         }
 
-        return events
+        // The file also carries occasions that are not on one fixed day (ranges, weekly fasts) and
+        // so have no `month` / `day`. They are not for the Home header, which marks a single day;
+        // they decode here as `nil` and are skipped, and `IslamicOccasionsRepositoring` reads them.
+        return entries.compactMap(\.value)
+    }
+}
+
+/// One array element that decodes to `nil` instead of failing the whole array.
+nonisolated struct Lossy<Value: Decodable>: Decodable {
+    let value: Value?
+
+    init(from decoder: any Decoder) throws {
+        value = try? Value(from: decoder)
     }
 }

@@ -3,66 +3,290 @@
     "id": "islamic_new_year",
     "nameKey": "event_islamic_new_year",
     "month": 1,
-    "day": 1
+    "day": 1,
+    "category": "season",
+    "summaryKey": "event_summary_islamic_new_year"
   },
   {
     "id": "ashura",
     "nameKey": "event_ashura",
     "month": 1,
-    "day": 10
+    "day": 10,
+    "category": "fasting",
+    "rule": {
+      "type": "dayRange",
+      "month": 1,
+      "from": 9,
+      "to": 10
+    },
+    "summaryKey": "event_summary_ashura",
+    "virtueKey": "event_virtue_ashura",
+    "sources": [
+      {
+        "work": "sahih_muslim",
+        "reference": "1162",
+        "grading": "sahih"
+      }
+    ]
   },
   {
     "id": "mawlid",
     "nameKey": "event_mawlid",
     "noteKey": "event_note_observance_varies",
     "month": 3,
-    "day": 12
+    "day": 12,
+    "category": "historical",
+    "summaryKey": "event_summary_mawlid",
+    "scholarlyNoteKey": "event_scholarly_mawlid"
   },
   {
     "id": "isra_miraj",
     "nameKey": "event_isra_miraj",
     "month": 7,
-    "day": 27
+    "day": 27,
+    "category": "night",
+    "summaryKey": "event_summary_isra_miraj",
+    "scholarlyNoteKey": "event_scholarly_isra_miraj"
   },
   {
     "id": "nisf_shaban",
     "nameKey": "event_nisf_shaban",
     "month": 8,
-    "day": 15
+    "day": 15,
+    "category": "night",
+    "summaryKey": "event_summary_nisf_shaban",
+    "scholarlyNoteKey": "event_scholarly_nisf_shaban"
   },
   {
     "id": "ramadan_start",
     "nameKey": "event_ramadan_start",
     "noteKey": "event_note_moon_sighting",
     "month": 9,
-    "day": 1
+    "day": 1,
+    "category": "season",
+    "summaryKey": "event_summary_ramadan_start"
   },
   {
     "id": "laylat_al_qadr",
     "nameKey": "event_laylat_al_qadr",
     "noteKey": "event_note_last_ten_nights",
     "month": 9,
-    "day": 27
+    "day": 27,
+    "category": "night",
+    "rule": {
+      "type": "oddNights",
+      "month": 9,
+      "days": [
+        21,
+        23,
+        25,
+        27,
+        29
+      ]
+    },
+    "summaryKey": "event_summary_laylat_al_qadr",
+    "virtueKey": "event_virtue_laylat_al_qadr",
+    "sources": [
+      {
+        "work": "sahih_bukhari",
+        "reference": "2017",
+        "grading": "sahih"
+      },
+      {
+        "work": "sahih_muslim",
+        "reference": "1169",
+        "grading": "sahih"
+      }
+    ],
+    "scholarlyNoteKey": "event_scholarly_laylat_al_qadr"
   },
   {
     "id": "eid_al_fitr",
     "nameKey": "event_eid_al_fitr",
     "noteKey": "event_note_moon_sighting",
     "month": 10,
-    "day": 1
+    "day": 1,
+    "category": "eid",
+    "summaryKey": "event_summary_eid_al_fitr"
   },
   {
     "id": "arafah",
     "nameKey": "event_arafah",
     "noteKey": "event_note_moon_sighting",
     "month": 12,
-    "day": 9
+    "day": 9,
+    "category": "fasting",
+    "summaryKey": "event_summary_arafah",
+    "virtueKey": "event_virtue_arafah",
+    "sources": [
+      {
+        "work": "sahih_muslim",
+        "reference": "1162",
+        "grading": "sahih"
+      }
+    ]
   },
   {
     "id": "eid_al_adha",
     "nameKey": "event_eid_al_adha",
     "noteKey": "event_note_moon_sighting",
     "month": 12,
-    "day": 10
+    "day": 10,
+    "category": "eid",
+    "summaryKey": "event_summary_eid_al_adha"
+  },
+  {
+    "id": "last_ten_nights",
+    "nameKey": "event_last_ten_nights",
+    "category": "night",
+    "rule": {
+      "type": "dayRange",
+      "month": 9,
+      "from": 21,
+      "to": 30
+    },
+    "summaryKey": "event_summary_last_ten_nights",
+    "virtueKey": "event_virtue_laylat_al_qadr",
+    "sources": [
+      {
+        "work": "sahih_bukhari",
+        "reference": "2017",
+        "grading": "sahih"
+      },
+      {
+        "work": "sahih_muslim",
+        "reference": "1169",
+        "grading": "sahih"
+      }
+    ],
+    "scholarlyNoteKey": "event_scholarly_laylat_al_qadr"
+  },
+  {
+    "id": "six_shawwal",
+    "nameKey": "event_six_shawwal",
+    "category": "fasting",
+    "rule": {
+      "type": "dayRange",
+      "month": 10,
+      "from": 2,
+      "to": 7
+    },
+    "summaryKey": "event_summary_six_shawwal",
+    "virtueKey": "event_virtue_six_shawwal",
+    "sources": [
+      {
+        "work": "sahih_muslim",
+        "reference": "1164",
+        "grading": "sahih"
+      }
+    ],
+    "scholarlyNoteKey": "event_scholarly_six_shawwal"
+  },
+  {
+    "id": "first_ten_dhul_hijjah",
+    "nameKey": "event_first_ten_dhul_hijjah",
+    "category": "season",
+    "rule": {
+      "type": "dayRange",
+      "month": 12,
+      "from": 1,
+      "to": 10
+    },
+    "summaryKey": "event_summary_first_ten_dhul_hijjah",
+    "virtueKey": "event_virtue_first_ten_dhul_hijjah",
+    "sources": [
+      {
+        "work": "sahih_bukhari",
+        "reference": "969",
+        "grading": "sahih"
+      }
+    ]
+  },
+  {
+    "id": "tashreeq",
+    "nameKey": "event_tashreeq",
+    "category": "season",
+    "rule": {
+      "type": "dayRange",
+      "month": 12,
+      "from": 11,
+      "to": 13
+    },
+    "summaryKey": "event_summary_tashreeq",
+    "virtueKey": "event_virtue_tashreeq",
+    "sources": [
+      {
+        "work": "sahih_muslim",
+        "reference": "1141",
+        "grading": "sahih"
+      }
+    ]
+  },
+  {
+    "id": "ayyam_al_bid",
+    "nameKey": "event_ayyam_al_bid",
+    "category": "fasting",
+    "rule": {
+      "type": "monthlyDays",
+      "days": [
+        13,
+        14,
+        15
+      ]
+    },
+    "summaryKey": "event_summary_ayyam_al_bid",
+    "virtueKey": "event_virtue_ayyam_al_bid",
+    "sources": [
+      {
+        "work": "jami_tirmidhi",
+        "reference": "761",
+        "grading": "hasan_tirmidhi"
+      }
+    ]
+  },
+  {
+    "id": "monday_thursday",
+    "nameKey": "event_monday_thursday",
+    "category": "fasting",
+    "rule": {
+      "type": "weekly",
+      "weekdays": [
+        2,
+        5
+      ]
+    },
+    "summaryKey": "event_summary_monday_thursday",
+    "virtueKey": "event_virtue_monday_thursday",
+    "sources": [
+      {
+        "work": "sahih_muslim",
+        "reference": "1162",
+        "grading": "sahih"
+      }
+    ]
+  },
+  {
+    "id": "badr",
+    "nameKey": "event_badr",
+    "category": "historical",
+    "rule": {
+      "type": "fixedDay",
+      "month": 9,
+      "day": 17
+    },
+    "summaryKey": "event_summary_badr",
+    "scholarlyNoteKey": "event_scholarly_badr"
+  },
+  {
+    "id": "conquest_makkah",
+    "nameKey": "event_conquest_makkah",
+    "category": "historical",
+    "rule": {
+      "type": "fixedDay",
+      "month": 9,
+      "day": 20
+    },
+    "summaryKey": "event_summary_conquest_makkah",
+    "scholarlyNoteKey": "event_scholarly_conquest_makkah"
   }
 ]

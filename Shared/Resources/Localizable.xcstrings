@@ -9251,6 +9251,873 @@
           }
         }
       }
+    },
+    "event_last_ten_nights" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العشر الأواخر من رمضان"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last ten nights of Ramadan"
+          }
+        }
+      }
+    },
+    "event_six_shawwal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ست من شوال"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Six days of Shawwal"
+          }
+        }
+      }
+    },
+    "event_first_ten_dhul_hijjah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العشر الأوائل من ذي الحجة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First ten days of Dhul Hijjah"
+          }
+        }
+      }
+    },
+    "event_tashreeq" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أيام التشريق"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days of Tashreeq"
+          }
+        }
+      }
+    },
+    "event_ayyam_al_bid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأيام البيض"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The White Days"
+          }
+        }
+      }
+    },
+    "event_monday_thursday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "صيام الاثنين والخميس"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monday and Thursday fasting"
+          }
+        }
+      }
+    },
+    "event_badr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غزوة بدر"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Battle of Badr"
+          }
+        }
+      }
+    },
+    "event_conquest_makkah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح مكة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conquest of Makkah"
+          }
+        }
+      }
+    },
+    "event_summary_islamic_new_year" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أول يوم من المحرّم، أول شهور السنة الهجرية."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first day of Muharram, the first month of the Hijri year."
+          }
+        }
+      }
+    },
+    "event_summary_ashura" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العاشر من المحرّم، يُستحب صيامه، ويصوم كثيرون التاسع معه."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The tenth of Muharram. Fasting it is recommended, and the ninth is commonly fasted with it."
+          }
+        }
+      }
+    },
+    "event_summary_mawlid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الثاني عشر من ربيع الأول، وهو التاريخ المشهور لمولد النبي ﷺ."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The twelfth of Rabi’ al-Awwal, the date commonly given for the Prophet’s ﷺ birth."
+          }
+        }
+      }
+    },
+    "event_summary_isra_miraj" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ليلة الإسراء والمعراج، وتُذكر عادةً في السابع والعشرين من رجب."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The night of the Prophet’s ﷺ journey and ascension, commonly placed on the twenty-seventh of Rajab."
+          }
+        }
+      }
+    },
+    "event_summary_nisf_shaban" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخامس عشر من شعبان."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The fifteenth of Sha’ban."
+          }
+        }
+      }
+    },
+    "event_summary_ramadan_start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أول أيام شهر رمضان، شهر الصيام."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first day of Ramadan, the month of fasting."
+          }
+        }
+      }
+    },
+    "event_summary_laylat_al_qadr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ليلة القدر، تُلتمس في الليالي الوتر من العشر الأواخر من رمضان."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Night of Decree, sought on the odd nights of the last ten nights of Ramadan."
+          }
+        }
+      }
+    },
+    "event_summary_eid_al_fitr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أول أيام شوال، عيد الفطر بعد رمضان."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first of Shawwal, the festival that follows Ramadan."
+          }
+        }
+      }
+    },
+    "event_summary_arafah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التاسع من ذي الحجة، يوم وقوف الحجاج بعرفة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The ninth of Dhul Hijjah, the day the pilgrims stand at Arafah."
+          }
+        }
+      }
+    },
+    "event_summary_eid_al_adha" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العاشر من ذي الحجة، عيد الأضحى."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The tenth of Dhul Hijjah, the festival of sacrifice."
+          }
+        }
+      }
+    },
+    "event_summary_last_ten_nights" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الليالي العشر الأخيرة من رمضان، وفيها ليلة القدر."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The last ten nights of Ramadan, which include the Night of Decree."
+          }
+        }
+      }
+    },
+    "event_summary_six_shawwal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ستة أيام تُصام من شوال بعد رمضان. الأيام المعروضة، من الثاني إلى السابع، اقتراح؛ فالحديث لم يحدد أيامًا بعينها."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Six days fasted in Shawwal after Ramadan. The days shown, the second to the seventh, are a suggestion; the hadith does not name particular days."
+          }
+        }
+      }
+    },
+    "event_summary_first_ten_dhul_hijjah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأيام العشرة الأولى من ذي الحجة، وتشمل يوم عرفة ويوم النحر."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first ten days of Dhul Hijjah, which include the Day of Arafah and the day of sacrifice."
+          }
+        }
+      }
+    },
+    "event_summary_tashreeq" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأيام الثلاثة التي تلي يوم النحر: من الحادي عشر إلى الثالث عشر من ذي الحجة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The three days after the day of sacrifice: the eleventh to the thirteenth of Dhul Hijjah."
+          }
+        }
+      }
+    },
+    "event_summary_ayyam_al_bid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ثلاثة أيام من كل شهر هجري: الثالث عشر والرابع عشر والخامس عشر، وتُعرف بالأيام البيض."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Three days of every Hijri month, the thirteenth, fourteenth and fifteenth, known as the White Days."
+          }
+        }
+      }
+    },
+    "event_summary_monday_thursday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يومان من كل أسبوع يُستحب صيامهما عادةً."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two days of every week on which fasting is commonly recommended."
+          }
+        }
+      }
+    },
+    "event_summary_badr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غزوة بدر الكبرى في رمضان من السنة الثانية للهجرة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Battle of Badr, in Ramadan of the second year of the Hijra."
+          }
+        }
+      }
+    },
+    "event_summary_conquest_makkah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح مكة في رمضان من السنة الثامنة للهجرة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The conquest of Makkah, in Ramadan of the eighth year of the Hijra."
+          }
+        }
+      }
+    },
+    "event_virtue_ashura" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روى أبو قتادة رضي الله عنه أن النبي ﷺ قال عن صيام يوم عاشوراء إنه يرجو من الله أن يكفّر به ذنوب السنة الماضية."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abu Qatadah reported that the Prophet ﷺ said of fasting the Day of Ashura that he hopes Allah will expiate the sins of the previous year by it."
+          }
+        }
+      }
+    },
+    "event_virtue_arafah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روى أبو قتادة رضي الله عنه أن النبي ﷺ قال عن صيام يوم عرفة إنه يرجو من الله أن يكفّر به ذنوب السنة التي قبله والسنة التي بعده."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abu Qatadah reported that the Prophet ﷺ said of fasting the Day of Arafah that he hopes Allah will expiate by it the sins of the year before and the year after."
+          }
+        }
+      }
+    },
+    "event_virtue_laylat_al_qadr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روت عائشة رضي الله عنها أن النبي ﷺ قال: تحرّوا ليلة القدر في الوتر من العشر الأواخر من رمضان."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aisha reported that the Prophet ﷺ said: seek the Night of Decree on the odd nights of the last ten nights of Ramadan."
+          }
+        }
+      }
+    },
+    "event_virtue_six_shawwal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روى أبو أيوب الأنصاري رضي الله عنه أن النبي ﷺ قال: من صام رمضان ثم أتبعه ستًّا من شوال كان كصيام الدهر."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abu Ayyub al-Ansari reported that the Prophet ﷺ said: whoever fasts Ramadan and then follows it with six days of Shawwal, it is as if they had fasted perpetually."
+          }
+        }
+      }
+    },
+    "event_virtue_first_ten_dhul_hijjah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روى ابن عباس رضي الله عنهما أن النبي ﷺ قال إن العمل في هذه الأيام أفضل من العمل في غيرها من الأيام."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ibn Abbas reported that the Prophet ﷺ said that no deeds done on other days are better than those done on these days."
+          }
+        }
+      }
+    },
+    "event_virtue_tashreeq" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روى نُبيشة الهذلي رضي الله عنه أن النبي ﷺ قال: أيام التشريق أيام أكل وشرب وذكر لله."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nubaisha al-Hudhali reported that the Prophet ﷺ said: the days of Tashreeq are days of eating, drinking and remembrance of Allah."
+          }
+        }
+      }
+    },
+    "event_virtue_ayyam_al_bid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روى أبو ذر رضي الله عنه أن النبي ﷺ قال له: إذا صمت من الشهر ثلاثة أيام فصم ثلاث عشرة وأربع عشرة وخمس عشرة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abu Dharr reported that the Prophet ﷺ said to him: if you fast three days of the month, fast the thirteenth, fourteenth and fifteenth."
+          }
+        }
+      }
+    },
+    "event_virtue_monday_thursday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روى أبو قتادة رضي الله عنه أن النبي ﷺ سُئل عن صيام يوم الاثنين فقال إنه يوم وُلد فيه وأُنزل عليه فيه الوحي."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abu Qatadah reported that the Prophet ﷺ was asked about fasting on Monday and said that it is the day on which he was born and on which revelation came to him."
+          }
+        }
+      }
+    },
+    "event_scholarly_mawlid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختلف العلماء في تاريخ مولد النبي ﷺ، وفي مشروعية الاحتفال بهذا اليوم."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scholars differ on the date of the Prophet’s ﷺ birth and on whether the day should be marked at all."
+          }
+        }
+      }
+    },
+    "event_scholarly_isra_miraj" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختلف أهل العلم في تحديد ليلة الإسراء والمعراج، وفي مشروعية تخصيصها بعبادة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scholars differ on which night the journey took place and on whether the night should be marked with particular worship."
+          }
+        }
+      }
+    },
+    "event_scholarly_nisf_shaban" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "للعلماء آراء مختلفة في الروايات الواردة في هذه الليلة وفي تخصيصها بعبادة. والتاريخ معروض هنا للعلم به فقط."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scholars hold differing views on the reports about this night and on marking it with particular worship. The date is shown for information only."
+          }
+        }
+      }
+    },
+    "event_scholarly_laylat_al_qadr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يرد نص صحيح يحدد الليلة بعينها، واختلف العلماء فيها؛ ولذلك تُعرض كل الليالي الوتر."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sound text fixes the night, and scholars differ about it, which is why every odd night is listed."
+          }
+        }
+      }
+    },
+    "event_scholarly_six_shawwal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختلف الفقهاء في تتابع الأيام الستة، وفي الأفضل: أن تبدأ بعد العيد مباشرة أم لا."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jurists differ on whether the six days should be consecutive and on whether it is better to begin straight after Eid."
+          }
+        }
+      }
+    },
+    "event_scholarly_badr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التاريخ المعروض هو الأشهر في الروايات، وللمؤرخين روايات مختلفة قليلًا."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The date shown is the one most commonly reported; historians record some variation."
+          }
+        }
+      }
+    },
+    "event_scholarly_conquest_makkah" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التاريخ المعروض هو المشهور، وتختلف الروايات في تحديد اليوم بدقة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The date shown is the one commonly given; reports differ on the exact day."
+          }
+        }
+      }
+    },
+    "work_sahih_bukhari" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "صحيح البخاري"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahih al-Bukhari"
+          }
+        }
+      }
+    },
+    "work_sahih_muslim" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "صحيح مسلم"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahih Muslim"
+          }
+        }
+      }
+    },
+    "work_jami_tirmidhi" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جامع الترمذي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jami’ at-Tirmidhi"
+          }
+        }
+      }
+    },
+    "grading_sahih" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "صحيح"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahih"
+          }
+        }
+      }
+    },
+    "grading_hasan_tirmidhi" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حسن (الترمذي)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasan (al-Tirmidhi)"
+          }
+        }
+      }
+    },
+    "occasion_category_eid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العيد"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eid"
+          }
+        }
+      }
+    },
+    "occasion_category_fasting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصيام"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fasting"
+          }
+        }
+      }
+    },
+    "occasion_category_night" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الليالي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nights"
+          }
+        }
+      }
+    },
+    "occasion_category_season" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المواسم"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seasons"
+          }
+        }
+      }
+    },
+    "occasion_category_historical" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاريخية"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

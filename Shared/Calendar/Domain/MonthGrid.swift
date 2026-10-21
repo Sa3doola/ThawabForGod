@@ -15,6 +15,8 @@ nonisolated struct MonthGrid: Equatable, Sendable {
         let number: Int
         /// The civil day it falls on, at the start of that day in the calendar's time zone.
         let gregorian: Date
+        /// `Calendar` numbering of that civil day: 1 is Sunday.
+        let weekday: Int
 
         var id: Int { number }
     }
