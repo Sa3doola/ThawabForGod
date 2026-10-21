@@ -110,6 +110,8 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     // which weekday the grid starts on — a `WeekStart` raw value, unset meaning the locale's.
     case showGregorianInCalendar
     case calendarWeekStart
+    // Hide the quiet dots for recurring fasts on the month grid (unset = shown).
+    case hideRecurringDots
 }
 
 /// Small key/value store for user preferences.

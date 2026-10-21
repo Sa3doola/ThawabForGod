@@ -888,4 +888,14 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case homeCalendarHint = "home_calendar_hint"
 
     case homeCalendarMoonLine = "home_calendar_moon_line"
+
+    case calendarHideRecurringDots = "calendar_hide_recurring_dots"
+    case calendarHideRecurringFooter = "calendar_hide_recurring_footer"
+    case calendarOffsetTitle = "calendar_offset_title"
+    case calendarOffsetFooter = "calendar_offset_footer"
+    case calendarOffsetNone = "calendar_offset_none"
+    case calendarOffsetAdvance1 = "calendar_offset_advance_1"
+    case calendarOffsetAdvance2 = "calendar_offset_advance_2"
+    case calendarOffsetDelay1 = "calendar_offset_delay_1"
+    case calendarOffsetDelay2 = "calendar_offset_delay_2"
 }

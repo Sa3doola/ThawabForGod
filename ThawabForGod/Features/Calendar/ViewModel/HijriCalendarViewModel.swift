@@ -53,6 +53,19 @@ final class HijriCalendarViewModel {
         }
     }
 
+    /// Whether the quiet dots for recurring fasts are drawn on the grid.
+    var hideRecurringDots: Bool {
+        didSet {
+            guard hideRecurringDots != oldValue else { return }
+            settingsStore.set(hideRecurringDots, for: .hideRecurringDots)
+        }
+    }
+
+    /// The reader's Hijri day offset (−2…+2). Held here as well as in the store so that views
+    /// reading a date depend on it and redraw when Settings changes it; the services read the
+    /// store themselves, live.
+    private(set) var dayOffset: Int
+
     var weekStart: WeekStart {
         didSet {
             guard weekStart != oldValue else { return }
@@ -70,6 +83,7 @@ final class HijriCalendarViewModel {
     @ObservationIgnored private let clock: any ClockService
     @ObservationIgnored private let gregorian: Calendar
     @ObservationIgnored private let locale: Locale
+    @ObservationIgnored private let onOffsetChange: @MainActor () -> Void
 
     init(
         calendar: any HijriCalendarServicing,
@@ -81,7 +95,8 @@ final class HijriCalendarViewModel {
         config: @escaping @MainActor () -> CalculationConfig,
         clock: any ClockService,
         timeZone: TimeZone = .autoupdatingCurrent,
-        locale: Locale = .autoupdatingCurrent
+        locale: Locale = .autoupdatingCurrent,
+        onOffsetChange: @escaping @MainActor () -> Void = {}
     ) {
         var gregorian = Calendar(identifier: .gregorian)
         gregorian.timeZone = timeZone
@@ -96,6 +111,7 @@ final class HijriCalendarViewModel {
         self.clock = clock
         self.gregorian = gregorian
         self.locale = locale
+        self.onOffsetChange = onOffsetChange
         self.months = calendar.supportedYears.flatMap { year in
             HijriMonth.allCases.map { HijriMonthKey(year: year, month: $0) }
         }
@@ -104,6 +120,8 @@ final class HijriCalendarViewModel {
         self.selectedDay = today
         self.visibleMonth = calendar.monthKey(containing: today)
         self.showGregorian = settingsStore.bool(for: .showGregorianInCalendar) ?? false
+        self.hideRecurringDots = settingsStore.bool(for: .hideRecurringDots) ?? false
+        self.dayOffset = HijriDayOffset.current(in: settingsStore)
         self.weekStart = settingsStore.string(for: .calendarWeekStart).flatMap(WeekStart.init(rawValue:)) ?? .locale
     }
 
@@ -124,8 +142,21 @@ final class HijriCalendarViewModel {
         gregorian.date(from: DateComponents(year: 2024, month: 1, day: 6 + weekday)) ?? today
     }
 
+    /// Registers a dependency on the offset, so whatever calls this redraws when it changes.
+    private func trackOffset() { _ = dayOffset }
+
+    /// Changes the offset, writing it only if it is a change, and tells whoever drew the old date.
+    func setDayOffset(_ value: Int) {
+        let clamped = HijriDayOffset.clamp(value)
+        guard clamped != dayOffset else { return }
+        settingsStore.set(Double(clamped), for: .hijriDayOffset)
+        dayOffset = clamped
+        onOffsetChange()
+    }
+
     func grid(for key: HijriMonthKey) -> MonthGrid? {
-        calendar.monthGrid(for: key, firstWeekday: firstWeekday)
+        trackOffset()
+        return calendar.monthGrid(for: key, firstWeekday: firstWeekday)
     }
 
     /// Every month the pager can show, oldest first. Built once: it is two thousand values and
@@ -152,7 +183,8 @@ final class HijriCalendarViewModel {
     var gregorianCalendar: Calendar { gregorian }
 
     func hijriDate(of day: Date) -> HijriDate {
-        hijriDates.hijriComponents(for: day)
+        trackOffset()
+        return hijriDates.hijriComponents(for: day)
     }
 
     func isToday(_ day: Date) -> Bool { gregorian.isDate(day, inSameDayAs: today) }
@@ -161,11 +193,13 @@ final class HijriCalendarViewModel {
 
     /// The markers for one month, keyed by the start of each civil day.
     func markers(in grid: MonthGrid) -> [Date: DayMarker] {
+        trackOffset()
         var result: [Date: DayMarker] = [:]
         let days = Set(grid.days.map(\.gregorian))
         for occurrence in resolver(hijriYear: grid.year) {
             for day in occurrence.days where days.contains(day.gregorian) {
                 if occurrence.occasion.isRecurring {
+                    if hideRecurringDots { continue }
                     result[day.gregorian, default: DayMarker()].hasRecurring = true
                 } else {
                     result[day.gregorian, default: DayMarker()].hasOccasion = true
@@ -177,6 +211,7 @@ final class HijriCalendarViewModel {
 
     /// The occasions on a civil day, one-off ones first.
     func occasions(on day: Date) -> [IslamicOccasion] {
+        trackOffset()
         let start = gregorian.startOfDay(for: day)
         let year = calendar.monthKey(containing: start).year
         let found = resolver(hijriYear: year).filter { occurrence in
@@ -187,7 +222,8 @@ final class HijriCalendarViewModel {
 
     /// The next one-off occasions from today, under way ones included.
     func upcoming(limit: Int) -> [OccasionOccurrence] {
-        GetUpcomingOccasionsUseCase(resolve: resolver, calendar: calendar, gregorian: gregorian)(
+        trackOffset()
+        return GetUpcomingOccasionsUseCase(resolve: resolver, calendar: calendar, gregorian: gregorian)(
             from: today,
             limit: limit
         )

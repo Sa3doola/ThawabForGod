@@ -67,6 +67,12 @@ struct HijriCalendarView: View {
             Text(l10n.dateString(viewModel.selectedDay))
                 .appFont(.subheadline)
                 .foregroundStyle(theme.textSecondary)
+
+            if viewModel.dayOffset != 0 {
+                Text(l10n.string(.calendarOffsetNote, l10n.offsetLabel(viewModel.dayOffset)))
+                    .appFont(.caption)
+                    .foregroundStyle(theme.textSecondary)
+            }
         }
         .accessibilityElement(children: .combine)
     }

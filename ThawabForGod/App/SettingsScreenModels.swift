@@ -18,6 +18,7 @@ struct SettingsScreenModels: SettingsScreens {
     let languageAndFormat: LanguageFormatSettingsViewModel
     let prayerCalculation: PrayerCalculationSettingsViewModel
     let reminders: RemindersSettingsViewModel
+    let calendar: HijriCalendarViewModel
     let tips: TipsSettingsViewModel
     let about: AboutViewModel
     let quranSettings: QuranSettingsViewModel

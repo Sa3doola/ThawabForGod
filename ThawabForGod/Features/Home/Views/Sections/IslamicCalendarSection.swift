@@ -19,6 +19,7 @@ struct IslamicCalendarSection: View {
 
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         let today = calendar.today
@@ -62,6 +63,8 @@ struct IslamicCalendarSection: View {
 
                 Spacer(minLength: 8)
 
+                // At accessibility sizes the words need the width; the moon line says it all.
+                if !dynamicTypeSize.isAccessibilitySize {
                 MoonView(
                     illuminatedFraction: moon.illuminatedFraction,
                     isWaxing: moon.isWaxing,
@@ -72,6 +75,7 @@ struct IslamicCalendarSection: View {
                 .padding(6)
                 .background { DayRampBackground(stop: DayRamp.stop(for: .isha)) }
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()

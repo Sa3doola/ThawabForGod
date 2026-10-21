@@ -10465,13 +10465,13 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "التواريخ مزاحة بمقدار %1$@ عن تقويم أم القرى."
+            "value" : "معدَّل عن أم القرى: %1$@."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dates are shifted by %1$@ from the Umm al-Qura calendar."
+            "value" : "Adjusted from Umm al-Qura: %1$@."
           }
         }
       }
@@ -11203,6 +11203,159 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "calendar_hide_recurring_dots" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إخفاء نقاط الصيام المتكرر"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide dots for recurring fasts"
+          }
+        }
+      }
+    },
+    "calendar_hide_recurring_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبقى الاثنين والخميس والأيام البيض ظاهرة في تفاصيل اليوم."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mondays, Thursdays and the White Days still appear in a day's details."
+          }
+        }
+      }
+    },
+    "calendar_offset_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعديل التاريخ الهجري"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hijri date adjustment"
+          }
+        }
+      }
+    },
+    "calendar_offset_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يزيح كل تاريخ هجري بمقدار يومين على الأكثر — في التقويم وفي الرئيسية وفي ودجت شاشة القفل — ليوافق رؤية الهلال عند جماعتك. أما تاريخ أم القرى المحسوب فلا يتغير."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves every Hijri date by up to two days — in the calendar, on Home and on the Lock Screen widget — to match your community's moon sighting. The calculated Umm al-Qura date is not changed."
+          }
+        }
+      }
+    },
+    "calendar_offset_none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدون تعديل"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No adjustment"
+          }
+        }
+      }
+    },
+    "calendar_offset_advance_1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقديم يوم"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advance 1 day"
+          }
+        }
+      }
+    },
+    "calendar_offset_advance_2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقديم يومين"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advance 2 days"
+          }
+        }
+      }
+    },
+    "calendar_offset_delay_1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأخير يوم"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delay 1 day"
+          }
+        }
+      }
+    },
+    "calendar_offset_delay_2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأخير يومين"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delay 2 days"
           }
         }
       }

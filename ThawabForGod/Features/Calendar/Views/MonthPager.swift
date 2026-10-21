@@ -15,6 +15,8 @@ struct MonthPager: View {
 
     @State private var position: HijriMonthKey?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(LocalizationManager.self) private var l10n
 
     /// Row heights that grow with the reader's text size, so a cell never clips its numbers. The
     /// second is for a cell that also carries the Gregorian number under the Hijri one.
@@ -47,12 +49,18 @@ struct MonthPager: View {
         }
         .scrollTargetBehavior(.paging)
         .scrollIndicators(.hidden)
+        // Paging is a swipe, which VoiceOver cannot make; these two are what it uses instead.
+        .accessibilityAction(named: Text(l10n.string(.calendarPreviousMonth))) { viewModel.step(by: -1) }
+        .accessibilityAction(named: Text(l10n.string(.calendarNextMonth))) { viewModel.step(by: 1) }
         .scrollPosition(id: $position)
         .onChange(of: position) { _, new in
             if let new, new != viewModel.visibleMonth { viewModel.show(new) }
         }
         .onChange(of: viewModel.visibleMonth) { _, new in
-            if position != new { withAnimation { position = new } }
+            guard position != new else { return }
+            // Jumping to a distant month sweeps across everything in between; with Reduce Motion
+            // on, it simply arrives.
+            if reduceMotion { position = new } else { withAnimation { position = new } }
         }
         // Six rows of cells, which is the most a month needs, so the pager does not change
         // height as the reader pages between a five-row month and a six-row one.

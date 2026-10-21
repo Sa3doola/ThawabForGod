@@ -20,6 +20,9 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
     case prayerCalculation
     case reminders
 
+    /// The Islamic calendar's own preferences: Gregorian dates, week start, dots, Hijri offset.
+    case calendar
+
     /// The Quran reader's preferences: mode, theme, fonts, packs.
     case quran
     case tips
@@ -58,7 +61,7 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
             #endif
 
         case .homeCustomization, .appearance, .languageAndFormat, .prayerCalculation,
-             .reminders, .quran, .tips, .about, .sources, .quranPacks:
+             .reminders, .calendar, .quran, .tips, .about, .sources, .quranPacks:
             true
         }
     }
@@ -70,6 +73,7 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .languageAndFormat: .settingsFormatSection
         case .prayerCalculation: .settingsCalculationSection
         case .reminders: .settingsRemindersSection
+        case .calendar: .calendarTitle
         case .quran: .settingsQuranSection
         case .tips: .settingsTipsSection
         case .macIntegration: .settingsMacSection
@@ -87,6 +91,7 @@ nonisolated enum SettingsRoute: String, CaseIterable, Hashable, Sendable {
         case .languageAndFormat: "textformat"
         case .prayerCalculation: "sun.and.horizon"
         case .reminders: "bell"
+        case .calendar: "calendar"
         case .quran: "book"
         case .quranPacks: "books.vertical"
         case .tips: "lightbulb"

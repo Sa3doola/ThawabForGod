@@ -92,6 +92,9 @@ struct SettingsView: View {
         case .reminders:
             RemindersSettingsView(viewModel: container.reminders)
 
+        case .calendar:
+            CalendarSettingsView(viewModel: container.calendar)
+
         case .quran:
             QuranSettingsForm(
                 viewModel: container.quranSettings,
@@ -136,6 +139,7 @@ protocol SettingsScreens {
     var languageAndFormat: LanguageFormatSettingsViewModel { get }
     var prayerCalculation: PrayerCalculationSettingsViewModel { get }
     var reminders: RemindersSettingsViewModel { get }
+    var calendar: HijriCalendarViewModel { get }
     var tips: TipsSettingsViewModel { get }
     var about: AboutViewModel { get }
     var quranSettings: QuranSettingsViewModel { get }

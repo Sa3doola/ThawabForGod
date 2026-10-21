@@ -97,6 +97,7 @@ struct SettingsScreensTests {
             languageAndFormat: languageAndFormat,
             prayerCalculation: prayerCalculation,
             reminders: remindersScreen,
+            calendar: HijriCalendarViewModel.testing(store: store),
             tips: tipsScreen,
             about: AboutViewModel(),
             quranSettings: quranSettings,
@@ -115,6 +116,7 @@ struct SettingsScreensTests {
             languageAndFormat: languageAndFormat,
             prayerCalculation: prayerCalculation,
             reminders: remindersScreen,
+            calendar: HijriCalendarViewModel.testing(store: store),
             tips: tipsScreen,
             about: AboutViewModel(),
             quranSettings: quranSettings

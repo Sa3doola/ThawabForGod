@@ -708,6 +708,7 @@ final class AppContainer {
             languageAndFormat: languageAndFormat,
             prayerCalculation: prayerCalculation,
             reminders: reminders,
+            calendar: hijriCalendarViewModel(),
             tips: tips,
             about: aboutViewModel,
             quranSettings: quranSettingsViewModel,
@@ -725,6 +726,7 @@ final class AppContainer {
             languageAndFormat: languageAndFormat,
             prayerCalculation: prayerCalculation,
             reminders: reminders,
+            calendar: hijriCalendarViewModel(),
             tips: tips,
             about: aboutViewModel,
             quranSettings: quranSettingsViewModel
@@ -847,7 +849,13 @@ final class AppContainer {
             settingsStore: settingsStore,
             coordinates: { home.coordinates },
             config: { calculation.config },
-            clock: clock
+            clock: clock,
+            // A changed offset has to reach what drew the old date: the widget timelines, and
+            // Home's header, which computes its date when it loads rather than when it draws.
+            onOffsetChange: { [weak self] in
+                self?.widgets.reloadAll()
+                self?.cachedHomeViewModel?.refresh()
+            }
         )
         cachedHijriCalendarViewModel = viewModel
         return viewModel
