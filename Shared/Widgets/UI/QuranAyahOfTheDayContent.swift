@@ -24,7 +24,7 @@ struct QuranAyahOfTheDayContent: View {
     private var l10n: WidgetLocalization { WidgetLocalization(style) }
 
     /// Registered in this process, now: a held entry may be rendered where the timeline build never ran.
-    private var canDrawArabic: Bool { entry.hasHafs && QuranWidgetFontRegistration.register() }
+    private var canDrawArabic: Bool { entry.hasHafs && QuranWidgetFontRegistration.registerOnce() }
 
     /// One rung of the ladder.
     private struct Step {

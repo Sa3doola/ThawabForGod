@@ -22,4 +22,11 @@ extension NextPrayerSnapshot.Style {
             language: language
         )
     }
+
+    /// The style a preview draws with: the device's language and the defaults, read from nothing
+    /// shared. A gallery render has no business waiting on the App Group.
+    nonisolated static func preview() -> Self {
+        let language = AppLanguage.current()
+        return Self(numberSystem: .preferred(for: language), clockFormat: .fallback, accent: .fallback, language: language)
+    }
 }

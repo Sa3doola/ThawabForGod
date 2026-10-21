@@ -228,4 +228,77 @@ struct QuranWidgetTimelineTests {
         let midnight = date(2026, 10, 9, 0, 0, in: riyadh)
         #expect(QuranWidgetTimeline.nextMidnight(after: midnight, calendar: riyadh) == date(2026, 10, 10, 0, 0, in: riyadh))
     }
+
+    // MARK: A preview is instant and small (B16)
+
+    @Test func theTimelineHoldsOnlyAWeekOfTheList() {
+        let calendar = calendar("Asia/Riyadh")
+        let now = date(2026, 10, 21, 9, in: calendar)
+        let result = QuranWidgetTimeline.ayahOfTheDay(
+            now: now, snapshot: fullSnapshot(count: 200), style: Self.style, hasHafs: true, calendar: calendar)
+        for entry in result.entries {
+            #expect((entry.snapshot?.entries.count ?? 0) <= QuranWidgetTimeline.daysAhead + 3)
+            // Trimming never costs an entry its own day.
+            #expect(entry.snapshot?.dailyAyah(for: entry.date, calendar: calendar) != nil)
+        }
+    }
+
+    @Test func continueReadingCarriesNoDailyList() {
+        var full = fullSnapshot(count: 200)
+        full.continueReading = .init(ayah: VerseReference(surah: 2, verse: 1), surahNameArabic: "البقرة",
+                                     surahNameEnglish: "Al-Baqarah", page: nil, juz: 1)
+        let result = QuranWidgetTimeline.continueReading(
+            now: Date(), snapshot: full, style: Self.style, hasHafs: true)
+        #expect(result.entries.first?.snapshot?.entries.isEmpty == true)
+        #expect(result.entries.first?.snapshot?.continueReading != nil)
+    }
+
+    @Test func theBundledSampleDrawsADayAndNeedsNoFont() async throws {
+        let sample = try #require(QuranWidgetSnapshot.sample())
+        let entry = QuranWidgetTimeline.previewEntry(now: Date(), sample: sample, style: .preview())
+        #expect(entry.hasHafs == false)
+        let day = try #require(entry.snapshot?.dailyAyah(for: Date()))
+        #expect(day.first == VerseReference(surah: 94, verse: 5))
+        #expect(day.texts.count == 2)
+        // The Quran text is only ever copied: the sample's words are the stored ones, character for character.
+        let stored = try await QuranTestData.repository(QuranTestData.publicDatabase).loadCorpus(style: .madaniV2)
+        #expect(day.texts == [stored.ayah(VerseReference(surah: 94, verse: 5))?.text, stored.ayah(VerseReference(surah: 94, verse: 6))?.text].compactMap { $0 })
+        #expect(entry.snapshot?.continueReading != nil)
+    }
+
+    /// The numbers behind the fix, for a list of the size B4 publishes (about 250 entries with a
+    /// translation). Simulator, not a device: it shows the order of magnitude, not the extension's
+    /// real footprint. Printed so a run records them; the bounds are generous on purpose.
+    @Test func decodingAndTrimmingTheWholeListIsCheap() throws {
+        // Filler of the same byte weight as a long ayah with a translation, so no verse text is typed here.
+        let long = String(repeating: "\u{0648}\u{064E}\u{0671}\u{0644}\u{0652} ", count: 90)
+        var full = QuranWidgetSnapshot(entries: (0..<250).map { index in
+            QuranWidgetSnapshot.DailyAyah(
+                index: index, first: VerseReference(surah: 2, verse: index % 286 + 1), lastVerse: index % 286 + 1,
+                surahNameArabic: "البقرة", surahNameEnglish: "Al-Baqarah", texts: [long],
+                translation: .init(packID: "x", nameArabic: "x", nameEnglish: "x", texts: [long], isRightToLeft: false))
+        }, listCount: 250)
+        full.listID = "x"
+        let data = try JSONEncoder().encode(full)
+
+        let clock = ContinuousClock()
+        var decoded: QuranWidgetSnapshot?
+        let decodeTime = clock.measure { decoded = try? JSONDecoder().decode(QuranWidgetSnapshot.self, from: data) }
+        let before = Self.footprint()
+        let trimmed = try #require(decoded).trimmed(from: Date(), days: 8)
+        let trimmedData = try JSONEncoder().encode(trimmed)
+        #expect(decodeTime < .milliseconds(500))
+        #expect(trimmedData.count * 10 < data.count)
+    }
+
+    private static func footprint() -> Int {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        return result == KERN_SUCCESS ? Int(info.phys_footprint) : 0
+    }
 }

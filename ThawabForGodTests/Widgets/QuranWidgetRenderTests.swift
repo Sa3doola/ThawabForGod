@@ -52,6 +52,46 @@ struct QuranWidgetRenderTests {
         try await renderEveryFamily(database: QuranTestData.fullDatabase, profile: "full")
     }
 
+    // MARK: Memory (B16)
+
+    /// One large render of the longest reference, measured as the process's footprint before and
+    /// after: the face registered, the stored snapshot decoded and trimmed as the timeline does, and
+    /// the content drawn at 3x. A widget extension is killed at about 30 MB; this is a simulator
+    /// figure for the test process (so it includes nothing of the extension's own baseline),
+    /// bounded at half the budget (the run that closed B16 measured about 1.2 MB, 10 of 125 entries kept).
+    @Test func oneLargeRenderStaysWellInsideTheExtensionBudget() async throws {
+        let harness = QuranWidgetHarness(database: QuranTestData.publicDatabase, packs: QuranTestData.bundledPacks)
+        await harness.publish()
+        let json = try #require(harness.snapshot().flatMap { try? JSONEncoder().encode($0) })
+        let fonts = try Self.fontFolder()
+        defer { try? FileManager.default.removeItem(at: fonts) }
+
+        let before = Self.footprint()
+        let hasHafs = QuranWidgetFontRegistration.register(folder: fonts)
+        let decoded = try JSONDecoder().decode(QuranWidgetSnapshot.self, from: json)
+        let now = harness.clock.now
+        let held = decoded.trimmed(from: now, days: 8)
+        let style = NextPrayerSnapshot.Style(numberSystem: .latin, clockFormat: .fallback, accent: .fallback, language: .english)
+        let entry = QuranWidgetEntry(date: now, snapshot: held, style: style, hasHafs: hasHafs)
+        let image = Self.image(
+            QuranAyahOfTheDayContent(entry: entry, family: .large).quranWidgetTheme(style: style),
+            family: .large, style: style)
+        let delta = Self.footprint() - before
+        #expect(image != nil)
+        #expect(delta < 15 * 1024 * 1024)
+    }
+
+    private static func footprint() -> Int {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        return result == KERN_SUCCESS ? Int(info.phys_footprint) : 0
+    }
+
     // MARK: Rendering
 
     private func renderEveryFamily(database: QuranDatabase, profile: String) async throws {

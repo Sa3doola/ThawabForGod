@@ -26,6 +26,14 @@ nonisolated enum QuranWidgetFamily: Sendable, CaseIterable {
 nonisolated enum QuranWidgetTimeline {
     static let daysAhead = 7
 
+    /// The entry a preview draws (gallery, placeholder): the bundled sample, no store, no face.
+    /// `hasHafs` is false on purpose, so the content shows the reference and never reaches for a font.
+    static func previewEntry(
+        now: Date, sample: QuranWidgetSnapshot?, style: NextPrayerSnapshot.Style
+    ) -> QuranWidgetEntry {
+        QuranWidgetEntry(date: now, snapshot: sample, style: style, hasHafs: false)
+    }
+
     static func nextMidnight(after now: Date, calendar: Calendar = DailyAyahRule.calendar) -> Date {
         calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
             ?? now.addingTimeInterval(24 * 60 * 60)
@@ -35,8 +43,11 @@ nonisolated enum QuranWidgetTimeline {
         now: Date, snapshot: QuranWidgetSnapshot?, style: NextPrayerSnapshot.Style, hasHafs: Bool,
         calendar: Calendar = DailyAyahRule.calendar
     ) -> (entries: [QuranWidgetEntry], reloadAfter: Date) {
+        // Today and the seven midnights after it: the rest of the curated list stays out of the
+        // entries (and out of what WidgetKit holds between reloads).
+        let held = snapshot?.trimmed(from: now, days: daysAhead + 1, calendar: calendar)
         func entry(_ date: Date) -> QuranWidgetEntry {
-            QuranWidgetEntry(date: date, snapshot: snapshot, style: style, hasHafs: hasHafs)
+            QuranWidgetEntry(date: date, snapshot: held, style: style, hasHafs: hasHafs)
         }
         var entries = [entry(now)]
         var last = now
@@ -53,7 +64,7 @@ nonisolated enum QuranWidgetTimeline {
         now: Date, snapshot: QuranWidgetSnapshot?, style: NextPrayerSnapshot.Style, hasHafs: Bool,
         calendar: Calendar = DailyAyahRule.calendar
     ) -> (entries: [QuranWidgetEntry], reloadAfter: Date) {
-        ([QuranWidgetEntry(date: now, snapshot: snapshot, style: style, hasHafs: hasHafs)],
+        ([QuranWidgetEntry(date: now, snapshot: snapshot?.withoutDailyList(), style: style, hasHafs: hasHafs)],
          nextMidnight(after: now, calendar: calendar))
     }
 }

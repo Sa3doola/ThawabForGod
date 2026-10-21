@@ -1,0 +1,29 @@
+{
+  "_source": "Tanzil Project, Uthmani text v1.1, tanzil.net, CC BY 3.0, copied verbatim from quran.sqlite (94:5-6). A tiny sample for the gallery; the real list comes from the app.",
+  "continueReading": {
+    "ayah": {
+      "surah": 94,
+      "verse": 5
+    },
+    "surahNameArabic": "الشرح",
+    "surahNameEnglish": "Ash-Sharh",
+    "juz": 30
+  },
+  "entries": [
+    {
+      "index": 0,
+      "first": {
+        "surah": 94,
+        "verse": 5
+      },
+      "lastVerse": 6,
+      "surahNameArabic": "الشرح",
+      "surahNameEnglish": "Ash-Sharh",
+      "texts": [
+        "فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا",
+        "إِنَّ مَعَ ٱلْعُسْرِ يُسْرًا"
+      ]
+    }
+  ],
+  "listCount": 1
+}

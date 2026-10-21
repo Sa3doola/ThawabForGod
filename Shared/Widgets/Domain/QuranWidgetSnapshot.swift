@@ -64,6 +64,41 @@ nonisolated struct QuranWidgetSnapshot: Codable, Equatable, Sendable {
         return entries.first { $0.index == index }
     }
 
+    /// What the gallery and the placeholder draw: one short ayah and a reading position from
+    /// `quran-widget-sample.json` in this bundle. No App Group, no font, no list — a preview must
+    /// return at once, and the words are data rather than a literal in code.
+    static func sample(bundle: Bundle = .main) -> QuranWidgetSnapshot? {
+        guard let url = bundle.url(forResource: "quran-widget-sample", withExtension: "json"),
+              let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(QuranWidgetSnapshot.self, from: data)
+    }
+
+    /// Only what the next `days` days (today included) can draw, plus the reading position. The
+    /// stored snapshot holds the whole curated list; a timeline never needs more than a week of
+    /// it, and every entry WidgetKit keeps would otherwise carry the rest.
+    func trimmed(from date: Date, days: Int, calendar: Calendar = DailyAyahRule.calendar) -> QuranWidgetSnapshot {
+        var copy = self
+        guard listCount > 0 else { copy.entries = []; return copy }
+        var wanted = Set<Int>()
+        // A day either side of the window as well: the view reads the day again at render time with
+        // whatever time zone the phone is in then, and an entry built at Riyadh midnight is the
+        // evening before in London.
+        var day = calendar.date(byAdding: .day, value: -1, to: date) ?? date
+        for _ in 0..<(max(days, 1) + 2) {
+            wanted.insert(DailyAyahRule.entryIndex(for: day, count: listCount, calendar: calendar))
+            day = calendar.date(byAdding: .day, value: 1, to: day) ?? day.addingTimeInterval(24 * 60 * 60)
+        }
+        copy.entries = entries.filter { wanted.contains($0.index) }
+        return copy
+    }
+
+    /// The same snapshot without the daily list, for the widget that does not read it.
+    func withoutDailyList() -> QuranWidgetSnapshot {
+        var copy = self
+        copy.entries = []
+        return copy
+    }
+
     static func load(from store: any SettingsStore) -> QuranWidgetSnapshot? {
         guard let json = store.string(for: .quranWidgetSnapshot),
               let data = json.data(using: .utf8) else { return nil }

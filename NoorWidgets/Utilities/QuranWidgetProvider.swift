@@ -13,12 +13,22 @@ extension QuranWidgetEntry: TimelineEntry {}
 private nonisolated enum QuranWidgetInputs {
     static func load() -> (snapshot: QuranWidgetSnapshot?, style: NextPrayerSnapshot.Style, hasHafs: Bool) {
         let store = UserDefaultsSettingsStore(defaults: SharedDefaults.store)
-        return (QuranWidgetSnapshot.load(from: store), .current(from: store), QuranWidgetFontRegistration.register())
+        return (QuranWidgetSnapshot.load(from: store), .current(from: store), QuranWidgetFontRegistration.registerOnce())
     }
 
-    static func entry(at date: Date) -> QuranWidgetEntry {
+    /// The gallery and the placeholder: the bundled sample, and nothing else. No App Group read, no
+    /// font registration, no decode of the stored list — a preview that waits on any of those is a
+    /// grey bar (BUGS.md B16).
+    static func previewEntry() -> QuranWidgetEntry {
+        QuranWidgetTimeline.previewEntry(now: Date(), sample: QuranWidgetSnapshot.sample(), style: .preview())
+    }
+
+    /// A snapshot request: instant in the gallery, the real entry on a Home Screen.
+    static func snapshotEntry(isPreview: Bool, trimmedTo days: Int?) -> QuranWidgetEntry {
+        if isPreview { return previewEntry() }
         let inputs = load()
-        return QuranWidgetEntry(date: date, snapshot: inputs.snapshot, style: inputs.style, hasHafs: inputs.hasHafs)
+        let held = days.map { inputs.snapshot?.trimmed(from: Date(), days: $0) } ?? inputs.snapshot?.withoutDailyList()
+        return QuranWidgetEntry(date: Date(), snapshot: held, style: inputs.style, hasHafs: inputs.hasHafs)
     }
 }
 
@@ -28,11 +38,11 @@ struct ContinueReadingProvider: TimelineProvider {
     init() {}
 
     func placeholder(in context: Context) -> QuranWidgetEntry {
-        QuranWidgetInputs.entry(at: Date())
+        QuranWidgetInputs.previewEntry()
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QuranWidgetEntry) -> Void) {
-        completion(QuranWidgetInputs.entry(at: Date()))
+        completion(QuranWidgetInputs.snapshotEntry(isPreview: context.isPreview, trimmedTo: nil))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<QuranWidgetEntry>) -> Void) {
@@ -49,11 +59,11 @@ struct AyahOfTheDayProvider: TimelineProvider {
     init() {}
 
     func placeholder(in context: Context) -> QuranWidgetEntry {
-        QuranWidgetInputs.entry(at: Date())
+        QuranWidgetInputs.previewEntry()
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QuranWidgetEntry) -> Void) {
-        completion(QuranWidgetInputs.entry(at: Date()))
+        completion(QuranWidgetInputs.snapshotEntry(isPreview: context.isPreview, trimmedTo: 1))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<QuranWidgetEntry>) -> Void) {
