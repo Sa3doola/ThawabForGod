@@ -45,6 +45,23 @@ nonisolated enum PhoneLandscapeLayout: String, CaseIterable, Identifiable, Senda
     }
 }
 
+/// How a Mushaf page is turned: a paper-like curl, or a plain slide. An unset or unknown stored
+/// value reads as the curl. Raw values are stored, so never rename them.
+nonisolated enum MushafPageTurnStyle: String, CaseIterable, Identifiable, Sendable {
+    case curl, slide
+
+    static let fallback: MushafPageTurnStyle = .curl
+
+    var id: String { rawValue }
+
+    var labelKey: L10nKey {
+        switch self {
+        case .curl: .readerPageTurnCurl
+        case .slide: .readerPageTurnSlide
+        }
+    }
+}
+
 /// Mushaf pages on a foldable iPhone opened flat: a spread across the fold, or one large page.
 nonisolated enum FlatOpenLayout: String, CaseIterable, Identifiable, Sendable {
     case spread, singlePage

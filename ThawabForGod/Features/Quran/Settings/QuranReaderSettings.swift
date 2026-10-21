@@ -54,6 +54,7 @@ final class QuranReaderSettings {
     private(set) var showsTranslationInSeparated: Bool
     private(set) var phoneLandscape: PhoneLandscapeLayout
     private(set) var flatOpen: FlatOpenLayout
+    private(set) var pageTurn: MushafPageTurnStyle
     /// The translations the reader switched on, in order. `nil`: never chosen, so every installed
     /// pack. `[]` is a choice (all off).
     private(set) var enabledTranslations: [ContentPackID]?
@@ -80,6 +81,7 @@ final class QuranReaderSettings {
         showsTranslationInSeparated = settingsStore.bool(for: .quranShowsTranslationInSeparated) ?? true
         phoneLandscape = settingsStore.string(for: .quranPhoneLandscape).flatMap(PhoneLandscapeLayout.init(rawValue:)) ?? .fallback
         flatOpen = settingsStore.string(for: .quranFlatOpen).flatMap(FlatOpenLayout.init(rawValue:)) ?? .fallback
+        pageTurn = settingsStore.string(for: .quranPageTurn).flatMap(MushafPageTurnStyle.init(rawValue:)) ?? .fallback
         enabledTranslations = Self.decodeIDs(settingsStore.string(for: .quranEnabledTranslations))
         enabledTafsirs = Self.decodeIDs(settingsStore.string(for: .quranEnabledTafsirs))
         defaultTafsir = settingsStore.string(for: .quranDefaultTafsir).map { ContentPackID(rawValue: $0) }
@@ -175,6 +177,11 @@ final class QuranReaderSettings {
         settingsStore.set(flatOpen.rawValue, for: .quranFlatOpen)
     }
 
+    func select(pageTurn: MushafPageTurnStyle) {
+        self.pageTurn = pageTurn
+        settingsStore.set(pageTurn.rawValue, for: .quranPageTurn)
+    }
+
     func setEnabledTranslations(_ ids: [ContentPackID]) {
         enabledTranslations = ids
         settingsStore.set(Self.encodeIDs(ids), for: .quranEnabledTranslations)
@@ -209,6 +216,7 @@ final class QuranReaderSettings {
         showsTranslationInSeparated = true
         phoneLandscape = .fallback
         flatOpen = .fallback
+        pageTurn = .fallback
         enabledTranslations = nil
         enabledTafsirs = nil
         defaultTafsir = nil
@@ -218,7 +226,7 @@ final class QuranReaderSettings {
     /// clears, and the ones the tests check against a store that started empty.
     static let stringKeys: [SettingsKey] = [
         .quranDisplayMode, .quranReaderTheme, .readerFont, .quranPhoneLandscape, .quranFlatOpen,
-        .quranEnabledTranslations, .quranEnabledTafsirs, .quranDefaultTafsir,
+        .quranPageTurn, .quranEnabledTranslations, .quranEnabledTafsirs, .quranDefaultTafsir,
     ]
     static let boolKeys: [SettingsKey] = [
         .quranFollowsSystemAppearance, .readerKeepsScreenAwake, .quranShowsMarginMarkers, .quranShowsTranslationInSeparated,

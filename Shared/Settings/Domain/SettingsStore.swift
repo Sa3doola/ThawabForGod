@@ -63,6 +63,8 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     case quranPhoneLandscape
     /// `FlatOpenLayout`. Unset: a spread.
     case quranFlatOpen
+    /// `MushafPageTurnStyle`. Unset: the curl.
+    case quranPageTurn
     /// The enabled translations, in order: a JSON `[String]` of pack ids. Unset (or unreadable):
     /// every installed one. An empty list is a real choice — all off.
     case quranEnabledTranslations

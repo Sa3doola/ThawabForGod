@@ -15,6 +15,15 @@ enum QuranSettingsPlatform {
         false
         #endif
     }
+
+    /// The page curl is UIKit's (`UIPageViewController`); the Mac has no curl to choose.
+    static var showsPageTurn: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
 }
 
 extension View {

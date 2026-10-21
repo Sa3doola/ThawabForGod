@@ -15,6 +15,17 @@ extension EnvironmentValues {
 /// while that applies; `nil` elsewhere, where a tap outside the text does nothing.
 struct MushafChromeToggle {
     let toggle: () -> Void
+
+    /// iPhone immersive reading: a tap outside the text shows or hides the chrome. Off with
+    /// VoiceOver (it pages with its own gestures), and on iPad and the Mac. Set once for the
+    /// pager, not per unit: the same closure for every page, in either page-turn mode.
+    static func pager(state: MushafReadingState, voiceOverEnabled: Bool, reduceMotion: Bool) -> MushafChromeToggle? {
+        guard DeviceKind.isPhone, !voiceOverEnabled else { return nil }
+        return MushafChromeToggle(
+            // Reduce Motion: the bars appear and go without sliding.
+            toggle: { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { state.isChromeHidden.toggle() } }
+        )
+    }
 }
 
 extension EnvironmentValues {
@@ -58,6 +69,8 @@ struct MushafPagerView: View {
     @Environment(\.foldOverride) private var foldOverride
     @Environment(\.mushafPanelCoversFold) private var panelCoversFold
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
+    @Environment(LocalizationManager.self) private var l10n
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -78,65 +91,110 @@ struct MushafPagerView: View {
             // ignores the horizontal safe area and each unit applies the insets once. The size
             // decision above uses the safe-area size.
             let sideInsets = EdgeInsets(top: 0, leading: geometry.safeAreaInsets.leading, bottom: 0, trailing: geometry.safeAreaInsets.trailing)
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal) {
-                    MushafPagerUnits(
-                        corpus: corpus,
-                        state: state,
-                        settings: settings,
-                        services: services,
-                        unit: unit,
-                        fold: fold,
-                        sideInsets: sideInsets,
-                        maxPageWidth: isTabletop ? Self.tabletopPageWidth : nil,
-                        marks: marks,
-                        onSelect: onSelect
-                    )
+            // Book turning only where the platform has it, the reader chose it, and nothing asks for
+            // less motion or a different gesture. A page fitted to the width scrolls vertically,
+            // which fights the curl's pan, so it slides.
+            let usesCurl = MushafPagerPlatform.supportsCurl && settings.pageTurn == .curl
+                && !reduceMotion && !voiceOverEnabled && unit != .widthFit
+            Group {
+                if usesCurl {
+                    curlPager(unit: unit, fold: fold, sideInsets: sideInsets, width: geometry.size.width)
+                        // As the Slide pager: the pages pad their own outer edge, so the safe area must not too.
+                        .ignoresSafeArea(.container, edges: .horizontal)
+                } else {
+                    slidePager(unit: unit, fold: fold, sideInsets: sideInsets)
                 }
-                .ignoresSafeArea(.container, edges: .horizontal)
-                .scrollTargetBehavior(.paging)
-                .scrollPosition(id: $visibleUnit)
-                .scrollIndicators(.hidden)
-                .onChange(of: unit.pageCount, initial: true) { _, count in
-                    state.visiblePageCount = count
-                }
-                .task(id: unit) {
-                    // The initial jump, and re-anchoring when the layout switches between one page
-                    // and spreads (rotation, folding): stay on the same page.
-                    await Task.yield()
-                    let target = unit.unitStart(for: state.page)
-                    proxy.scrollTo(target)
-                    visibleUnit = target
-                }
-                .onChange(of: visibleUnit) { _, first in
-                    guard let first else { return }
-                    // A jump is settling: reports of other units are stale until it arrives.
-                    if let jumpTarget, first != jumpTarget { return }
-                    // A paging swipe moves one unit. Anything further is the RTL scroll view
-                    // reporting its mirrored origin: go back to where the reader is.
-                    guard MushafPagerStep.accepts(reported: first, page: state.page, pageCount: unit.pageCount, jumpTarget: jumpTarget) else {
-                        jump(to: unit.unitStart(for: state.page), proxy: proxy, farJump: true)
-                        return
-                    }
-                    // Keep the exact page if it is still visible (the left page of a spread).
-                    if !(first...(first + unit.pageCount - 1)).contains(state.page) { state.show(page: first) }
-                }
-                .task(id: state.page) {
-                    await prepare(around: state.page)
-                }
-                .onChange(of: state.page) { _, page in
-                    // Programmatic navigation (go to, a turn from a key or the menu).
-                    let target = unit.unitStart(for: page)
-                    guard target != visibleUnit else { return }
-                    let isNeighbour = visibleUnit.map { abs(target - $0) == unit.pageCount } ?? false
-                    jump(to: target, proxy: proxy, farJump: !isNeighbour)
-                }
+            }
+            .environment(\.mushafChromeToggle, MushafChromeToggle.pager(state: state, voiceOverEnabled: voiceOverEnabled, reduceMotion: reduceMotion))
+            // Shared by both modes: the unit's size for the view model, and the font window.
+            .onChange(of: unit.pageCount, initial: true) { _, count in
+                state.visiblePageCount = count
+            }
+            .task(id: state.page) {
+                await prepare(around: state.page)
+            }
+            .onChange(of: state.page) { _, page in
+                guard voiceOverEnabled else { return }
+                AccessibilityNotification.Announcement(l10n.string(.quranPageNumber, l10n.string(page, grouped: false))).post()
             }
         }
         // Paper behind the system bars too (the background extends into the safe areas).
         .background(palette.background)
         // Forced whatever the interface language: a Mushaf always pages right-to-left.
         .environment(\.layoutDirection, .rightToLeft)
+    }
+
+    /// The book: a page curl. With a fold the curl is framed so its spine (its centre) is on the hinge.
+    @ViewBuilder
+    private func curlPager(unit: MushafPageUnit, fold: FoldGeometry?, sideInsets: EdgeInsets, width: CGFloat) -> some View {
+        let pager = MushafCurlPager(
+            corpus: corpus, state: state, settings: settings, services: services, unit: unit,
+            fold: fold, sideInsets: sideInsets, marks: marks, onSelect: onSelect
+        )
+        // The spine is fixed when the controller is built, so a new unit builds a new one.
+        .id(unit)
+        if let fold, unit == .spread {
+            let curlWidth = 2 * min(fold.leadingWidth, fold.trailingWidth) + fold.gutterWidth
+            // The layout is right-to-left, so the leading side is on the right; offsets are physical.
+            pager
+                .frame(width: curlWidth)
+                .offset(x: (fold.trailingWidth - fold.leadingWidth) / 2)
+                .frame(maxWidth: .infinity)
+        } else {
+            pager
+        }
+    }
+
+    /// Today's pager, unchanged: a paging horizontal scroll view of units.
+    private func slidePager(unit: MushafPageUnit, fold: FoldGeometry?, sideInsets: EdgeInsets) -> some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                MushafPagerUnits(
+                    corpus: corpus,
+                    state: state,
+                    settings: settings,
+                    services: services,
+                    unit: unit,
+                    fold: fold,
+                    sideInsets: sideInsets,
+                    maxPageWidth: isTabletop ? Self.tabletopPageWidth : nil,
+                    marks: marks,
+                    onSelect: onSelect
+                )
+            }
+            .ignoresSafeArea(.container, edges: .horizontal)
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $visibleUnit)
+            .scrollIndicators(.hidden)
+            .task(id: unit) {
+                // The initial jump, and re-anchoring when the layout switches between one page
+                // and spreads (rotation, folding): stay on the same page.
+                await Task.yield()
+                let target = unit.unitStart(for: state.page)
+                proxy.scrollTo(target)
+                visibleUnit = target
+            }
+            .onChange(of: visibleUnit) { _, first in
+                guard let first else { return }
+                // A jump is settling: reports of other units are stale until it arrives.
+                if let jumpTarget, first != jumpTarget { return }
+                // A paging swipe moves one unit. Anything further is the RTL scroll view
+                // reporting its mirrored origin: go back to where the reader is.
+                guard MushafPagerStep.accepts(reported: first, page: state.page, pageCount: unit.pageCount, jumpTarget: jumpTarget) else {
+                    jump(to: unit.unitStart(for: state.page), proxy: proxy, farJump: true)
+                    return
+                }
+                // Keep the exact page if it is still visible (the left page of a spread).
+                if !(first...(first + unit.pageCount - 1)).contains(state.page) { state.show(page: first) }
+            }
+            .onChange(of: state.page) { _, page in
+                // Programmatic navigation (go to, a turn from a key or the menu).
+                let target = unit.unitStart(for: page)
+                guard target != visibleUnit else { return }
+                let isNeighbour = visibleUnit.map { abs(target - $0) == unit.pageCount } ?? false
+                jump(to: target, proxy: proxy, farJump: !isNeighbour)
+            }
+        }
     }
 
     /// Moves the scroll view to the unit starting at `target`. A neighbouring unit needs only the
@@ -213,9 +271,6 @@ private struct MushafPagerUnits: View {
     let marks: QuranAyahMarks
     let onSelect: (VerseReference) -> Void
 
-    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
         LazyHStack(spacing: 0) {
             ForEach(Array(stride(from: corpus.style.pages.lowerBound, through: corpus.style.pageCount, by: unit.pageCount)), id: \.self) { first in
@@ -229,18 +284,6 @@ private struct MushafPagerUnits: View {
             }
         }
         .scrollTargetLayout()
-        // Once for the row, not per unit: the same closures for every page.
-        .environment(\.mushafChromeToggle, chromeToggle)
-    }
-
-    /// iPhone immersive reading: a tap outside the text shows or hides the chrome. Off with
-    /// VoiceOver (it pages with its own gestures), and on iPad and the Mac.
-    private var chromeToggle: MushafChromeToggle? {
-        guard DeviceKind.isPhone, !voiceOverEnabled else { return nil }
-        return MushafChromeToggle(
-            // Reduce Motion: the bars appear and go without sliding.
-            toggle: { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { state.isChromeHidden.toggle() } }
-        )
     }
 }
 

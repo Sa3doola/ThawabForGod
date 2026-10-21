@@ -480,6 +480,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case quranSettingsMarginMarkersFooter = "quran_settings_margin_markers_footer"
     case quranSettingsLandscape = "quran_settings_landscape"
     case quranSettingsOpenFlat = "quran_settings_open_flat"
+    case quranSettingsPageTurn = "quran_settings_page_turn"
+    case quranSettingsPageTurnFooter = "quran_settings_page_turn_footer"
     case quranSettingsSources = "quran_settings_sources"
 
     // MARK: The reading panel
@@ -506,6 +508,10 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     /// `FlatOpenLayout`: a foldable iPhone opened flat.
     case readerFlatOpenSpread = "reader_flat_open_spread"
     case readerFlatOpenSinglePage = "reader_flat_open_single_page"
+    /// `MushafPageTurnStyle`: the page turns like paper.
+    case readerPageTurnCurl = "reader_page_turn_curl"
+    /// `MushafPageTurnStyle`: the page slides.
+    case readerPageTurnSlide = "reader_page_turn_slide"
 
     // MARK: Hadith
 

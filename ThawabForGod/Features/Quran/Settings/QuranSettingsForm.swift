@@ -27,6 +27,9 @@ struct QuranSettingsForm: View {
             textSection
             if settings.capabilities.supportsMushafPages {
                 mushafSection
+                if QuranSettingsPlatform.showsPageTurn {
+                    pageTurnSection
+                }
             }
             if QuranSettingsPlatform.showsKeepScreenAwake {
                 screenSection
@@ -179,6 +182,27 @@ struct QuranSettingsForm: View {
             Text(l10n.string(.quranSettingsMushafPages))
         } footer: {
             Text(l10n.string(.quranSettingsMarginMarkersFooter))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var pageTurnSection: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { settings.pageTurn },
+                set: { settings.select(pageTurn: $0) }
+            )) {
+                ForEach(MushafPageTurnStyle.allCases) { style in
+                    Text(l10n.string(style.labelKey)).tag(style)
+                }
+            } label: {
+                Text(l10n.string(.quranSettingsPageTurn))
+            }
+            .accessibilityIdentifier("quran.settings.pageTurn")
+        } header: {
+            Text(l10n.string(.quranSettingsPageTurn))
+        } footer: {
+            Text(l10n.string(.quranSettingsPageTurnFooter))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
