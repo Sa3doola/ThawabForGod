@@ -169,6 +169,24 @@ nonisolated extension AttributionSource {
             url: URL(string: "https://github.com/IBM/plex")!,
             licenceFile: "IBMPlexSansArabic-OFL"
         ),
+        // The moon drawn on the calendar. The image is NASA's; the exact file's own page is where
+        // its terms are confirmed (svs.gsfc.nasa.gov/4720) — a manual step the project owner owns.
+        AttributionSource(
+            id: "moon-image",
+            titleKey: .sourceMoonImageTitle,
+            attributionKey: .sourceMoonImageAttribution,
+            licenceKey: .licenceNASA,
+            noteKey: nil,
+            url: URL(string: "https://svs.gsfc.nasa.gov/4720")!
+        ),
+        AttributionSource(
+            id: "meeus",
+            titleKey: .sourceMeeusTitle,
+            attributionKey: .sourceMeeusAttribution,
+            licenceKey: .licencePublishedAlgorithm,
+            noteKey: nil,
+            url: nil
+        ),
         AttributionSource(
             id: "adhan",
             titleKey: .sourceAdhanTitle,

@@ -8,6 +8,8 @@ import SwiftUI
 /// What the selected day holds: the Moon at Maghrib and the occasions that fall on it.
 struct SelectedDayPanel: View {
     let viewModel: HijriCalendarViewModel
+    let showMoon: () -> Void
+    let showOccasion: (IslamicOccasion) -> Void
 
     @Environment(\.theme) private var theme
     @Environment(LocalizationManager.self) private var l10n
@@ -24,32 +26,11 @@ struct SelectedDayPanel: View {
     }
 
     private var moonRow: some View {
-        let info = viewModel.moon(on: viewModel.selectedDay)
-        let phase = l10n.string(info.phase.labelKey)
-        let percent = l10n.string(.moonPercentValue, l10n.string(Int((info.illuminatedFraction * 100).rounded())))
-
-        return HStack(spacing: 14) {
-            MoonView(
-                illuminatedFraction: info.illuminatedFraction,
-                isWaxing: info.isWaxing,
-                hemisphere: viewModel.hemisphere,
-                accessibilityText: l10n.string(.moonAccessibilityLabel, phase, percent)
-            )
-            .frame(width: 48, height: 48)
-            .padding(6)
-            .background { DayRampBackground(stop: DayRamp.stop(for: .isha)) }
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(l10n.string(.calendarMoonHeading))
-                    .appFont(.caption)
-                    .foregroundStyle(theme.textSecondary)
-                Text(l10n.string(.calendarMoonSummary, phase, percent))
-                    .appFont(.body, weight: .medium)
-                    .foregroundStyle(theme.textPrimary)
-            }
-        }
-        .accessibilityElement(children: .combine)
+        MoonCard(
+            info: viewModel.moon(on: viewModel.selectedDay),
+            hemisphere: viewModel.hemisphere,
+            showDetails: showMoon
+        )
     }
 
     @ViewBuilder
@@ -67,6 +48,7 @@ struct SelectedDayPanel: View {
                     .foregroundStyle(theme.textSecondary)
             } else {
                 ForEach(occasions, id: \.id) { occasion in
+                    Button { showOccasion(occasion) } label: {
                     HStack(spacing: 8) {
                         Text(l10n.string(occasion.nameKey))
                             .appFont(.body, weight: .medium)
@@ -77,6 +59,10 @@ struct SelectedDayPanel: View {
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
+                    .frame(minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }

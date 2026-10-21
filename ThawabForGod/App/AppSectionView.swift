@@ -52,7 +52,8 @@ struct AppSectionView: View {
             open: container.open,
             customizationViewModel: container.homeCustomizationViewModel(),
             prayerTimesViewModel: container.prayerTimesSheetViewModel(),
-            calendarViewModel: container.hijriCalendarViewModel()
+            calendarViewModel: container.hijriCalendarViewModel(),
+            moonDetailViewModel: container.moonDetailViewModel()
         )
     }
 

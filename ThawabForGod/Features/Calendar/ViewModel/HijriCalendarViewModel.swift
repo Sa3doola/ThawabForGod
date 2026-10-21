@@ -171,6 +171,34 @@ final class HijriCalendarViewModel {
         return found.map(\.occasion).sorted { !$0.isRecurring && $1.isRecurring }
     }
 
+    /// The next one-off occasions from today, under way ones included.
+    func upcoming(limit: Int) -> [OccasionOccurrence] {
+        GetUpcomingOccasionsUseCase(resolve: resolver, calendar: calendar, gregorian: gregorian)(
+            from: today,
+            limit: limit
+        )
+    }
+
+    /// Every one-off occasion of a Hijri year, earliest first. Recurring ones are left out: the
+    /// year list is for the dozen that happen once, not the weekly fasts.
+    func occurrences(inYear year: Int) -> [OccasionOccurrence] {
+        resolver(hijriYear: year).filter { !$0.occasion.isRecurring }
+    }
+
+    /// Whole civil days from today to the start of an occurrence — negative once it has begun.
+    func daysAway(to occurrence: OccasionOccurrence) -> Int {
+        gregorian.dateComponents([.day], from: today, to: occurrence.first.gregorian).day ?? 0
+    }
+
+    /// Whole civil days from today to a date.
+    func daysFromToday(to date: Date) -> Int {
+        gregorian.dateComponents([.day], from: today, to: gregorian.startOfDay(for: date)).day ?? 0
+    }
+
+    func day(byAdding days: Int, to day: Date) -> Date {
+        gregorian.date(byAdding: .day, value: days, to: day) ?? day
+    }
+
     func moon(on day: Date) -> MoonInfo {
         moonUseCase(on: day, coordinates: coordinates(), config: config())
     }

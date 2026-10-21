@@ -11,10 +11,13 @@ import SwiftUI
 /// A push on Home's stack rather than a tab — it is a visit that ends by going back.
 struct HijriCalendarView: View {
     let viewModel: HijriCalendarViewModel
+    let showMoon: () -> Void
+    let showOccasionsYear: () -> Void
 
     @Environment(\.theme) private var theme
     @Environment(LocalizationManager.self) private var l10n
     @State private var isPickingMonth = false
+    @State private var sheet: OccasionSheetItem?
 
     var body: some View {
         ScrollView {
@@ -23,7 +26,12 @@ struct HijriCalendarView: View {
                 monthBar
                 weekdayRow
                 MonthPager(viewModel: viewModel)
-                SelectedDayPanel(viewModel: viewModel)
+                SelectedDayPanel(
+                    viewModel: viewModel,
+                    showMoon: showMoon,
+                    showOccasion: { sheet = OccasionSheetItem(occasion: $0, dateLine: nil) }
+                )
+                upcoming
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -39,6 +47,7 @@ struct HijriCalendarView: View {
         .sheet(isPresented: $isPickingMonth) {
             CalendarMonthPicker(viewModel: viewModel)
         }
+        .sheet(item: $sheet) { OccasionDetailSheet(item: $0) }
     }
 
     // MARK: Pieces
@@ -97,6 +106,41 @@ struct HijriCalendarView: View {
             .accessibilityLabel(l10n.string(.calendarNextMonth))
         }
         .foregroundStyle(theme.accent)
+    }
+
+    private var upcoming: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(l10n.string(.occasionsUpcomingHeading))
+                .appFont(.headline)
+                .foregroundStyle(theme.textPrimary)
+                .padding(.bottom, 4)
+
+            ForEach(viewModel.upcoming(limit: 5)) { occurrence in
+                OccasionRow(
+                    occurrence: occurrence,
+                    daysAway: viewModel.daysAway(to: occurrence),
+                    open: {
+                        sheet = OccasionSheetItem(
+                            occasion: occurrence.occasion,
+                            dateLine: OccasionDateText.hijri(
+                                first: occurrence.first.hijri,
+                                last: occurrence.last.hijri,
+                                localized: l10n.string,
+                                number: { l10n.string($0, grouped: $1) }
+                            )
+                        )
+                    }
+                )
+            }
+
+            Button(action: showOccasionsYear) {
+                Text(l10n.string(.occasionsAllYear))
+                    .appFont(.subheadline, weight: .medium)
+                    .foregroundStyle(theme.accent)
+                    .frame(minHeight: 44, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     /// `October – November 2026`, in the app's language and digits.

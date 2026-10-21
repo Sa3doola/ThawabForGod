@@ -4,6 +4,11 @@
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 /// Which half of the Earth the viewer is on, which decides which side of the Moon is lit.
 ///
@@ -49,7 +54,73 @@ struct MoonView: View {
 
     private var litOnRight: Bool { isWaxing == (hemisphere == .northern) }
 
+    /// Whether the bundled photograph is there. The drawn moon below is what a build without it
+    /// keeps, so the view never depends on the file being present.
+    static let hasTexture: Bool = {
+        #if canImport(UIKit)
+        UIImage(named: "MoonNearside") != nil
+        #elseif canImport(AppKit)
+        NSImage(named: "MoonNearside") != nil
+        #else
+        false
+        #endif
+    }()
+
+    /// How much of the unlit side still shows: earthshine, not a black cut-out.
+    private static let earthshine = 0.08
+
+    /// The terminator's soft edge, as a fraction of the radius.
+    private static let feather = 0.035
+
     private func draw(in context: inout GraphicsContext, size: CGSize) {
+        if Self.hasTexture {
+            drawPhotograph(in: &context, size: size)
+        } else {
+            drawIllustration(in: &context, size: size)
+        }
+    }
+
+    /// The photograph as a disc, with the unlit part darkened to earthshine along the terminator.
+    ///
+    /// The picture is the near side as seen from the northern hemisphere. From the southern one
+    /// the same face is upside down, so it is turned half a revolution there — physics, and for
+    /// the same reason the lit side is decided from `isWaxing` and `hemisphere`, never from the
+    /// layout direction.
+    private func drawPhotograph(in context: inout GraphicsContext, size: CGSize) {
+        let radius = min(size.width, size.height) / 2
+        let center = CGPoint(x: size.width / 2, y: size.height / 2)
+        let ink = theme.onDayRamp
+        let rect = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+        let disc = Path(ellipseIn: rect)
+
+        let glow = Path(ellipseIn: rect.insetBy(dx: -radius * 0.5, dy: -radius * 0.5))
+        context.fill(glow, with: .radialGradient(
+            Gradient(colors: [ink.textPrimary.opacity(0.22 * illuminatedFraction), .clear]),
+            center: center, startRadius: radius * 0.9, endRadius: radius * 1.5))
+
+        context.drawLayer { layer in
+            layer.clip(to: disc)
+
+            var picture = layer
+            if hemisphere == .southern {
+                picture.translateBy(x: center.x, y: center.y)
+                picture.rotate(by: .degrees(180))
+                picture.translateBy(x: -center.x, y: -center.y)
+            }
+            picture.draw(layer.resolve(Image("MoonNearside")), in: rect)
+
+            // Shade everything, then cut the lit region back out; blurring the layer is what
+            // softens the terminator.
+            layer.drawLayer { shade in
+                shade.addFilter(.blur(radius: radius * Self.feather))
+                shade.fill(disc, with: .color(.black.opacity(1 - Self.earthshine)))
+                shade.blendMode = .destinationOut
+                shade.fill(litPath(center: center, radius: radius), with: .color(.black))
+            }
+        }
+    }
+
+    private func drawIllustration(in context: inout GraphicsContext, size: CGSize) {
         let radius = min(size.width, size.height) / 2
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
         let ink = theme.onDayRamp

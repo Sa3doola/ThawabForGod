@@ -853,6 +853,25 @@ final class AppContainer {
         return viewModel
     }
 
+    private var cachedMoonDetailViewModel: MoonDetailViewModel?
+
+    /// The moon screen's view model. It reads the calendar's selected day rather than keeping one.
+    func moonDetailViewModel() -> MoonDetailViewModel {
+        if let cachedMoonDetailViewModel {
+            return cachedMoonDetailViewModel
+        }
+
+        let moon = AstronomicalMoonCalculator()
+        let viewModel = MoonDetailViewModel(
+            calendar: hijriCalendarViewModel(),
+            strip: GetMoonPhaseStripUseCase(moon: moon),
+            next: GetNextMoonEventsUseCase(moon: moon),
+            clock: clock
+        )
+        cachedMoonDetailViewModel = viewModel
+        return viewModel
+    }
+
     func homeCustomizationViewModel() -> HomeCustomizationViewModel {
         if let cachedHomeCustomizationViewModel {
             return cachedHomeCustomizationViewModel

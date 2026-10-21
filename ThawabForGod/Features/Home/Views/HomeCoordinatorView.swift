@@ -39,6 +39,7 @@ struct HomeCoordinatorView: View {
     let prayerTimesViewModel: PrayerTimesSheetViewModel
 
     let calendarViewModel: HijriCalendarViewModel
+    let moonDetailViewModel: MoonDetailViewModel
 
     @Environment(LocalizationManager.self) private var l10n
 
@@ -78,7 +79,17 @@ struct HomeCoordinatorView: View {
             HomeCustomizationView(viewModel: customizationViewModel)
 
         case .hijriCalendar:
-            HijriCalendarView(viewModel: calendarViewModel)
+            HijriCalendarView(
+                viewModel: calendarViewModel,
+                showMoon: { coordinator.show(.moonDetail) },
+                showOccasionsYear: { coordinator.show(.occasionsYear) }
+            )
+
+        case .moonDetail:
+            MoonDetailView(viewModel: moonDetailViewModel)
+
+        case .occasionsYear:
+            OccasionsYearView(viewModel: calendarViewModel)
         }
     }
 
