@@ -51,11 +51,11 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
     /// to `true` is the one-line change that ships a reserved section.
     var isAvailable: Bool {
         switch self {
-        case .nextPrayer, .shortcuts, .continueReading, .lastActivity, .prayerTracker:
+        case .nextPrayer, .shortcuts, .continueReading, .lastActivity, .prayerTracker,
+             .islamicCalendar:
             true
-        // Phase 3 and beyond: there is no calendar screen, no verse-of-the-day corpus, and no
-        // hadith yet.
-        case .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
+        // Phase 3 and beyond: there is no verse-of-the-day corpus and no hadith of the day yet.
+        case .ayahOfDay, .hadithOfDay, .duaOfDay:
             false
         }
     }
@@ -81,9 +81,9 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
             true
         case .nextPrayer, .shortcuts, .lastActivity:
             false
-        // Reserved. A verse and a hadith are passages, and a passage at half width is a column
-        // of two words — so they will span when they land, and the calendar's month grid with
-        // them.
+        // The calendar card is a date, a moon and a line about what is next: it spans. The rest
+        // are reserved — a verse and a hadith are passages, and a passage at half width is a
+        // column of two words, so they will span when they land too.
         case .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
             false
         }
@@ -125,11 +125,18 @@ nonisolated enum HomeSectionKind: String, CaseIterable, Codable, Sendable {
     ///
     /// Reserved kinds are hidden rather than visible so that shipping one does not silently
     /// rearrange a Home screen somebody had already settled on.
+    ///
+    /// **This is not a migration, and the calendar card is the case that shows it.** Nothing is
+    /// stored until a user edits Home, so a never-customized user is *derived* from this and finds
+    /// the card on; a user who has customized has the card stored as hidden — written by a build
+    /// where it did not exist — and keeps their Home as it was. It is in the customization list
+    /// for them to switch on.
     var defaultVisibility: Bool {
         switch self {
-        case .nextPrayer, .shortcuts, .continueReading, .lastActivity, .prayerTracker:
+        case .nextPrayer, .shortcuts, .continueReading, .lastActivity, .prayerTracker,
+             .islamicCalendar:
             true
-        case .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
+        case .ayahOfDay, .hadithOfDay, .duaOfDay:
             false
         }
     }

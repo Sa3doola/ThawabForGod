@@ -34,9 +34,9 @@ nonisolated enum HomeShortcut: String, CaseIterable, Codable, Sendable {
     /// neither on Home nor in the editor.
     var isAvailable: Bool {
         switch self {
-        case .morningEveningAdhkar, .tasbih, .qibla, .namesOfAllah:
+        case .morningEveningAdhkar, .tasbih, .qibla, .namesOfAllah, .islamicCalendar:
             true
-        case .islamicCalendar, .hadith:
+        case .hadith:
             false
         }
     }
@@ -56,7 +56,8 @@ nonisolated enum HomeShortcut: String, CaseIterable, Codable, Sendable {
         case .tasbih: .tasbih
         case .qibla: .qibla
         case .namesOfAllah: .names
-        case .islamicCalendar, .hadith: nil
+        case .islamicCalendar: .hijriCalendar(selecting: nil)
+        case .hadith: nil
         }
     }
 

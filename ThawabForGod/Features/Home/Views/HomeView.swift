@@ -41,6 +41,10 @@ struct HomeView: View {
     /// stack, and this one is pushed onto whichever stack Home happens to be in.
     let customize: () -> Void
 
+    /// What the Islamic calendar card reads. The calendar screen's own view model, so the two
+    /// cannot disagree about the date.
+    let calendar: HijriCalendarViewModel
+
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.theme) private var theme
     @Environment(\.scenePhase) private var scenePhase
@@ -280,7 +284,10 @@ struct HomeView: View {
                 Task { await viewModel.setPrayerCompleted(isCompleted, of: prayer) }
             }
 
-        case .islamicCalendar, .ayahOfDay, .hadithOfDay, .duaOfDay:
+        case .islamicCalendar:
+            IslamicCalendarSection(calendar: calendar, day: viewModel.currentDate, open: open)
+
+        case .ayahOfDay, .hadithOfDay, .duaOfDay:
             EmptyView()
         }
     }
@@ -362,7 +369,23 @@ private struct StatusNotice: View {
             open: { _ in },
             showPrayerTimes: {},
             isShowingPrayerTimes: .constant(false),
-            customize: {}
+            customize: {},
+            calendar: {
+                let months = HijriCalendarService()
+                return HijriCalendarViewModel(
+                    calendar: months,
+                    occasions: ResolveOccasionDatesUseCase(
+                        repository: BundledOccasionsRepository(),
+                        calendar: months
+                    ),
+                    moon: GetMoonInfoUseCase(moon: AstronomicalMoonCalculator(), schedule: useCase),
+                    hijriDates: HijriDateService(),
+                    settingsStore: settingsStore,
+                    coordinates: { .makkah },
+                    config: { .default },
+                    clock: SystemClockService()
+                )
+            }()
         )
     }
     .themed(ThemeManager(settingsStore: settingsStore))

@@ -882,4 +882,8 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case sourceMeeusTitle = "source_meeus_title"
     case sourceMeeusAttribution = "source_meeus_attribution"
     case licencePublishedAlgorithm = "licence_published_algorithm"
+
+    case homeCalendarTodayLine = "home_calendar_today_line"
+    case homeCalendarNextLine = "home_calendar_next_line"
+    case homeCalendarHint = "home_calendar_hint"
 }

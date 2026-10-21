@@ -50,7 +50,8 @@ struct HomeCoordinatorView: View {
                 open: open,
                 showPrayerTimes: { coordinator.isShowingPrayerTimes = true },
                 isShowingPrayerTimes: $coordinator.isShowingPrayerTimes,
-                customize: { coordinator.show(.customize) }
+                customize: { coordinator.show(.customize) },
+                calendar: calendarViewModel
             )
 //                .toolbar { toolbar }
                 .navigationDestination(for: HomeCoordinator.Destination.self, destination: destination)
