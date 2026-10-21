@@ -42,6 +42,7 @@ struct ContinueReadingSection: View {
                 Spacer(minLength: 8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
             .appCard()
         }
         .buttonStyle(.plain)
