@@ -51,7 +51,8 @@ nonisolated enum OccasionGrading: String, Codable, Sendable {
 
 nonisolated struct OccasionSource: Codable, Equatable, Sendable {
     let work: OccasionWork
-    /// The published hadith number, as sunnah.com numbers it.
+    /// The number the narration carries in the bundled corpus (`hadith.sqlite`), for the two Sahihs.
+    /// Muslim's differs from the Abd al-Baqi numbering printed editions cite.
     let reference: String
     let grading: OccasionGrading?
 }
