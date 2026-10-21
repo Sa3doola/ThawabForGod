@@ -32,6 +32,14 @@ nonisolated struct MonthGrid: Equatable, Sendable {
         Array(repeating: nil, count: leadingBlanks) + days.map(Optional.some)
     }
 
+    /// Index into `cells` of the cell whose civil day contains `date`, or `nil` when the date is
+    /// in another month. Compared by civil day in the caller's calendar, so a time of day never
+    /// misses the cell.
+    func cellIndex(containing date: Date, calendar: Calendar) -> Int? {
+        days.firstIndex { calendar.isDate($0.gregorian, inSameDayAs: date) }
+            .map { $0 + leadingBlanks }
+    }
+
     var key: HijriMonthKey { HijriMonthKey(year: year, month: month) }
 }
 

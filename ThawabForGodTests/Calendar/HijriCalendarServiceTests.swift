@@ -54,6 +54,32 @@ struct HijriCalendarServiceTests {
         #expect(shifted.days[0].gregorian == date(2025, 6, 25))
     }
 
+    /// 26 June 2025 is 1 Muharram 1447 (a Thursday). Saturday-first, a Thursday starts the
+    /// sixth column (5 blanks); +2 pulls day 1 back to Tuesday (3 blanks), −2 pushes it to
+    /// Saturday (0 blanks).
+    @Test(arguments: [
+        (offset: 2, civilDay1: (2025, 6, 24), blanks: 3, todayCell: 3 + 2),
+        (offset: -2, civilDay1: (2025, 6, 28), blanks: 0, todayCell: nil as Int?),
+    ])
+    func extremeOffsetsMoveDayOneAndToday(
+        offset: Int, civilDay1: (Int, Int, Int), blanks: Int, todayCell: Int?
+    ) throws {
+        let service = service(offset: offset)
+        let today = date(2025, 6, 26)
+        let key = HijriMonthKey(year: 1447, month: .muharram)
+        let grid = try #require(service.monthGrid(for: key, firstWeekday: 7))
+
+        #expect(grid.days[0].gregorian == date(civilDay1.0, civilDay1.1, civilDay1.2))
+        #expect(grid.leadingBlanks == blanks)
+        #expect(grid.cellIndex(containing: today, calendar: Self.gregorian) == todayCell)
+
+        // Wherever "today" is not in Muharram it is in the month the service names for it.
+        let todayKey = service.monthKey(containing: today)
+        let todayGrid = try #require(service.monthGrid(for: todayKey, firstWeekday: 7))
+        #expect(todayGrid.cellIndex(containing: today, calendar: Self.gregorian) != nil)
+        if offset == -2 { #expect(todayKey == key.previous) }
+    }
+
     @Test func offsetAppliesToTheMonthContainingADate() {
         // 26 June 2025 is 1 Muharram; with +1 the previous civil day (25 June) is too, so the
         // reader whose calendar runs a day ahead is already in Muharram on the 25th.
