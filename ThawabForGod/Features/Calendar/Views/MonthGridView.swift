@@ -9,6 +9,7 @@ import SwiftUI
 struct MonthGridView: View {
     let key: HijriMonthKey
     let viewModel: HijriCalendarViewModel
+    let rowHeight: CGFloat
 
     @Environment(LocalizationManager.self) private var l10n
 
@@ -22,7 +23,7 @@ struct MonthGridView: View {
                     if let day {
                         cell(day, marker: markers[day.gregorian] ?? DayMarker())
                     } else {
-                        Color.clear.frame(minHeight: 52)
+                        Color.clear.frame(minHeight: rowHeight)
                     }
                 }
             }
@@ -39,6 +40,7 @@ struct MonthGridView: View {
             isToday: viewModel.isToday(day.gregorian),
             isSelected: viewModel.isSelected(day.gregorian),
             showGregorian: viewModel.showGregorian,
+            rowHeight: rowHeight,
             accessibilityLabel: label(for: day),
             select: { viewModel.select(day.gregorian) }
         )

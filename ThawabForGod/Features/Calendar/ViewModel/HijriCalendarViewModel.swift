@@ -123,6 +123,20 @@ final class HijriCalendarViewModel {
     /// The Gregorian day-of-month, for the small number under a Hijri one.
     func gregorianDayNumber(_ day: Date) -> Int { gregorian.component(.day, from: day) }
 
+    /// Whether the pager is on the month that holds today — the Today button is only needed when
+    /// it is not.
+    var isShowingCurrentMonth: Bool {
+        visibleMonth == calendar.monthKey(containing: today)
+    }
+
+    /// The first and last civil days of a month, for the Gregorian span under its name.
+    func gregorianSpan(of key: HijriMonthKey) -> (first: Date, last: Date)? {
+        guard let grid = grid(for: key), let first = grid.days.first, let last = grid.days.last else { return nil }
+        return (first.gregorian, last.gregorian)
+    }
+
+    var gregorianCalendar: Calendar { gregorian }
+
     func hijriDate(of day: Date) -> HijriDate {
         hijriDates.hijriComponents(for: day)
     }

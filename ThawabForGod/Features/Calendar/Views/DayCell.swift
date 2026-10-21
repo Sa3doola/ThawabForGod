@@ -17,11 +17,13 @@ struct DayCell: View {
     let isToday: Bool
     let isSelected: Bool
     let showGregorian: Bool
+    let rowHeight: CGFloat
     let accessibilityLabel: String
     let select: () -> Void
 
     @Environment(\.theme) private var theme
     @Environment(LocalizationManager.self) private var l10n
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
 
@@ -32,7 +34,9 @@ struct DayCell: View {
                     .appFont(.body, weight: isToday ? .semibold : .regular)
                     .foregroundStyle(isToday ? theme.background : theme.textPrimary)
 
-                if showGregorian {
+                // Dropped at accessibility sizes rather than left to truncate: the Hijri number is
+                // the cell's job, and the Gregorian one is only worth drawing while it fits.
+                if showGregorian && !dynamicTypeSize.isAccessibilitySize {
                     Text(l10n.string(gregorianNumber, grouped: false))
                         .appFont(.caption)
                         .foregroundStyle(isToday ? theme.background.opacity(0.85) : theme.textSecondary)
@@ -40,7 +44,7 @@ struct DayCell: View {
 
                 dot
             }
-            .frame(maxWidth: .infinity, minHeight: 52)
+            .frame(maxWidth: .infinity, minHeight: rowHeight)
             .background { if isToday { shape.fill(theme.accent) } }
             .overlay { if isSelected { shape.strokeBorder(theme.accent, lineWidth: 2) } }
             .contentShape(shape)

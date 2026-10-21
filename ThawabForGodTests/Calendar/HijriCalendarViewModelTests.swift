@@ -59,6 +59,23 @@ struct HijriCalendarViewModelTests {
         #expect(model.hijriDate(of: model.selectedDay).day == 7)
     }
 
+    @Test func todayIsOnlyNeededAwayFromTheCurrentMonth() {
+        let model = makeViewModel()
+        #expect(model.isShowingCurrentMonth)
+
+        model.step(by: 1)
+        #expect(!model.isShowingCurrentMonth)
+
+        model.goToToday()
+        #expect(model.isShowingCurrentMonth)
+    }
+
+    @Test func spanOfAMonthCoversItsFirstAndLastCivilDay() throws {
+        let span = try #require(makeViewModel().gregorianSpan(of: HijriMonthKey(year: 1447, month: .muharram)))
+        #expect(span.first == date(2025, 6, 26))
+        #expect(span.last == date(2025, 7, 25))
+    }
+
     @Test func revealingADayBringsItsMonthIntoView() {
         let model = makeViewModel()
 
@@ -218,5 +235,48 @@ struct HijriOffsetWiringTests {
         // Opening it again replaces rather than stacks.
         container.open(DeepLink.calendar)
         #expect(container.homeCoordinator.path.count == 1)
+    }
+}
+
+@MainActor
+struct CalendarPolishTests {
+
+    private static var gregorian: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        return calendar
+    }
+
+    private func date(_ y: Int, _ m: Int, _ d: Int) -> Date {
+        Self.gregorian.date(from: DateComponents(year: y, month: m, day: d))!
+    }
+
+    private func text(_ first: Date, _ last: Date) -> String {
+        GregorianMonthSpan.text(
+            first: first, last: last, calendar: Self.gregorian,
+            monthName: { "m\(Self.gregorian.component(.month, from: $0))" },
+            year: { "y\($0)" }
+        )
+    }
+
+    @Test func spanNamesOneMonthTwoMonthsOrTwoYears() {
+        #expect(text(date(2026, 10, 3), date(2026, 10, 30)) == "m10 y2026")
+        #expect(text(date(2026, 10, 12), date(2026, 11, 10)) == "m10 – m11 y2026")
+        #expect(text(date(2026, 12, 20), date(2027, 1, 18)) == "m12 y2026 – m1 y2027")
+    }
+
+    @Test func spanIsInArabicWithArabicIndicDigits() {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ar")
+        formatter.calendar = Self.gregorian
+        formatter.timeZone = .gmt
+        formatter.setLocalizedDateFormatFromTemplate("LLLL")
+
+        let line = GregorianMonthSpan.text(
+            first: date(2026, 10, 12), last: date(2026, 11, 10), calendar: Self.gregorian,
+            monthName: formatter.string(from:),
+            year: { LocaleNumberFormattingService().string(from: $0, grouped: false, system: .arabicIndic) }
+        )
+        #expect(line == "أكتوبر – نوفمبر ٢٠٢٦")
     }
 }

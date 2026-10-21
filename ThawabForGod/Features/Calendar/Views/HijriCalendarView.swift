@@ -67,10 +67,18 @@ struct HijriCalendarView: View {
             Button {
                 isPickingMonth = true
             } label: {
-                let key = viewModel.visibleMonth
-                Text("\(l10n.string(key.month.labelKey)) \(l10n.string(key.year, grouped: false))")
-                    .appFont(.headline)
-                    .foregroundStyle(theme.textPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    let key = viewModel.visibleMonth
+                    Text("\(l10n.string(key.month.labelKey)) \(l10n.string(key.year, grouped: false))")
+                        .appFont(.headline)
+                        .foregroundStyle(theme.textPrimary)
+
+                    if viewModel.showGregorian, let span = gregorianSpan(of: key) {
+                        Text(span)
+                            .appFont(.caption)
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
             }
             .buttonStyle(.plain)
 
@@ -91,6 +99,24 @@ struct HijriCalendarView: View {
         .foregroundStyle(theme.accent)
     }
 
+    /// `October – November 2026`, in the app's language and digits.
+    private func gregorianSpan(of key: HijriMonthKey) -> String? {
+        guard let span = viewModel.gregorianSpan(of: key) else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = l10n.language.locale
+        formatter.calendar = viewModel.gregorianCalendar
+        formatter.timeZone = viewModel.gregorianCalendar.timeZone
+        formatter.setLocalizedDateFormatFromTemplate("LLLL")
+
+        return GregorianMonthSpan.text(
+            first: span.first,
+            last: span.last,
+            calendar: viewModel.gregorianCalendar,
+            monthName: formatter.string(from:),
+            year: { l10n.string($0, grouped: false) }
+        )
+    }
+
     private var weekdayRow: some View {
         HStack(spacing: 0) {
             ForEach(viewModel.columnWeekdays, id: \.self) { weekday in
@@ -106,8 +132,11 @@ struct HijriCalendarView: View {
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
-            Button(l10n.string(.calendarToday)) { viewModel.goToToday() }
+        // Only when there is somewhere to come back from.
+        if !viewModel.isShowingCurrentMonth {
+            ToolbarItem(placement: .primaryAction) {
+                Button(l10n.string(.calendarToday)) { viewModel.goToToday() }
+            }
         }
 
         ToolbarItem(placement: .primaryAction) {
