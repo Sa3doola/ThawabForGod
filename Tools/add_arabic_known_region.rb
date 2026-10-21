@@ -7,11 +7,11 @@
 #
 #     ruby Tools/add_arabic_known_region.rb
 #
-# Why (docs/quran-migration/BUGS.md, B7): the String Catalog ships Arabic strings without the region
-# being declared, so iOS picks Arabic and mirrors. A sandboxed Mac app launched in Arabic got the
-# Arabic text but an unmirrored window (sidebar, toolbar and the Quran's side panel on the left-to-right
-# side). AppKit decides the window's direction from the *project's* declared localisations, so the
-# region has to be declared. It is a script because CLAUDE.md forbids hand-editing `project.pbxproj`;
+# Why (docs/quran-migration/BUGS.md, B7): the plan asked for `ar` among the project's declared
+# regions, and it is harmless. It does NOT make the Mac window mirror: with it declared, AppKit still
+# reports a left-to-right `NSApp.userInterfaceLayoutDirection` under `-AppleLanguages (ar)`. The Mac
+# gets its mirroring from `LocalizedModifier` instead. It is a script because CLAUDE.md forbids
+# hand-editing `project.pbxproj`;
 # the `xcodeproj` gem writes the same structures Xcode does. Idempotent.
 
 require 'xcodeproj'

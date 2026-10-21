@@ -90,16 +90,17 @@ final class QuranSidePanelTests: XCTestCase {
             "-quranResetSettings", "YES", "-quranFollowSystem", "NO", "-ApplePersistenceIgnoreState", "YES",
         ] + panelLaunch
         app.launch()
-        waitForReader(app)
-
+        // Not `waitForReader`: in the mirrored Mac window the reader's toolbar items collapse into
+        // the "more toolbar items" overflow (BUGS.md B17), so the Library button is not in the tree.
         let panel = app.element(id: "quran.sidePanel")
-        XCTAssertTrue(panel.waitForExistence(timeout: 15), "the side panel column")
-        // The column follows the window's layout direction. If the Mac window itself is not
-        // mirrored in Arabic (the sidebar stays on the left), there is nothing to mirror: BUGS.md B7.
+        XCTAssertTrue(panel.waitForExistence(timeout: 30), "the side panel column")
+        XCTAssertFalse(app.readerRetry.exists, "the Quran data loaded (no Try again)")
+        // The Mac's window chrome is not mirrored, but the app's content follows `AppLanguage`
+        // (`LocalizedModifier`): the sidebar is on the right and the panel, trailing, on the left.
         let window = app.windows.firstMatch.frame
         let sidebar = app.element(id: "app.sidebar.quran")
-        try XCTSkipUnless(sidebar.waitForExistence(timeout: 10) && sidebar.frame.midX > window.midX,
-                          "the Mac window is not mirrored in Arabic (B7), so the panel stays on the right")
+        XCTAssertTrue(sidebar.waitForExistence(timeout: 10), "the sidebar")
+        XCTAssertGreaterThan(sidebar.frame.midX, window.midX, "Arabic: the sidebar is on the right")
         XCTAssertLessThan(panel.frame.maxX, window.midX, "Arabic: the trailing edge is the left")
     }
 }

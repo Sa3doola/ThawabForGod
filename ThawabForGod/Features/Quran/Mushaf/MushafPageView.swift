@@ -26,6 +26,7 @@ struct MushafPageView: View {
     @Environment(LocalizationManager.self) private var l10n
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.readingPalette) private var palette
+    @Environment(\.mushafChromeToggle) private var chromeToggle
 
     /// Side margin of the page; the outer one holds the margin labels.
     static let sideMargin: CGFloat = 14
@@ -111,6 +112,11 @@ struct MushafPageView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 6)
             .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+            // The footer owns its own strip. A page font's glyph boxes are taller than the printed
+            // line, so without a hit shape of its own the last line's words answered taps down here
+            // and a tap on the footer selected an ayah (BUGS.md B14).
+            .contentShape(.rect)
+            .onTapGesture { chromeToggle?.toggle() }
     }
 }
 

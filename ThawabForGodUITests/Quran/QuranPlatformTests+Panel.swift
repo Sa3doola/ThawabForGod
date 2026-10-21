@@ -133,7 +133,6 @@ extension QuranPlatformTests {
     /// text unchanged; on iOS the runner cannot read it without the system's paste prompt, so the
     /// flow stops at the tap (the manual check is in the plan).
     func testPanelCopy() throws {
-        try XCTSkipIf(TestPlatform.isMac, "Mac, unresolved (BUGS.md B11): the pasteboard text differs from the panel's Arabic value under XCUITest; passes on iOS")
         let app = XCUIApplication()
         app.launchPlatform(Self.panelLaunchOptions)
         waitForReader(app)
@@ -149,7 +148,10 @@ extension QuranPlatformTests {
         #if os(macOS)
         let copied = NSPasteboard.general.string(forType: .string) ?? ""
         XCTAssertFalse(text.isEmpty, "the panel's Arabic text is readable")
-        XCTAssertTrue(copied.contains(text), "the pasteboard carries the panel's Arabic text unchanged")
+        // What the panel draws is the stored text, a no-break space and the end marker; Copy puts
+        // the stored text on the pasteboard (never the drawn result), then the reference.
+        let stored = String(text.split(separator: "\u{00A0}").first ?? Substring(text))
+        XCTAssertTrue(copied.hasPrefix(stored), "the pasteboard carries the panel's Arabic text unchanged")
         #endif
     }
 

@@ -96,6 +96,11 @@ private struct QuranSettingsHeader: View {
             Text(title)
                 .appFont(.headline)
                 .foregroundStyle(theme.textPrimary)
+                // Room either side for Done, so a long title or a large text size shrinks rather
+                // than running under it.
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(.horizontal, 72)
                 .accessibilityAddTraits(.isHeader)
             HStack {
                 Spacer()

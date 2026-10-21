@@ -784,7 +784,10 @@ extension XCUIApplication {
         #if os(macOS)
         toolbars.buttons.element(boundBy: 0).click()
         #else
-        navigationBars.buttons.element(boundBy: 0).tap()
+        // The Duo draws the back button outside the navigation bar element; it is still the
+        // system's `BackButton` (BUGS.md B15).
+        let inBar = navigationBars.buttons.element(boundBy: 0)
+        if inBar.exists { inBar.tap() } else { buttons["BackButton"].tap() }
         #endif
     }
 
