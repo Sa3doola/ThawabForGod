@@ -755,4 +755,16 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case eventNoteMoonSighting = "event_note_moon_sighting"
     case eventNoteObservanceVaries = "event_note_observance_varies"
     case eventNoteLastTenNights = "event_note_last_ten_nights"
+
+    case moonPhaseNewMoon = "moon_phase_new_moon"
+    case moonPhaseWaxingCrescent = "moon_phase_waxing_crescent"
+    case moonPhaseFirstQuarter = "moon_phase_first_quarter"
+    case moonPhaseWaxingGibbous = "moon_phase_waxing_gibbous"
+    case moonPhaseFullMoon = "moon_phase_full_moon"
+    case moonPhaseWaningGibbous = "moon_phase_waning_gibbous"
+    case moonPhaseLastQuarter = "moon_phase_last_quarter"
+    case moonPhaseWaningCrescent = "moon_phase_waning_crescent"
+    case moonAccessibilityLabel = "moon_accessibility_label"
+
+    case moonPercentValue = "moon_percent_value"
 }
