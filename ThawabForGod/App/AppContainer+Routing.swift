@@ -31,6 +31,15 @@ extension AppContainer {
             router.selectedTab = .home
             homeCoordinator.show(.names)
 
+        case .hijriCalendar(let day):
+            router.selectedTab = .home
+            // Replace rather than stack: opening the calendar twice should not need two taps of
+            // Back, and a day asked for from outside should land on the calendar, not under it.
+            homeCoordinator.popToRoot()
+            let calendar = hijriCalendarViewModel()
+            if let day { calendar.reveal(day) } else { calendar.goToToday() }
+            homeCoordinator.show(.hijriCalendar)
+
         case .adhkar(let categoryID):
             router.selectedTab = .adhkar
             adhkarCoordinator.open(categoryID: categoryID)

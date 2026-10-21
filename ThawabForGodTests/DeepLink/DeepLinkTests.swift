@@ -27,6 +27,7 @@ struct DeepLinkTests {
         .qibla,
         .tasbih,
         .names,
+        .calendar,
         .adhkar,
         .adhkarCategory(.morning),
         .adhkarCategory(.evening),

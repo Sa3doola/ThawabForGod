@@ -21,6 +21,9 @@ nonisolated enum AppRoute: Hashable, Sendable {
     case tasbih
     case names
 
+    /// The Islamic calendar, pushed onto Home's stack, with this civil day selected when given.
+    case hijriCalendar(selecting: Date?)
+
     /// One chapter of the adhkar, by slug.
     ///
     /// A `String` rather than an `AdhkarCategory`, because the chapters are corpus rows now and

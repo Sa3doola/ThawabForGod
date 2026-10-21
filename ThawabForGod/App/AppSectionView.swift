@@ -51,7 +51,8 @@ struct AppSectionView: View {
             // The one layer entitled to know that a tap on Home can land in another section.
             open: container.open,
             customizationViewModel: container.homeCustomizationViewModel(),
-            prayerTimesViewModel: container.prayerTimesSheetViewModel()
+            prayerTimesViewModel: container.prayerTimesSheetViewModel(),
+            calendarViewModel: container.hijriCalendarViewModel()
         )
     }
 

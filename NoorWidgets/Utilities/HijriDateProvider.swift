@@ -18,9 +18,11 @@ struct HijriDateProvider: TimelineProvider {
     private let timeline: HijriDateTimeline
 
     init() {
+        let store = UserDefaultsSettingsStore(defaults: SharedDefaults.store)
         timeline = HijriDateTimeline(
-            hijriDates: HijriDateService(),
-            settingsStore: UserDefaultsSettingsStore(defaults: SharedDefaults.store)
+            // The reader's day offset, from the App Group, so this widget and the calendar agree.
+            hijriDates: HijriDateService(dayOffset: { HijriDayOffset.current(in: store) }),
+            settingsStore: store
         )
     }
 

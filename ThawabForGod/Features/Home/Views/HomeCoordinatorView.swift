@@ -38,6 +38,8 @@ struct HomeCoordinatorView: View {
     /// The day sheet, which Home puts up over itself.
     let prayerTimesViewModel: PrayerTimesSheetViewModel
 
+    let calendarViewModel: HijriCalendarViewModel
+
     @Environment(LocalizationManager.self) private var l10n
 
     var body: some View {
@@ -74,6 +76,9 @@ struct HomeCoordinatorView: View {
 
         case .customize:
             HomeCustomizationView(viewModel: customizationViewModel)
+
+        case .hijriCalendar:
+            HijriCalendarView(viewModel: calendarViewModel)
         }
     }
 

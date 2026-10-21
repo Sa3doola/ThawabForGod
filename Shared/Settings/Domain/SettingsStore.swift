@@ -106,6 +106,10 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     // Hijri calendar: how many days to shift every Hijri date by (−2…+2), so the calculated
     // Umm al-Qura date can be matched to the reader's local moon sighting.
     case hijriDayOffset
+    // Whether each day in the Hijri calendar also shows its Gregorian number (unset = off), and
+    // which weekday the grid starts on — a `WeekStart` raw value, unset meaning the locale's.
+    case showGregorianInCalendar
+    case calendarWeekStart
 }
 
 /// Small key/value store for user preferences.

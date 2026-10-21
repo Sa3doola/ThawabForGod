@@ -38,6 +38,7 @@ struct DeepLinkRoutingTests {
             (.qibla, .home),
             (.tasbih, .home),
             (.names, .home),
+            (.calendar, .home),
             (.adhkar, .adhkar),
             (.adhkarCategory(.evening), .adhkar),
             (.quran, .quran),

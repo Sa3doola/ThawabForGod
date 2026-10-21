@@ -36,6 +36,9 @@ nonisolated enum DeepLink: Hashable, Sendable {
     case tasbih
     case names
 
+    /// The Islamic calendar: `noor://calendar`. Additive, like every case here.
+    case calendar
+
     /// The adhkar list, at its categories.
     case adhkar
 
@@ -92,6 +95,7 @@ nonisolated extension DeepLink {
         case .qibla: "qibla"
         case .tasbih: "tasbih"
         case .names: "names"
+        case .calendar: "calendar"
         case .adhkar, .adhkarCategory: "adhkar"
         case .quran, .quranVerse, .quranPage: "quran"
         case .hadith: "hadith"
@@ -155,6 +159,7 @@ nonisolated extension DeepLink {
         case "qibla": self = .qibla
         case "tasbih": self = .tasbih
         case "names": self = .names
+        case "calendar": self = .calendar
         case "quran":
             // Anything that is not a well-formed verse or page is still "the Quran", as a
             // malformed adhkar link is still "the adhkar": `noor://quran` must keep working.

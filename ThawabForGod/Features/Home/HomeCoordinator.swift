@@ -28,6 +28,8 @@ final class HomeCoordinator {
         /// pushes the same screen onto its own stack — two doors to a screen that edits what is
         /// on the other side of one of them, which is the case where a second door earns itself.
         case customize
+        /// The Islamic calendar — a visit, so a push here rather than a tab of its own.
+        case hijriCalendar
     }
 
     var path = NavigationPath()

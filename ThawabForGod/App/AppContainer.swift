@@ -293,7 +293,7 @@ final class AppContainer {
         notificationService: (any NotificationService)? = nil,
         tipsService: any TipsServicing = TipsService(),
         widgets: any WidgetRefreshing = WidgetCenterRefresher(),
-        hijriDates: any HijriDateServicing = HijriDateService(),
+        hijriDates: (any HijriDateServicing)? = nil,
         corpus: any CorpusDatabaseProviding = CorpusDatabase(name: "corpus"),
         hadithCorpus: any CorpusDatabaseProviding = CorpusDatabase(name: "hadith"),
         quranDatabase: QuranDatabase = .bundled(),
@@ -310,7 +310,9 @@ final class AppContainer {
         registersBackgroundRefresh: Bool = true
     ) {
         self.tipsService = tipsService
-        self.hijriDates = hijriDates
+        // Read through the same store the widget reads (the App Group suite), so the Lock Screen
+        // date, Home's header and the calendar all shift together when the offset is changed.
+        self.hijriDates = hijriDates ?? HijriDateService(dayOffset: { HijriDayOffset.current(in: settingsStore) })
         self.settingsStore = settingsStore
         self.numberFormatting = numberFormatting
         self.timeFormatting = timeFormatting
@@ -816,6 +818,41 @@ final class AppContainer {
     /// made through one is on screen when the other is opened. It calls back into Home's view
     /// model after each write, which is what makes the screen behind follow along rather than
     /// waiting to be re-entered.
+    private var cachedHijriCalendarViewModel: HijriCalendarViewModel?
+
+    /// The Islamic calendar's view model, built on first use and kept so the month the reader was
+    /// on is still showing when they come back to it.
+    ///
+    /// The month grids, the occasions and Home's header all read one offset from `settingsStore`
+    /// — the App Group suite the widget reads too — so every surface shows the same date.
+    func hijriCalendarViewModel() -> HijriCalendarViewModel {
+        if let cachedHijriCalendarViewModel {
+            return cachedHijriCalendarViewModel
+        }
+
+        let store = settingsStore
+        let offset: @Sendable () -> Int = { HijriDayOffset.current(in: store) }
+        let months = HijriCalendarService(dayOffset: offset)
+        let home = homeViewModel()
+        let calculation = calculationSettings()
+        let viewModel = HijriCalendarViewModel(
+            calendar: months,
+            occasions: ResolveOccasionDatesUseCase(
+                repository: BundledOccasionsRepository(),
+                calendar: months,
+                dayOffset: offset
+            ),
+            moon: GetMoonInfoUseCase(moon: AstronomicalMoonCalculator(), schedule: getPrayerSchedule),
+            hijriDates: hijriDates,
+            settingsStore: settingsStore,
+            coordinates: { home.coordinates },
+            config: { calculation.config },
+            clock: clock
+        )
+        cachedHijriCalendarViewModel = viewModel
+        return viewModel
+    }
+
     func homeCustomizationViewModel() -> HomeCustomizationViewModel {
         if let cachedHomeCustomizationViewModel {
             return cachedHomeCustomizationViewModel

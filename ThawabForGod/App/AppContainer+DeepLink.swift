@@ -43,6 +43,9 @@ extension AppContainer {
         case .names:
             open(AppRoute.names)
 
+        case .calendar:
+            open(AppRoute.hijriCalendar(selecting: nil))
+
         case .adhkar:
             router.selectedTab = .adhkar
             adhkarCoordinator.closeCategory()
