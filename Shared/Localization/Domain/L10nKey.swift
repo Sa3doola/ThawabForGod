@@ -886,4 +886,6 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case homeCalendarTodayLine = "home_calendar_today_line"
     case homeCalendarNextLine = "home_calendar_next_line"
     case homeCalendarHint = "home_calendar_hint"
+
+    case homeCalendarMoonLine = "home_calendar_moon_line"
 }

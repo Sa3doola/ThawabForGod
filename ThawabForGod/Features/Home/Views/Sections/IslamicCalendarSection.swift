@@ -29,6 +29,7 @@ struct IslamicCalendarSection: View {
         )
         let moon = calendar.moon(on: today)
         let phase = l10n.string(moon.phase.labelKey)
+        let percent = l10n.string(.moonPercentValue, l10n.string(Int((moon.illuminatedFraction * 100).rounded())))
 
         Button {
             open(.hijriCalendar(selecting: nil))
@@ -47,6 +48,10 @@ struct IslamicCalendarSection: View {
                         .appFont(.subheadline)
                         .foregroundStyle(theme.textSecondary)
 
+                    Text(l10n.string(.homeCalendarMoonLine, phase, percent))
+                        .appFont(.footnote)
+                        .foregroundStyle(theme.textSecondary)
+
                     if let line = occasionLine(today) {
                         Text(line)
                             .appFont(.footnote, weight: .medium)
@@ -57,25 +62,19 @@ struct IslamicCalendarSection: View {
 
                 Spacer(minLength: 8)
 
-                VStack(spacing: 4) {
-                    MoonView(
-                        illuminatedFraction: moon.illuminatedFraction,
-                        isWaxing: moon.isWaxing,
-                        hemisphere: calendar.hemisphere,
-                        accessibilityText: phase
-                    )
-                    .frame(width: 44, height: 44)
-                    .padding(6)
-                    .background { DayRampBackground(stop: DayRamp.stop(for: .isha)) }
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-                    Text(phase)
-                        .appFont(.caption)
-                        .foregroundStyle(theme.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
+                MoonView(
+                    illuminatedFraction: moon.illuminatedFraction,
+                    isWaxing: moon.isWaxing,
+                    hemisphere: calendar.hemisphere,
+                    accessibilityText: l10n.string(.moonAccessibilityLabel, phase, percent)
+                )
+                .frame(width: 52, height: 52)
+                .padding(6)
+                .background { DayRampBackground(stop: DayRamp.stop(for: .isha)) }
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
             .appCard()
         }
         .buttonStyle(.plain)
@@ -85,16 +84,19 @@ struct IslamicCalendarSection: View {
         .accessibilityIdentifier("home.islamicCalendar")
     }
 
-    /// An occasion that falls today, or failing that the next one and how far off it is.
+    /// Today's occasion always; the next one only when it is close enough to be news.
     private func occasionLine(_ today: Date) -> String? {
-        if let now = calendar.occasions(on: today).first(where: { !$0.isRecurring }) {
-            return l10n.string(.homeCalendarTodayLine, l10n.string(now.nameKey))
+        switch calendar.cardOccasion(lookAheadDays: Self.lookAheadDays) {
+        case .today(let occasion):
+            l10n.string(.homeCalendarTodayLine, l10n.string(occasion.nameKey))
+        case .upcoming(let occasion, let days):
+            l10n.string(.homeCalendarNextLine, l10n.string(occasion.nameKey), l10n.daysAwayString(days))
+        case nil:
+            nil
         }
-        guard let next = calendar.upcoming(limit: 1).first else { return nil }
-        return l10n.string(
-            .homeCalendarNextLine,
-            l10n.string(next.occasion.nameKey),
-            l10n.daysAwayString(calendar.daysAway(to: next))
-        )
     }
+
+    /// How far ahead the card is willing to look. Further than a week it stops being news and
+    /// becomes clutter; the calendar screen has the full list.
+    static let lookAheadDays = 7
 }

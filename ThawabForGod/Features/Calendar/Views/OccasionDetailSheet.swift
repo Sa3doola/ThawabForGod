@@ -98,7 +98,7 @@ struct OccasionDetailSheet: View {
                 .appFont(.footnote, weight: .medium)
                 .foregroundStyle(theme.textSecondary)
             if let line = item.dateLine {
-                Text("·").foregroundStyle(theme.textSecondary)
+                Text(verbatim: "·").foregroundStyle(theme.textSecondary)
                 Text(line)
                     .appFont(.footnote)
                     .foregroundStyle(theme.textSecondary)

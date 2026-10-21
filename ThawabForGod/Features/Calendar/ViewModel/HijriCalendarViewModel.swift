@@ -14,6 +14,20 @@ nonisolated struct DayMarker: Equatable, Sendable {
     var hasRecurring = false
 }
 
+/// The one occasion Home's card mentions.
+nonisolated enum CardOccasion: Equatable, Sendable {
+    case today(IslamicOccasion)
+    case upcoming(IslamicOccasion, days: Int)
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) {
+        case (.today(let a), .today(let b)): a.id == b.id
+        case (.upcoming(let a, let x), .upcoming(let b, let y)): a.id == b.id && x == y
+        default: false
+        }
+    }
+}
+
 /// State for the Hijri calendar screen: which month is showing, which day is selected, and what
 /// each day carries.
 ///
@@ -177,6 +191,17 @@ final class HijriCalendarViewModel {
             from: today,
             limit: limit
         )
+    }
+
+    /// An occasion falling today (a range under way counts) — always — or else the next one, but
+    /// only within `lookAheadDays`. Recurring fasts never appear: two a week would always win.
+    func cardOccasion(lookAheadDays: Int) -> CardOccasion? {
+        if let now = occasions(on: today).first(where: { !$0.isRecurring }) {
+            return .today(now)
+        }
+        guard let next = upcoming(limit: 1).first else { return nil }
+        let days = daysAway(to: next)
+        return days <= lookAheadDays ? .upcoming(next.occasion, days: days) : nil
     }
 
     /// Every one-off occasion of a Hijri year, earliest first. Recurring ones are left out: the
