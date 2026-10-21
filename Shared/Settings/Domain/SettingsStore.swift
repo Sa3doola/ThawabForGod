@@ -102,6 +102,10 @@ nonisolated enum SettingsKey: String, CaseIterable, Sendable {
     // menu bar is permanently crowded and who would rather choose once than watch the item grow
     // back every time an app quits.
     case menuBarStatusStyle
+
+    // Hijri calendar: how many days to shift every Hijri date by (−2…+2), so the calculated
+    // Umm al-Qura date can be matched to the reader's local moon sighting.
+    case hijriDayOffset
 }
 
 /// Small key/value store for user preferences.

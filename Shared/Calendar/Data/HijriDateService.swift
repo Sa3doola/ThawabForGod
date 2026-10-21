@@ -25,22 +25,29 @@ nonisolated struct HijriDateService: HijriDateServicing {
 
     private let events: [IslamicEvent]
 
+    /// Read on every call rather than captured once, so a change in Settings shows through a
+    /// service that was built before it.
+    private let dayOffset: @Sendable () -> Int
+
     /// - Parameters:
     ///   - timeZone: defaults to the device's, and tracks it if the user travels.
     ///   - events: the fixed-date table. Injected so tests can supply their own instead of
     ///     depending on what is currently in the bundle.
     init(
         timeZone: TimeZone = .autoupdatingCurrent,
-        events: [IslamicEvent] = IslamicEventTable.bundled()
+        events: [IslamicEvent] = IslamicEventTable.bundled(),
+        dayOffset: @escaping @Sendable () -> Int = { 0 }
     ) {
         var calendar = Calendar(identifier: .islamicUmmAlQura)
         calendar.timeZone = timeZone
         self.calendar = calendar
         self.events = events
+        self.dayOffset = dayOffset
     }
 
     func hijriComponents(for date: Date) -> HijriDate {
-        let components = calendar.dateComponents([.day, .month, .year], from: date)
+        let shifted = calendar.date(byAdding: .day, value: HijriDayOffset.clamp(dayOffset()), to: date) ?? date
+        let components = calendar.dateComponents([.day, .month, .year], from: shifted)
 
         guard let day = components.day,
               let month = components.month.flatMap(HijriMonth.init(rawValue:)),
