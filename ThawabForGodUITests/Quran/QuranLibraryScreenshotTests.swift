@@ -29,20 +29,22 @@ final class QuranLibraryScreenshotTests: XCTestCase {
             let app = XCUIApplication()
             app.launchQuranLibrary(.surah, options(appearance.style))
             waitForLibrary(app)
-            XCTAssertTrue(app.surahRow(1).waitForExistence(timeout: 10))
+            // A Continue reading bar may sit above the first row (the position outlives launches),
+            // so the first row is scrolled to rather than assumed to be at the top.
+            scrollToLibraryRow(prefix: "surah", 1, in: app)
             captureScreenshot(app, screen: "library-surah", theme: appearance.theme)
 
             app.selectLibraryTab(.juz)
-            XCTAssertTrue(app.juzRow(1).waitForExistence(timeout: 10))
+            scrollToLibraryRow(prefix: "juz", 1, in: app)
             captureScreenshot(app, screen: "library-juz", theme: appearance.theme)
 
             app.selectLibraryTab(.hizb)
-            XCTAssertTrue(app.hizbRow(1).waitForExistence(timeout: 10))
+            scrollToLibraryRow(prefix: "hizb", 1, in: app)
             captureScreenshot(app, screen: "library-hizb", theme: appearance.theme)
 
             if app.libraryHasPages {
                 app.selectLibraryTab(.page)
-                XCTAssertTrue(app.pageCell(1).waitForExistence(timeout: 10))
+                scrollToLibraryRow(prefix: "page", 1, in: app)
                 captureScreenshot(app, screen: "library-page", theme: appearance.theme)
             }
             app.terminate()

@@ -39,7 +39,7 @@ extension XCUIApplication {
         launchScripted(["-quranLibrary", tab.rawValue] + options, language: language)
     }
 
-    private func launchScripted(_ options: [String], language: TestLanguage) {
+    fileprivate func launchScripted(_ options: [String], language: TestLanguage) {
         launchArguments = [
             "-AppleLanguages", language.languages, "-AppleLocale", language.locale,
             "-quranResetSettings", "YES", "-quranFollowSystem", "NO",
@@ -64,6 +64,181 @@ extension XCUIApplication {
         #else
         navigationBars.staticTexts[title]
         #endif
+    }
+}
+
+// MARK: - Platform runs (QuranPlatformTests)
+
+/// The appearance of a launch.
+enum TestAppearance {
+    case light, dark
+
+    /// `-AppleInterfaceStyle Dark` for dark; nothing for light (the launch pins follow-system off).
+    var arguments: [String] {
+        switch self {
+        case .light: []
+        case .dark: ["-AppleInterfaceStyle", "Dark"]
+        }
+    }
+}
+
+/// What this run was asked for through the runner's environment. `xcodebuild` strips the
+/// `TEST_RUNNER_` prefix: `TEST_RUNNER_QURAN_DATA=public`, `TEST_RUNNER_QURAN_LANGUAGE=ar`,
+/// `TEST_RUNNER_QURAN_APPEARANCE=dark`. Unset means full data, English, light.
+enum TestRun {
+    private static var environment: [String: String] { ProcessInfo.processInfo.environment }
+
+    /// `["-quranData", "public"]` when the run forces the public database, otherwise empty.
+    static var dataArguments: [String] {
+        environment["QURAN_DATA"]?.lowercased() == "public" ? ["-quranData", "public"] : []
+    }
+
+    static var language: TestLanguage {
+        environment["QURAN_LANGUAGE"]?.lowercased() == "ar" ? .arabic : .english
+    }
+
+    static var appearance: TestAppearance {
+        environment["QURAN_APPEARANCE"]?.lowercased() == "dark" ? .dark : .light
+    }
+
+    static var isPublicData: Bool { !dataArguments.isEmpty }
+}
+
+/// The five sections; the tab index is the declaration order (`AppTab.visible`), the raw value is
+/// the sidebar row's identifier suffix (`app.sidebar.<raw>`).
+enum AppSection: String {
+    case home, quran, hadith, adhkar, settings
+
+    var index: Int {
+        switch self {
+        case .home: 0
+        case .quran: 1
+        case .hadith: 2
+        case .adhkar: 3
+        case .settings: 4
+        }
+    }
+}
+
+extension XCUIApplication {
+    /// Launches as `launchQuran` does, plus the run's data mode and appearance, and the run's
+    /// language unless `language` asks for Arabic. `options` must name a reader target.
+    func launchPlatform(_ options: [String], language: TestLanguage = .english) {
+        launchScripted(options + TestRun.dataArguments + TestRun.appearance.arguments,
+                       language: language == .english ? TestRun.language : language)
+    }
+
+    /// `launchQuranLibrary` with the run's data mode, appearance and language.
+    func launchPlatformLibrary(_ tab: LibraryTab = .surah, _ options: [String] = [], language: TestLanguage = .english) {
+        launchPlatform(["-quranLibrary", tab.rawValue] + options, language: language)
+    }
+
+    /// Whether the reader offers a way to switch display mode: the toggle itself, or the More menu
+    /// that holds it at compact width. False in the public build, which has one mode.
+    var hasDisplayModeControl: Bool {
+        readerModeToggle.exists || element(id: "quran.reader.more").exists
+    }
+
+    /// Switches Mushaf <-> separated. At compact width the toggle is inside the More menu, so that
+    /// is opened first when it is there.
+    func toggleDisplayMode() {
+        tapReaderAction("quran.reader.modeToggle")
+    }
+
+    /// Opens the reader settings sheet, through the More menu at compact width.
+    func openReaderSettings() {
+        tapReaderAction("quran.reader.settings")
+    }
+
+    private func tapReaderAction(_ identifier: String) {
+        let more = element(id: "quran.reader.more")
+        let action = element(id: identifier)
+        if more.waitForExistence(timeout: 2) {
+            more.tapOrClick()
+        }
+        if !action.waitForExistence(timeout: 10) {
+            XCTFail("the reader action \(identifier) exists")
+            return
+        }
+        action.tapOrClick()
+    }
+
+    /// Opens a URL in this app. If the system asks to confirm (an "Open" alert), taps it.
+    func openLink(_ string: String) {
+        guard let url = URL(string: string) else {
+            XCTFail("not a URL: \(string)")
+            return
+        }
+        open(url)
+        #if os(iOS)
+        let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
+        if alert.waitForExistence(timeout: 2) {
+            alert.buttons["Open"].tap()
+        }
+        #endif
+    }
+
+    /// Types a key chord into the app (⌘ by default).
+    func pressShortcut(_ key: String, _ modifiers: XCUIElement.KeyModifierFlags = .command) {
+        typeKey(key, modifierFlags: modifiers)
+    }
+}
+
+extension TestPlatform {
+    /// A Surface Duo simulator: the device name carries "Duo".
+    static var isFoldable: Bool {
+        (ProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] ?? "").contains("Duo")
+    }
+}
+
+extension XCTestCase {
+    /// Selects a section: the tab bar, the sidebar row, or (a compact window in landscape, the Duo)
+    /// the tab button found by its title. The logic of `QuranSectionSwitchTests`.
+    @MainActor
+    func selectSection(_ section: AppSection, in app: XCUIApplication) {
+        if app.appTabBar.waitForExistence(timeout: 2) {
+            selectTab(app.appTabBar.buttons.element(boundBy: section.index))
+        } else if !app.element(id: "app.sidebar.\(section.rawValue)").waitForExistence(timeout: 3) {
+            let button = app.buttons[section.rawValue.capitalized].firstMatch
+            XCTAssertTrue(button.waitForExistence(timeout: 10), "the tab button for \(section.rawValue)")
+            selectTab(button)
+        } else {
+            let row = app.element(id: "app.sidebar.\(section.rawValue)")
+            #if os(iOS)
+            for _ in 0..<3 {
+                row.tapOrClick()
+                let done = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: row)
+                if XCTWaiter().wait(for: [done], timeout: 3) == .completed { break }
+            }
+            XCTAssertTrue(row.isSelected, "the \(section.rawValue) section is selected")
+            #else
+            row.tapOrClick()
+            #endif
+        }
+    }
+
+    /// The surah names of the ayah elements on screen: each label's text before ", ayah ".
+    @MainActor
+    func onScreenSurahNames(in app: XCUIApplication) -> Set<String> {
+        Set(onScreenAyahLabels(in: app).compactMap { label in
+            label.range(of: ", ayah ").map { String(label[..<$0.lowerBound]) }
+        })
+    }
+
+    /// Swipes up (scrolls, on the Mac) until `element` exists and is hittable, at most `maxSwipes` times.
+    @MainActor
+    func scrollUntilHittable(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 8) -> Bool {
+        var swipes = 0
+        while !(element.exists && element.isHittable) {
+            guard swipes < maxSwipes else { return false }
+            #if os(macOS)
+            app.windows.firstMatch.scroll(byDeltaX: 0, deltaY: -300)
+            #else
+            app.windows.firstMatch.swipeUp()
+            #endif
+            swipes += 1
+        }
+        return true
     }
 }
 

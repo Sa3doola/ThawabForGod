@@ -21,11 +21,11 @@ final class QuranModeSwitchTests: XCTestCase {
         try requireMushafPages(app)
         XCTAssertTrue(waitUntilOnScreen(app.pageFooter(50), in: app, timeout: 15))
 
-        app.readerModeToggle.tapOrClick()
+        app.toggleDisplayMode()
         XCTAssertTrue(app.anyPageFooter.waitForNonExistence(timeout: 10), "separated mode has no footer")
         XCTAssertTrue(app.ayahElements.firstMatch.waitForExistence(timeout: 10), "ayah rows")
 
-        app.readerModeToggle.tapOrClick()
+        app.toggleDisplayMode()
         XCTAssertTrue(app.anyPageFooter.waitForExistence(timeout: 10), "the footer is back in Mushaf mode")
     }
 
@@ -62,7 +62,7 @@ final class QuranModeSwitchTests: XCTestCase {
         // page come *after* the new place only in the backward case, where they may legitimately show.
         let wentForward = isOnScreen(app.pageFooter(202), in: app)
 
-        app.readerModeToggle.tapOrClick()
+        app.toggleDisplayMode()
         XCTAssertTrue(app.anyPageFooter.waitForNonExistence(timeout: 10))
         let row = app.buttons.matching(NSPredicate(format: "label == %@", turnedOnly)).firstMatch
         XCTAssertTrue(waitUntilOnScreen(row, in: app, timeout: 15), "separated shows '\(turnedOnly)', an ayah of the new page")
@@ -88,7 +88,7 @@ final class QuranModeSwitchTests: XCTestCase {
         let onPage = Set((0..<app.ayahElements.count).map { app.ayahElements.element(boundBy: $0).label })
         XCTAssertFalse(onPage.isEmpty)
 
-        app.readerModeToggle.tapOrClick()
+        app.toggleDisplayMode()
         XCTAssertTrue(app.anyPageFooter.waitForNonExistence(timeout: 10))
         let first = app.ayahElements.firstMatch
         XCTAssertTrue(first.waitForExistence(timeout: 10))
@@ -101,7 +101,7 @@ final class QuranModeSwitchTests: XCTestCase {
         XCTAssertTrue(app.ayahElement(verse: 255).waitForExistence(timeout: 15))
         XCTAssertFalse(app.anyPageFooter.exists)
 
-        app.readerModeToggle.tapOrClick()
+        app.toggleDisplayMode()
         XCTAssertTrue(app.anyPageFooter.waitForExistence(timeout: 10), "Mushaf mode shows a page")
         XCTAssertTrue(app.ayahElement(verse: 255).waitForExistence(timeout: 10), "the page holds ayah 255")
     }

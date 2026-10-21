@@ -255,6 +255,16 @@ final class AppContainer {
     /// Built in `init`, not here: it applies a target to the reader before pushing it, so it is
     /// constructed over `quranReaderViewModel`.
     let quranCoordinator: QuranCoordinator
+
+    /// What the Quran menu and its shortcuts act on (see `QuranCommands`).
+    var quranCommandTarget: QuranCommandTarget {
+        QuranCommandTarget(
+            coordinator: quranCoordinator,
+            reader: quranReaderViewModel,
+            userData: quranUserData,
+            isSectionActive: { [router] in router.selectedTab == .quran }
+        )
+    }
     let hadithCoordinator = HadithCoordinator()
     let adhkarCoordinator = AdhkarCoordinator()
     let tasbihCoordinator = TasbihCoordinator()

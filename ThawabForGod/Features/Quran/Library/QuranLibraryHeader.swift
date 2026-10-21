@@ -51,6 +51,9 @@ struct QuranLibraryHeader: View {
             .autocorrectionDisabled()
             .submitLabel(.go)
             .onSubmit(submit)
+            // Explicit: on the Mac the field's label shows only as a placeholder, and the audit found
+            // the field with no description (M8).
+            .accessibilityLabel(Text(placeholder))
             .accessibilityIdentifier("quran.library.query")
             if !viewModel.query.isEmpty {
                 Button {

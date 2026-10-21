@@ -90,8 +90,8 @@ nonisolated enum QuranCommand: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// What a command does right now. Built once by the Quran section and published with
-/// `focusedSceneValue`, so the menu acts on the Quran only while the Quran is what is showing.
+/// What a command does right now. Built by `AppContainer.quranCommandTarget`; it checks that the
+/// Quran is the selected section, so the menu and the keys act on the Quran only while it is showing.
 @MainActor
 struct QuranCommandTarget {
     let coordinator: QuranCoordinator
@@ -177,16 +177,5 @@ struct QuranCommandTarget {
         let all = ReaderTheme.allCases
         guard let index = all.firstIndex(of: settings.theme) else { return }
         settings.select(theme: all[(index + 1) % all.count])
-    }
-}
-
-struct QuranCommandTargetKey: FocusedValueKey {
-    typealias Value = QuranCommandTarget
-}
-
-extension FocusedValues {
-    var quranCommandTarget: QuranCommandTarget? {
-        get { self[QuranCommandTargetKey.self] }
-        set { self[QuranCommandTargetKey.self] = newValue }
     }
 }

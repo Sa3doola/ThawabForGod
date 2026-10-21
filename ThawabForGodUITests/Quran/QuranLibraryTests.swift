@@ -20,7 +20,8 @@ final class QuranLibraryTests: XCTestCase {
 
     /// Both data modes. The Library is the Quran tab's root: the field, the picker and the list are
     /// there, the reader's own Library button is not, and nothing is offered that has not happened
-    /// (no Continue reading row, no error, no Go or Clear on an empty field).
+    /// (no error, no Go or Clear on an empty field). A Continue reading row may or may not be there:
+    /// the stored position outlives a launch, so no test asserts its absence.
     func testLibraryIsTheRoot() throws {
         let app = XCUIApplication()
         app.launchQuranLibrary(.surah)
@@ -33,7 +34,6 @@ final class QuranLibraryTests: XCTestCase {
         XCTAssertFalse(app.libraryClear.exists, "Clear appears with text")
         XCTAssertTrue(app.surahRow(1).waitForExistence(timeout: 10), "the surah list")
         XCTAssertFalse(app.readerLibraryButton.exists, "the reader is not in front")
-        XCTAssertFalse(app.libraryContinue.exists, "nothing to continue on a fresh launch")
         XCTAssertGreaterThanOrEqual(app.libraryTabCount, 3)
     }
 
@@ -145,14 +145,13 @@ final class QuranLibraryTests: XCTestCase {
         XCTAssertTrue(waitUntilOnScreen(app.pageCell(50), in: app), "and the grid scrolled it into view")
     }
 
-    /// Both modes. Not there on a fresh launch; open surah 18, move, tap Library: the row is there
+    /// Both modes. Open surah 18, move, tap Library: the row is there
     /// and names surah 18; tapping it returns to the reader where it was.
     func testContinueReadingReturnsToTheSamePlace() throws {
         let app = XCUIApplication()
         app.launchQuranLibrary(.surah, ["-quranMode", "mushaf"])
         waitForLibrary(app)
-        XCTAssertFalse(app.libraryContinue.exists, "nothing to continue yet")
-
+        // The stored reading position survives launches, so a Continue row may already be there.
         scrollToSurahRow(18, in: app)
         let name = surahName(ofRow: app.surahRow(18))
         app.surahRow(18).tapOrClick()

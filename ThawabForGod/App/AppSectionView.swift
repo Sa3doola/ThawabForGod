@@ -67,12 +67,7 @@ struct AppSectionView: View {
         let viewModel = container.quranReaderViewModel
         let library = container.quranLibraryViewModel
 
-        let target = QuranCommandTarget(
-            coordinator: container.quranCoordinator,
-            reader: viewModel,
-            userData: container.quranUserData,
-            isSectionActive: { [router = container.router] in router.selectedTab == .quran }
-        )
+        let target = container.quranCommandTarget
 
         return NavigationStack(path: $coordinator.path.navigationPath(isActive: { [router = container.router] in router.selectedTab == .quran })) {
             QuranLibraryView(viewModel: library, coordinator: container.quranCoordinator)
@@ -123,7 +118,6 @@ struct AppSectionView: View {
         // index is built behind it, so the root's first frame already has its rows.
         .task { await library.load(language: container.localizationManager.language) }
         .quranSectionChrome(coordinator: container.quranCoordinator, viewModel: viewModel)
-        .focusedSceneValue(\.quranCommandTarget, target)
     }
 
     /// The two Sahihs, each pushing into its divisions and then into the narrations.

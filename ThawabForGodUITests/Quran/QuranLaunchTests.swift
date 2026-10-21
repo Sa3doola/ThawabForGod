@@ -22,7 +22,7 @@ final class QuranLaunchTests: XCTestCase {
 
         XCTAssertTrue(waitUntilOnScreen(app.pageFooter(50), in: app, timeout: 15), "the footer of page 50")
         XCTAssertTrue(app.readerLibraryButton.exists)
-        XCTAssertTrue(app.readerModeToggle.exists)
+        XCTAssertTrue(app.hasDisplayModeControl, "the mode toggle, or the More menu that holds it at compact width")
         XCTAssertFalse(app.libraryList.exists, "the reader, not the Library, is in front")
     }
 
@@ -54,7 +54,7 @@ final class QuranLaunchTests: XCTestCase {
         waitForReader(app)
 
         XCTAssertTrue(app.ayahElements.firstMatch.waitForExistence(timeout: 15), "ayah rows are shown")
-        XCTAssertFalse(app.readerModeToggle.exists, "no mode toggle without Mushaf pages")
+        XCTAssertFalse(app.hasDisplayModeControl, "no mode toggle (or More menu) without Mushaf pages")
         XCTAssertFalse(app.anyPageFooter.exists, "no page footer without Mushaf pages")
     }
 }
