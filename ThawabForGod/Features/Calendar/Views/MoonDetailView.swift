@@ -9,6 +9,7 @@ import SwiftUI
 /// phases, the next new and full moon, and a short account of how the Hijri month begins.
 struct MoonDetailView: View {
     let viewModel: MoonDetailViewModel
+    let showScene: () -> Void
 
     @Environment(\.theme) private var theme
     @Environment(LocalizationManager.self) private var l10n
@@ -19,6 +20,7 @@ struct MoonDetailView: View {
         ScrollView {
             VStack(spacing: 20) {
                 hero(info)
+                explorePill
                 stats(info)
                 strip(info)
                 nextEvents
@@ -62,6 +64,20 @@ struct MoonDetailView: View {
         .frame(maxWidth: .infinity)
         .background { DayRampBackground(stop: DayRamp.stop(for: .isha)) }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private var explorePill: some View {
+        Button(action: showScene) {
+            Label(l10n.string(.moonScenePill), systemImage: "cube.transparent")
+                .appFont(.subheadline, weight: .medium)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(theme.accent.opacity(0.15), in: Capsule())
+                .foregroundStyle(theme.accent)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("moon.explore3D")
     }
 
     private func stats(_ info: MoonInfo) -> some View {

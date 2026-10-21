@@ -87,7 +87,10 @@ struct HomeCoordinatorView: View {
             )
 
         case .moonDetail:
-            MoonDetailView(viewModel: moonDetailViewModel)
+            MoonDetailView(viewModel: moonDetailViewModel, showScene: { coordinator.show(.moonScene) })
+
+        case .moonScene:
+            MoonSceneView(viewModel: moonDetailViewModel)
 
         case .occasionsYear:
             OccasionsYearView(viewModel: calendarViewModel)

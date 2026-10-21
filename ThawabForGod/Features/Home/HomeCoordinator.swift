@@ -31,6 +31,7 @@ final class HomeCoordinator {
         /// The Islamic calendar — a visit, so a push here rather than a tab of its own.
         case hijriCalendar
         case moonDetail
+        case moonScene
         case occasionsYear
     }
 

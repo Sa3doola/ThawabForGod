@@ -37,6 +37,7 @@ struct MoonCard: View {
                     .foregroundStyle(theme.accent)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("calendar.moonDetails")
         }
     }
 

@@ -898,4 +898,13 @@ nonisolated enum L10nKey: String, CaseIterable, Sendable, Decodable {
     case calendarOffsetAdvance2 = "calendar_offset_advance_2"
     case calendarOffsetDelay1 = "calendar_offset_delay_1"
     case calendarOffsetDelay2 = "calendar_offset_delay_2"
+
+    case moonScenePill = "moon_scene_pill"
+    case moonSceneTitle = "moon_scene_title"
+    case moonSceneReset = "moon_scene_reset"
+    case moonSceneHint = "moon_scene_hint"
+    case moonSceneIlluminated = "moon_scene_illuminated"
+    case moonSceneAccessibility = "moon_scene_accessibility"
+    case moonSceneRotateLeft = "moon_scene_rotate_left"
+    case moonSceneRotateRight = "moon_scene_rotate_right"
 }

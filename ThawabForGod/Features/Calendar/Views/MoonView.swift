@@ -14,7 +14,7 @@ import AppKit
 ///
 /// A waxing Moon is lit on the right from the northern hemisphere and on the left from the
 /// southern. It belongs to the drawing, not to the calculator: the phase is the same everywhere.
-enum MoonHemisphere {
+nonisolated enum MoonHemisphere: Sendable {
     case northern, southern
 
     /// Northern when the latitude is unknown, which is where most readers are.
