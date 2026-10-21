@@ -122,16 +122,22 @@
 		};
 		9D285A32302A054500164D4C /* ThawabForGodTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ThawabForGodTests;
 			sourceTree = "<group>";
 		};
 		9D285A3C302A054500164D4C /* ThawabForGodUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = ThawabForGodUITests;
 			sourceTree = "<group>";
 		};
 		9D2E1F9E303A5AF900BDF1BE /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
@@ -401,13 +407,14 @@
 			knownRegions = (
 				en,
 				Base,
+				ar,
 			);
 			mainGroup = 9D285A17302A054500164D4C;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0DD56495FC908CFB1C802C0F /* XCRemoteSwiftPackageReference "adhan-swift" */,
-				154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */,
-				2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "Packages/ArabicText" */,
+				154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+				2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "ArabicText" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9D285A21302A054500164D4C /* Products */;
@@ -1138,7 +1145,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "Packages/ArabicText" */ = {
+		2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "ArabicText" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/ArabicText;
 		};
@@ -1153,7 +1160,7 @@
 				minimumVersion = 1.5.0;
 			};
 		};
-		154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+		154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift";
 			requirement = {
@@ -1166,7 +1173,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		2C71CE3FCDE2C2F4A4C3B29E /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB" */;
+			package = 154AA189234795E98A0AAF35 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
 		};
 		9D2E200A303A5C4300BDF1BE /* Adhan */ = {
@@ -1176,7 +1183,7 @@
 		};
 		C8E6AA6A8AFE6A8912F4E051 /* ArabicText */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "Packages/ArabicText" */;
+			package = 2086F11C5855DF690225564B /* XCLocalSwiftPackageReference "ArabicText" */;
 			productName = ArabicText;
 		};
 		DD936F943D1B7087D5370BD1 /* Adhan */ = {

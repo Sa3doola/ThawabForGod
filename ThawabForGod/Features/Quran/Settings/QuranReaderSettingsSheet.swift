@@ -31,12 +31,7 @@ struct QuranReaderSettingsSheet: View {
             )
             .navigationTitle(l10n.string(.readerOptionsTitle))
             .toolbarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button { dismiss() } label: { Text(l10n.string(.readerDone)) }
-                        .accessibilityIdentifier("quran.settings.done")
-                }
-            }
+            .quranSettingsPinnedHeader(title: l10n.string(.readerOptionsTitle), done: l10n.string(.readerDone)) { dismiss() }
             .navigationDestination(for: QuranSettingsPage.self) { page in
                 switch page {
                 case .packs: ContentPacksView(viewModel: viewModel)

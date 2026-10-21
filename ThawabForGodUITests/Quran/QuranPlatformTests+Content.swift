@@ -161,10 +161,9 @@ extension QuranPlatformTests {
         }
 
         let done = app.element(id: "quran.settings.done")
-        // After scrolling to the phone-only pickers the bar can be scrolled out of view (the Duo's sheet
-        // lets it go): scroll back to the top where Done is.
-        for _ in 0..<5 where !done.isHittable { app.windows.firstMatch.swipeDown() }
-        XCTAssertTrue(done.exists, "Done")
+        // The bar is pinned (BUGS.md B9): Done is still reachable after scrolling to the lower pickers.
+        captureScreenshot(app, screen: "reading-options-scrolled", theme: themeName)
+        XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done stays on screen")
         done.tapOrClick()
         XCTAssertTrue(done.waitForNonExistence(timeout: 10), "the sheet closed")
         if full {

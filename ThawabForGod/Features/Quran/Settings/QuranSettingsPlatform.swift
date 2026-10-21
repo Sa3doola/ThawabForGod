@@ -28,6 +28,26 @@ extension View {
         #endif
     }
 
+    /// The sheet's title and Done. On iOS they are a header outside the scrolling form, because on the
+    /// iPhone Duo the system's navigation bar went up with the form's content (BUGS.md B9); a header
+    /// that is not part of the scroll view cannot. The Mac sheet keeps the toolbar's Done.
+    @ViewBuilder
+    func quranSettingsPinnedHeader(title: String, done: String, action: @escaping () -> Void) -> some View {
+        #if os(iOS)
+        toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                QuranSettingsHeader(title: title, done: done, action: action)
+            }
+        #else
+        toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(action: action) { Text(done) }
+                    .accessibilityIdentifier("quran.settings.done")
+            }
+        }
+        #endif
+    }
+
     /// The Edit button the pack lists need for drag-to-reorder on iOS. The Mac list reorders by
     /// dragging directly.
     func quranPacksEditButton() -> some View {
@@ -59,6 +79,33 @@ private struct QuranCompactWidthReader: ViewModifier {
             .onChange(of: horizontalSizeClass, initial: true) { _, sizeClass in
                 isCompact = sizeClass == .compact
             }
+    }
+}
+#endif
+
+#if os(iOS)
+private struct QuranSettingsHeader: View {
+    let title: String
+    let done: String
+    let action: () -> Void
+
+    @Environment(\.theme) private var theme
+
+    var body: some View {
+        ZStack {
+            Text(title)
+                .appFont(.headline)
+                .foregroundStyle(theme.textPrimary)
+                .accessibilityAddTraits(.isHeader)
+            HStack {
+                Spacer()
+                Button(action: action) { Text(done).appFont(.headline) }
+                    .accessibilityIdentifier("quran.settings.done")
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.bar)
     }
 }
 #endif
