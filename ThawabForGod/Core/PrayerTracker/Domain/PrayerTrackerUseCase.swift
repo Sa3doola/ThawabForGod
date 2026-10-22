@@ -32,10 +32,11 @@ nonisolated struct PrayerTrackerUseCase: Sendable {
     }
 
     func setCompleted(_ isCompleted: Bool, of prayer: Prayer, on date: Date) async throws {
-        let day = calendar.startOfDay(for: date)
-        let record = try await repository.record(on: day)
-
-        try await repository.save(record.setting(prayer, to: isCompleted))
+        try await repository.setCompleted(
+            isCompleted,
+            of: prayer,
+            on: calendar.startOfDay(for: date)
+        )
     }
 
     /// How many days in a row, ending today, have all five marked.

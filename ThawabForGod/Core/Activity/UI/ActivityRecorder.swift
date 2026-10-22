@@ -26,6 +26,11 @@ final class ActivityRecorder {
     private var pending: [ActivityKind: RecentActivity] = [:]
     private var tasks: [ActivityKind: Task<Void, Never>] = [:]
 
+    /// The store write for each kind that has left `pending` but not yet finished. `write(_:)`
+    /// takes the entry out of `pending` before it awaits the save, so without this a `flush()`
+    /// arriving mid-save would find nothing waiting and return while the write was still going.
+    private var saving: [ActivityKind: Task<Void, Never>] = [:]
+
     /// - Parameter delay: how long the taps have to stop before the write goes out. Injected so a
     ///   test can drive the debounce without waiting on it.
     init(useCase: RecentActivityUseCase, delay: Duration = .milliseconds(400)) {
@@ -50,12 +55,28 @@ final class ActivityRecorder {
             tasks[kind] = nil
             await write(kind)
         }
+
+        // Writes the timer had already started: not in `pending` any more, but not on disk yet.
+        for save in Array(saving.values) {
+            await save.value
+        }
     }
 
     private func write(_ kind: ActivityKind) async {
         guard let activity = pending.removeValue(forKey: kind) else { return }
 
         tasks[kind] = nil
-        await useCase.record(activity)
+
+        // Behind any earlier save of the same kind, so two writes cannot land out of order.
+        let earlier = saving[kind]
+        let save = Task { [useCase] in
+            await earlier?.value
+            await useCase.record(activity)
+        }
+        saving[kind] = save
+
+        await save.value
+
+        if saving[kind] == save { saving[kind] = nil }
     }
 }

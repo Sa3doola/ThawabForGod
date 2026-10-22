@@ -78,7 +78,27 @@ final class UserNotificationService: NotificationService {
 
     // MARK: Scheduling
 
+    /// The most recent refresh, so the next one can wait for it.
+    private var lastRefresh: Task<Void, Never>?
+
+    /// One refresh at a time, in the order they were asked for.
+    ///
+    /// `.task(id:)` cancels the caller when the inputs change, but the `add` loop below does not
+    /// observe cancellation, so the old run kept going and could land after the new run's
+    /// `cancelAll()`. Identifiers are stable and `add` replaces, so the stale plan's times then
+    /// overwrote the fresh ones. Chaining makes the newest request both the last to start and the
+    /// last to finish, and it reads its inputs only once the earlier run is done.
     func refreshSchedule() async {
+        let previous = lastRefresh
+        let run = Task {
+            await previous?.value
+            await performRefresh()
+        }
+        lastRefresh = run
+        await run.value
+    }
+
+    private func performRefresh() async {
         // Idempotent, and free. Registering here rather than from a trigger of its own is the
         // same call `refillReminders()` makes about widget reloads: a second launch-time trigger
         // would be a second thing to keep in step, and the failure when the two drifted would be

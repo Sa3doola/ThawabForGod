@@ -306,6 +306,9 @@ struct MushafCurlController: UIViewControllerRepresentable {
             let uiKitDirection: UIPageViewController.NavigationDirection = direction == .forward ? .forward : .reverse
             guard step == input.unit.pageCount else {
                 pageViewController.setViewControllers(controllers, direction: uiKitDirection, animated: false)
+                // Now in `viewControllers`, which `host(for:)` protects on its own. Left in the set,
+                // every page ever jumped to would stay protected and the pool would never reuse one.
+                handedOut = []
                 return
             }
             isTurning = true
@@ -316,6 +319,7 @@ struct MushafCurlController: UIViewControllerRepresentable {
 
         private func turnEnded() {
             isTurning = false
+            handedOut = []
             if let target = pendingTarget {
                 pendingTarget = nil
                 move(to: target)

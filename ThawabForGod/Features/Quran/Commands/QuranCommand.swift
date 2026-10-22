@@ -133,17 +133,22 @@ struct QuranCommandTarget {
             return
         }
         guard let corpus = reader.corpus else { return }
-        let current = reader.mushaf.selectedAyah ?? reader.location
+        // Where the reader is looking, which moves as they read.
+        let visible = reader.location
+        // The ayah they tapped, if any. The selection is never cleared, so it can name an ayah that
+        // scrolled away long ago: it is right for "this ayah" commands and wrong for "go on from
+        // here" ones, which step from the visible place instead.
+        let target = reader.mushaf.selectedAyah ?? visible
         switch command {
-        case .nextPage: turn(.next, corpus: corpus, from: current)
-        case .previousPage: turn(.previous, corpus: corpus, from: current)
+        case .nextPage: turn(.next, corpus: corpus, from: visible)
+        case .previousPage: turn(.previous, corpus: corpus, from: visible)
         case .goTo, .search: performUnrestricted(command)
-        case .bookmark: userData.toggleBookmark(current)
-        case .toggleAyahPanel: coordinator.toggleAyahPanel(at: current)
+        case .bookmark: userData.toggleBookmark(target)
+        case .toggleAyahPanel: coordinator.toggleAyahPanel(at: target)
         case .toggleDisplayMode: reader.toggleDisplayMode()
         case .nextTheme: cycleTheme()
-        case .previousSurah: openSurah(current.surah - 1)
-        case .nextSurah: openSurah(current.surah + 1)
+        case .previousSurah: openSurah(visible.surah - 1)
+        case .nextSurah: openSurah(visible.surah + 1)
         case .biggerText: settings.enlargeText()
         case .smallerText: settings.shrinkText()
         }

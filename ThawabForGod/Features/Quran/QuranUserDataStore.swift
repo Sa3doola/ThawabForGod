@@ -280,6 +280,13 @@ final class QuranUserDataStore: QuranReadingPositionRecording {
 
     private func reloadFromDisk() async {
         guard let marks = try? await repository.marks() else { return }
+        // The main actor was free during that read. An edit made meanwhile is in memory and queued
+        // behind this reload, so the snapshot predates it: assigning it would erase the edit from
+        // the screen even though its write goes on to succeed. Leave the next link to reload.
+        guard linksInFlight == 0 else {
+            needsReload = true
+            return
+        }
         replace(with: marks)
         if pendingPosition == nil, let position = try? await positions.readingPosition() { applyPosition(position) }
     }

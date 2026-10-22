@@ -107,8 +107,14 @@ final class TasbihViewModel {
     func select(_ dhikr: TasbihDhikr) async {
         if self.dhikr?.id != dhikr.id {
             await persistPendingCount()
+            // A tap that arrived during that save is dirty and not in what was written.
+            if hasUnsavedCount { await persistPendingCount() }
         }
 
+        // No live session while the new one loads. `increment()` ignores taps without one, so a
+        // tap in the gap can no longer be counted on the outgoing session under the new dhikr's
+        // name and then discarded when the loaded session replaces it.
+        self.session = nil
         self.dhikr = dhikr
 
         do {
@@ -163,6 +169,9 @@ final class TasbihViewModel {
         guard let dhikr else { return }
 
         hasUnsavedCount = false
+        // Shows zero straight away, and refuses taps until the reset lands: one counted against
+        // the old session in the meantime would be overwritten by the zeroed one below.
+        session = nil
         tips.resetPerformed()
 
         do {
@@ -181,10 +190,17 @@ final class TasbihViewModel {
     /// Idempotent and cheap to call — the view leans on that, firing it from both `onDisappear`
     /// and a scene-phase change without either having to know the other exists.
     func persistPendingCount() async {
-        // Ahead of the guard, and unconditional: the count may be safely stored already and the
-        // chip still be holding an older number, because the two are written on different rules.
-        await activity?.flush()
+        // The count goes first. This runs as the screen is going away, when the process can be
+        // suspended at any await; the count is the data a reader would miss, and the chip is a
+        // convenience, so the chip must not be the thing standing in front of it.
+        await saveCountIfDirty()
 
+        // Unconditional: the count may be safely stored already and the chip still be holding an
+        // older number, because the two are written on different rules.
+        await activity?.flush()
+    }
+
+    private func saveCountIfDirty() async {
         guard hasUnsavedCount, let session else { return }
 
         // Cleared before the await, not after: a tap arriving mid-save marks the session dirty

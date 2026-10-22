@@ -48,6 +48,13 @@ actor PrayerTrackerRepository: PrayerTrackerRepositoring {
         try modelContext.save()
     }
 
+    /// Synchronous on purpose: with no `await` between the read and the write, nothing else on this
+    /// actor can run in the middle, so two quick taps on different prayers both land.
+    func setCompleted(_ isCompleted: Bool, of prayer: Prayer, on day: Date) throws {
+        let current = try storedRecord(on: day)?.domainValue ?? PrayerRecord(day: day)
+        try save(current.setting(prayer, to: isCompleted))
+    }
+
     /// `#Predicate` cannot close over a property of a struct, so the day is lifted into a local
     /// first — the same shape every other repository here needs.
     private func storedRecord(on day: Date) throws -> PrayerCompletionRecord? {
